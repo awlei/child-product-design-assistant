@@ -141,6 +141,11 @@ export default function ChildSafetyChairApp() {
   const [accelerationLimit, setAccelerationLimit] = useState(50);
   const [injuryCriteria, setInjuryCriteria] = useState<string[]>([]);
 
+  // PWA安装状态
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
   // 综合设计状态
   const [designInput, setDesignInput] = useState({
     inputType: 'height', // 'height' or 'weight'
@@ -496,6 +501,73 @@ export default function ChildSafetyChairApp() {
     updateInjuryLimits();
     loadGpsData();
   }, []);
+
+  // PWA安装提示
+  useEffect(() => {
+    // 检查是否已经安装
+    const checkInstalled = () => {
+      if (window.matchMedia('(display-mode: standalone)').matches ||
+          window.matchMedia('(display-mode: minimal-ui)').matches) {
+        setIsInstalled(true);
+      }
+    };
+    checkInstalled();
+
+    // 监听 beforeinstallprompt 事件
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+      console.log('PWA安装提示已触发');
+    };
+
+    // 监听应用安装事件
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+      console.log('PWA已安装');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  // PWA安装处理函数
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      showToastMessage('PWA安装不可用，请使用Chrome浏览器访问', 'error');
+      return;
+    }
+
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`用户选择: ${outcome}`);
+
+      if (outcome === 'accepted') {
+        showToastMessage('开始安装...', 'success');
+      } else {
+        showToastMessage('安装已取消', 'warning');
+      }
+
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+    } catch (error) {
+      console.error('PWA安装失败:', error);
+      showToastMessage('安装失败，请稍后重试', 'error');
+    }
+  };
+
+  const dismissInstallPrompt = () => {
+    setShowInstallPrompt(false);
+    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+  };
 
   // 加载GPS人体测量数据
   const loadGpsData = async () => {
@@ -977,6 +1049,41 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="container mx-auto p-4">
+        {/* PWA安装提示 */}
+        {showInstallPrompt && !isInstalled && (
+          <Card className="mb-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">📱</div>
+                  <div>
+                    <div className="font-bold text-lg">安装到手机</div>
+                    <div className="text-sm text-blue-100">添加到主屏幕，使用更便捷</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleInstallClick}
+                    className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+                  >
+                    立即安装
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={dismissInstallPrompt}
+                    className="text-white hover:bg-white/20"
+                  >
+                    暂不安装
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <Card className="mb-6 bg-white/95 backdrop-blur">
           <CardHeader>
@@ -993,6 +1100,11 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                 <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs">
                   免费智能体版
                 </Badge>
+                {isInstalled && (
+                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs">
+                    已安装
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-4 mt-4 flex-wrap">
@@ -2664,6 +2776,23 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           >
             {toastMessage}
           </div>
+        )}
+
+        {/* PWA安装提示 - 底部常驻提示（仅当未安装且未显示顶部提示时） */}
+        {!isInstalled && !showInstallPrompt && typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && (
+          <Card className="mt-6 bg-white/95 backdrop-blur border-2 border-dashed border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">💡</div>
+                <div className="flex-1">
+                  <div className="font-semibold text-blue-800 mb-1">安装到手机获得最佳体验</div>
+                  <div className="text-sm text-gray-600">
+                    在Chrome浏览器菜单中选择"添加到主屏幕"或点击上方安装按钮，即可离线使用！
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Loading Overlay */}

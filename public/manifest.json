@@ -1,14 +1,29 @@
 {
   "name": "儿童安全座椅设计助手",
   "short_name": "座椅助手",
-  "description": "专业的儿童安全座椅尺寸计算与伤害指标分析工具",
-  "start_url": "/",
+  "description": "专业的儿童安全座椅尺寸计算与伤害指标分析工具，支持ECE R129标准和智能设计",
+  "start_url": "/?source=pwa",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#667eea",
   "orientation": "portrait",
   "scope": "/",
+  "dir": "ltr",
+  "lang": "zh-CN",
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icon-192.svg",
       "sizes": "192x192",
@@ -22,19 +37,43 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["utilities", "productivity"],
+  "categories": ["utilities", "productivity", "business"],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
   "shortcuts": [
     {
       "name": "尺寸计算",
       "short_name": "尺寸",
       "description": "快速计算座椅尺寸",
-      "url": "/#dimensions"
+      "url": "/#dimensions",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "伤害指标",
       "short_name": "伤害",
       "description": "伤害指标检查",
-      "url": "/#injury"
+      "url": "/#injury",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "综合设计",
+      "short_name": "设计",
+      "description": "智能设计助手",
+      "url": "/#comprehensive",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }
