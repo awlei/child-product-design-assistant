@@ -71,6 +71,12 @@ export default function GPSAnthroTool() {
   const [searchAge, setSearchAge] = useState('');
   const [selectedDummy, setSelectedDummy] = useState<DummyData | null>(null);
 
+  // 示意图生成状态
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string>('');
+  const [imageError, setImageError] = useState<string>('');
+  const [imageStyle, setImageStyle] = useState<'simple' | 'detailed' | 'cartoon'>('simple');
+
   useEffect(() => {
     loadData();
   }, []);
@@ -107,6 +113,57 @@ export default function GPSAnthroTool() {
       backHeight: Math.round(backHeight),
       headrestHeight: Math.round(headrestHeight),
     };
+  };
+
+  const generateSeatSchematic = async (height: number, dimensions: any) => {
+    setIsGeneratingImage(true);
+    setImageError('');
+    setGeneratedImageUrl('');
+
+    try {
+      const prompt = `Child safety car seat design, side view diagram. Dimensions: seat width ${dimensions.seatWidth}cm, seat depth ${dimensions.seatDepth}cm, back height ${dimensions.backHeight}cm, headrest height ${dimensions.headrestHeight}cm, ${harnessSlots} harness slots. Simple technical drawing style.`;
+
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          style: imageStyle,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setGeneratedImageUrl(result.imageUrl);
+      } else {
+        setImageError(result.error || '图片生成失败');
+      }
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : '生成失败');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const downloadImage = async (imageUrl: string, filename: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('下载失败，请右键图片另存为');
+    }
   };
 
   const checkR129Compliance = (stature: number, sittingHeight: number) => {
@@ -269,7 +326,7 @@ export default function GPSAnthroTool() {
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
                 <CardTitle>座椅尺寸计算器</CardTitle>
-                <CardDescription>根据儿童身高计算座椅的关键尺寸</CardDescription>
+                <CardDescription>根据儿童身高计算座椅的关键尺寸，并生成简笔画示意图</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -339,19 +396,109 @@ export default function GPSAnthroTool() {
                   />
                 </div>
 
-                <Button
-                  className="w-full"
-                  style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
-                  onClick={() => {
-                    const height = Number((document.getElementById('testHeight') as HTMLInputElement)?.value);
-                    if (height) {
-                      const dimensions = calculateSeatDimensions(height);
-                      alert(`计算结果:\n插槽高度: ${dimensions.harnessSlotHeight}cm\n座椅宽度: ${dimensions.seatWidth}cm\n座椅深度: ${dimensions.seatDepth}cm\n靠背高度: ${dimensions.backHeight}cm\n头枕高度: ${dimensions.headrestHeight}cm`);
-                    }
-                  }}
-                >
-                  计算座椅尺寸
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    className="w-full"
+                    style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
+                    onClick={() => {
+                      const height = Number((document.getElementById('testHeight') as HTMLInputElement)?.value);
+                      if (height) {
+                        const dimensions = calculateSeatDimensions(height);
+                        alert(`计算结果:\n插槽高度: ${dimensions.harnessSlotHeight}cm\n座椅宽度: ${dimensions.seatWidth}cm\n座椅深度: ${dimensions.seatDepth}cm\n靠背高度: ${dimensions.backHeight}cm\n头枕高度: ${dimensions.headrestHeight}cm`);
+                      }
+                    }}
+                  >
+                    📐 计算座椅尺寸
+                  </Button>
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => {
+                      const height = Number((document.getElementById('testHeight') as HTMLInputElement)?.value);
+                      if (height) {
+                        const dimensions = calculateSeatDimensions(height);
+                        generateSeatSchematic(height, dimensions);
+                      } else {
+                        alert('请先输入儿童身高');
+                      }
+                    }}
+                    disabled={isGeneratingImage}
+                  >
+                    {isGeneratingImage ? '🎨 生成中...' : '🖼️ 生成示意图'}
+                  </Button>
+                </div>
+
+                {/* 图片样式选择 */}
+                <div>
+                  <Label>示意图样式</Label>
+                  <div className="flex gap-2 mt-2">
+                    {(['simple', 'detailed', 'cartoon'] as const).map((style) => (
+                      <Button
+                        key={style}
+                        variant={imageStyle === style ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setImageStyle(style)}
+                        style={imageStyle === style ? { background: 'linear-gradient(135deg, #667eea, #764ba2)' } : {}}
+                      >
+                        {style === 'simple' ? '简笔画' : style === 'detailed' ? '详细' : '卡通'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 图片展示区域 */}
+                {generatedImageUrl && (
+                  <Card className="border-2 border-violet-200">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">生成的示意图</CardTitle>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadImage(generatedImageUrl, 'seat-schematic.png')}
+                        >
+                          📥 下载图片
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={generatedImageUrl}
+                          alt="座椅示意图"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 错误提示 */}
+                {imageError && (
+                  <Card className="border-2 border-red-200 bg-red-50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">❌</span>
+                        <div>
+                          <h4 className="font-semibold text-red-900">生成失败</h4>
+                          <p className="text-sm text-red-700 mt-1">{imageError}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 加载中提示 */}
+                {isGeneratingImage && (
+                  <Card className="border-2 border-blue-200 bg-blue-50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 border-3 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                        <p className="text-blue-900 font-medium">正在生成示意图，请稍候...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                   <h4 className="font-semibold text-blue-900 mb-2">计算说明</h4>
@@ -361,6 +508,12 @@ export default function GPSAnthroTool() {
                     <li>• 座椅深度 ≈ 身高 × 0.42</li>
                     <li>• 靠背高度 ≈ 身高 × 0.85</li>
                     <li>• 头枕高度 ≈ 身高 × 0.35</li>
+                  </ul>
+                  <h4 className="font-semibold text-blue-900 mt-4 mb-2">生成说明</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• 点击"生成示意图"按钮生成简笔画</li>
+                    <li>• 可选择不同样式：简笔画/详细/卡通</li>
+                    <li>• 支持下载保存图片</li>
                   </ul>
                 </div>
               </CardContent>
