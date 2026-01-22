@@ -120,6 +120,17 @@ export default function ChildSafetyChairApp() {
   const [imageStyle, setImageStyle] = useState<'simple' | 'detailed' | 'cartoon'>('simple');
   const [gpsActiveTab, setGpsActiveTab] = useState('data-analysis');
 
+  // 测试矩阵相关状态
+  const [testMatrix, setTestMatrix] = useState<any[]>([]);
+  const [matrixConfig, setMatrixConfig] = useState({
+    impactTypes: ['Frontal', 'Rear'],
+    dummies: ['Q0', 'Q1', 'Q1.5', 'Q3', 'Q6'],
+    positions: ['Rearward facing', 'Forward facing'],
+    installations: ['Isofix 3 pts', 'Isofix 2 pts', 'Vehicle belt'],
+    configurations: ['Upright', 'Reclined'],
+  });
+  const [exportingMatrix, setExportingMatrix] = useState(false);
+
   // R129智能设计助手状态
   const [r129Height, setR129Height] = useState('');
   const [r129Consulting, setR129Consulting] = useState(false);
@@ -441,6 +452,120 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
     }
   };
 
+  // 生成测试矩阵
+  const generateTestMatrix = () => {
+    const matrix: any[] = [];
+    let testNumber = 1;
+
+    // 为每个碰撞类型和假人生成测试组合
+    matrixConfig.impactTypes.forEach((impact) => {
+      matrixConfig.dummies.forEach((dummy) => {
+        matrixConfig.positions.forEach((position) => {
+          matrixConfig.installations.forEach((installation) => {
+            matrixConfig.configurations.forEach((config) => {
+              // 生成测试项
+              const testItem: any = {
+                'Test #': testNumber,
+                'Pulse': 'R129',
+                'Impact': impact,
+                'Dummy': dummy,
+                'Position': position,
+                'Installation': installation,
+                'Product Configuration': config,
+                'Isofix anchors': installation.includes('Isofix') ? 'yes' : 'no',
+                'Position of floor': 'Low',
+                'Harness': 'With',
+                'Top Tether / Support leg': 'With',
+                'Dashboard': 'With',
+                'Comments': '',
+                'Buckle': 'no',
+                'Adjuster': 'no',
+                'Isofix': 'no',
+                'Top Tether': installation.includes('Isofix') ? 'With' : 'no',
+                'Quantity': 1,
+                'Test No': testNumber,
+                'Speed (km/h)': impact === 'Frontal' ? '50' : '30',
+                'Max Pulse (g)': '',
+                'Stopping Distance (mm)': '',
+                'Head Excursion (mm)': '',
+                'Chest Acc. Vert (g)': '',
+                'Chest Acc. Result (g)': '',
+                'Head Acc. 3ms (g)': '',
+                'HIC36/HPC15': '',
+                'Upper Neck Force (N)': '',
+                'Upper Neck Moment (Nm)': '',
+                'Chest Deflection (mm)': '',
+                'Observation': '',
+                'Status': '',
+              };
+
+              // 根据假人类型调整参数
+              if (dummy === 'Q0' && position === 'Forward facing') {
+                // Q0通常不用于前向，跳过
+                return;
+              }
+
+              // Q0/Q1/Q1.5 - 婴幼儿组 (后向)
+              if (['Q0', 'Q1', 'Q1.5'].includes(dummy)) {
+                testItem['Position'] = 'Rearward facing';
+                testItem['Product Configuration'] = 'Reclined';
+                testItem['Isofix anchors'] = 'yes';
+              }
+
+              // Q3/Q6 - 儿童组
+              if (['Q3', 'Q6'].includes(dummy)) {
+                testItem['Top Tether / Support leg'] = position === 'Forward facing' ? 'With' : 'With';
+              }
+
+              matrix.push(testItem);
+              testNumber++;
+            });
+          });
+        });
+      });
+    });
+
+    setTestMatrix(matrix);
+  };
+
+  // 导出测试矩阵为CSV
+  const exportMatrixToCSV = () => {
+    if (testMatrix.length === 0) {
+      alert('请先生成测试矩阵');
+      return;
+    }
+
+    setExportingMatrix(true);
+
+    try {
+      const headers = Object.keys(testMatrix[0]);
+      const csvContent = [
+        headers.join(','),
+        ...testMatrix.map(row => headers.map(header => {
+          const val = row[header];
+          return val !== undefined && val !== null ? `"${val}"` : '';
+        }).join(','))
+      ].join('\n');
+
+      const BOM = '\uFEFF'; // 添加BOM以支持Excel中文显示
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Dynamic_Test_Matrix_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      showToastMessage('✅ 测试矩阵已导出', 'success');
+    } catch (error) {
+      showToastMessage('❌ 导出失败', 'error');
+    } finally {
+      setExportingMatrix(false);
+    }
+  };
+
   const downloadImage = async (imageUrl: string, filename: string) => {
     try {
       const response = await fetch(imageUrl);
@@ -734,9 +859,10 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
                 <Tabs value={gpsActiveTab} onValueChange={setGpsActiveTab}>
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="data-analysis">数据分析</TabsTrigger>
                     <TabsTrigger value="seat-design">座椅设计</TabsTrigger>
+                    <TabsTrigger value="test-matrix">测试矩阵</TabsTrigger>
                     <TabsTrigger value="r129-compliance">R129法规</TabsTrigger>
                     <TabsTrigger value="dummies">假人数据</TabsTrigger>
                   </TabsList>
@@ -1132,6 +1258,181 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 测试矩阵标签页 */}
+            {gpsActiveTab === 'test-matrix' && (
+              <Card className="bg-white/95 backdrop-blur">
+                <CardHeader>
+                  <CardTitle>动态测试矩阵生成器</CardTitle>
+                  <CardDescription>基于R129标准生成动态测试矩阵，支持导出为Excel格式</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* 配置区域 */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">测试配置</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div>
+                        <Label>碰撞类型</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {matrixConfig.impactTypes.map((type) => (
+                            <Badge key={type} variant="outline" className="px-3 py-1">
+                              {type}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>假人类型</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {matrixConfig.dummies.map((dummy) => (
+                            <Badge key={dummy} variant="outline" className="px-3 py-1">
+                              {dummy}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>座椅朝向</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {matrixConfig.positions.map((pos) => (
+                            <Badge key={pos} variant="outline" className="px-3 py-1">
+                              {pos}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>安装方式</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {matrixConfig.installations.map((inst) => (
+                            <Badge key={inst} variant="outline" className="px-3 py-1">
+                              {inst}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>座椅配置</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {matrixConfig.configurations.map((config) => (
+                            <Badge key={config} variant="outline" className="px-3 py-1">
+                              {config}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 操作按钮 */}
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={generateTestMatrix}
+                      className="flex-1"
+                      style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
+                    >
+                      📋 生成测试矩阵
+                    </Button>
+                    <Button
+                      onClick={exportMatrixToCSV}
+                      disabled={testMatrix.length === 0 || exportingMatrix}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      {exportingMatrix ? '导出中...' : '📥 导出CSV'}
+                    </Button>
+                  </div>
+
+                  {/* 统计信息 */}
+                  {testMatrix.length > 0 && (
+                    <Card className="bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-violet-200">
+                      <CardContent className="pt-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                          <div>
+                            <div className="text-3xl font-bold text-violet-600">{testMatrix.length}</div>
+                            <div className="text-sm text-violet-700">测试总数</div>
+                          </div>
+                          <div>
+                            <div className="text-3xl font-bold text-violet-600">
+                              {new Set(testMatrix.map(t => t.Dummy)).size}
+                            </div>
+                            <div className="text-sm text-violet-700">假人类型</div>
+                          </div>
+                          <div>
+                            <div className="text-3xl font-bold text-violet-600">
+                              {new Set(testMatrix.map(t => t.Impact)).size}
+                            </div>
+                            <div className="text-sm text-violet-700">碰撞类型</div>
+                          </div>
+                          <div>
+                            <div className="text-3xl font-bold text-violet-600">
+                              {new Set(testMatrix.map(t => t.Position)).size}
+                            </div>
+                            <div className="text-sm text-violet-700">座椅朝向</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* 测试矩阵表格 */}
+                  {testMatrix.length > 0 && (
+                    <div className="overflow-x-auto">
+                      <h4 className="font-semibold text-gray-900 mb-4">测试矩阵预览（前10项）</h4>
+                      <table className="w-full border-collapse text-xs">
+                        <thead className="bg-gradient-to-r from-violet-500 to-purple-500 text-white">
+                          <tr>
+                            <th className="text-left p-2">Test #</th>
+                            <th className="text-left p-2">Impact</th>
+                            <th className="text-left p-2">Dummy</th>
+                            <th className="text-left p-2">Position</th>
+                            <th className="text-left p-2">Installation</th>
+                            <th className="text-left p-2">Config</th>
+                            <th className="text-left p-2">Speed (km/h)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {testMatrix.slice(0, 10).map((test, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                              <td className="p-2 font-semibold">{test['Test #']}</td>
+                              <td className="p-2">{test.Impact}</td>
+                              <td className="p-2">{test.Dummy}</td>
+                              <td className="p-2">{test.Position}</td>
+                              <td className="p-2">{test.Installation}</td>
+                              <td className="p-2">{test['Product Configuration']}</td>
+                              <td className="p-2">{test['Speed (km/h)']}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {testMatrix.length > 10 && (
+                        <div className="text-center text-sm text-gray-500 mt-2">
+                          还有 {testMatrix.length - 10} 项测试，请导出查看完整列表
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 说明信息 */}
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                    <h4 className="font-semibold text-blue-900 mb-2">功能说明</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• 基于R129（i-Size）标准生成动态测试矩阵</li>
+                      <li>• 支持多种碰撞类型、假人类型、安装方式组合</li>
+                      <li>• 自动配置测试参数（速度、安装方式等）</li>
+                      <li>• 导出CSV文件，可直接导入Excel编辑</li>
+                      <li>• 包含完整的测试配置和结果记录模板</li>
+                    </ul>
+                    <h4 className="font-semibold text-blue-900 mt-4 mb-2">导出说明</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• CSV文件使用UTF-8编码，支持Excel中文显示</li>
+                      <li>• 包含测试编号、配置参数、结果记录等完整字段</li>
+                      <li>• 可直接在Excel中编辑测试结果</li>
+                    </ul>
                   </div>
                 </CardContent>
               </Card>
