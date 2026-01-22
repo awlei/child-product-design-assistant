@@ -141,6 +141,238 @@ export default function ChildSafetyChairApp() {
   const [accelerationLimit, setAccelerationLimit] = useState(50);
   const [injuryCriteria, setInjuryCriteria] = useState<string[]>([]);
 
+  // 综合设计状态
+  const [designInput, setDesignInput] = useState({
+    inputType: 'height', // 'height' or 'weight'
+    minHeight: '',
+    maxHeight: '',
+    minWeight: '',
+    maxWeight: '',
+    standard: 'R129', // 'R44', 'R129'
+    productType: 'forward', // 'rearward', 'forward', 'booster'
+  });
+
+  const [designResults, setDesignResults] = useState<{
+    dummyMatrix: any[];
+    isoClass: string | null;
+    testMatrix: any[];
+    internalDimensions: any;
+  } | null>(null);
+
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  // 综合计算函数
+  const calculateIntegratedDesign = () => {
+    setIsCalculating(true);
+
+    setTimeout(() => {
+      const { inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType } = designInput;
+
+      // 1. 生成假人矩阵
+      const dummyMatrix = generateDummyMatrix(inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType);
+
+      // 2. 计算ISO分类
+      const isoClass = calculateISOClass(dummyMatrix);
+
+      // 3. 生成碰撞测试矩阵
+      const testMatrix = generateTestMatrixForDesign(dummyMatrix, standard, productType);
+
+      // 4. 计算产品内部尺寸
+      const internalDimensions = calculateInternalDimensions(dummyMatrix, productType);
+
+      setDesignResults({
+        dummyMatrix,
+        isoClass,
+        testMatrix,
+        internalDimensions,
+      });
+
+      setIsCalculating(false);
+      showToastMessage('✅ 综合设计计算完成', 'success');
+    }, 1000);
+  };
+
+  // 生成假人矩阵
+  const generateDummyMatrix = (inputType: string, minHeight: string, maxHeight: string, minWeight: string, maxWeight: string, standard: string, productType: string) => {
+    const dummies: any[] = [];
+
+    // 定义假人规格
+    const dummySpecs = [
+      { name: 'Q0', height: 50, weight: 3.5, age: '0-6mo', position: 'Rearward' },
+      { name: 'Q1', height: 75, weight: 9.7, age: '12mo', position: 'Rearward' },
+      { name: 'Q1.5', height: 87.5, weight: 11.5, age: '18mo', position: 'Rearward/Forward' },
+      { name: 'Q3', height: 105, weight: 15, age: '3yr', position: 'Forward' },
+      { name: 'Q6', height: 125, weight: 21.5, age: '6yr', position: 'Forward' },
+      { name: 'Q10', height: 138, weight: 32, age: '10yr', position: 'Booster' },
+    ];
+
+    dummySpecs.forEach(dummy => {
+      const hMin = parseInt(minHeight) || 0;
+      const hMax = parseInt(maxHeight) || 200;
+      const wMin = parseFloat(minWeight) || 0;
+      const wMax = parseFloat(maxWeight) || 100;
+
+      let included = false;
+      let reason = '';
+
+      if (inputType === 'height') {
+        if (dummy.height >= hMin && dummy.height <= hMax) {
+          included = true;
+          reason = '身高在范围内';
+        }
+      } else {
+        if (dummy.weight >= wMin && dummy.weight <= wMax) {
+          included = true;
+          reason = '重量在范围内';
+        }
+      }
+
+      // 检查与产品类型匹配
+      if (included) {
+        if (productType === 'rearward' && dummy.position.includes('Forward')) {
+          included = false;
+          reason = '后向座椅不支持前向假人';
+        }
+        if (productType === 'forward' && dummy.position === 'Rearward') {
+          included = false;
+          reason = '前向座椅不支持后向假人';
+        }
+      }
+
+      if (included) {
+        dummies.push({
+          ...dummy,
+          included,
+          reason,
+          r44_compatible: standard === 'R44' || true,
+          r129_compatible: standard === 'R129' || true,
+          test_required: true,
+        });
+      }
+    });
+
+    return dummies;
+  };
+
+  // 计算ISO尺寸分类
+  const calculateISOClass = (dummyMatrix: any[]) => {
+    if (dummyMatrix.length === 0) return null;
+
+    const maxHeight = Math.max(...dummyMatrix.map(d => d.height));
+    const maxWeight = Math.max(...dummyMatrix.map(d => d.weight));
+
+    // ISO尺寸分类（基于R129标准）
+    if (maxHeight <= 83) return 'ISO Class A (婴儿提篮)';
+    if (maxHeight <= 105) return 'ISO Class B/C (后向座椅)';
+    if (maxHeight <= 125) return 'ISO Class D (前向座椅)';
+    if (maxHeight <= 150) return 'ISO Class E/F (增高垫)';
+    return 'ISO Class G (大尺寸增高垫)';
+  };
+
+  // 为设计生成测试矩阵
+  const generateTestMatrixForDesign = (dummyMatrix: any[], standard: string, productType: string) => {
+    const matrix: any[] = [];
+    let testNum = 1;
+
+    dummyMatrix.forEach(dummy => {
+      if (!dummy.included) return;
+
+      // 碰撞类型
+      const impacts = dummy.position.includes('Rearward') ? ['Frontal', 'Rear'] : ['Frontal'];
+
+      impacts.forEach(impact => {
+        const test: any = {
+          'Test #': testNum++,
+          'Dummy': dummy.name,
+          'Standard': standard,
+          'Impact': impact,
+          'Position': productType === 'rearward' ? 'Rearward facing' : 'Forward facing',
+          'Speed (km/h)': impact === 'Frontal' ? '50' : '30',
+          'Installation': 'Isofix 3 pts',
+          'Harness': 'With',
+          'Top Tether': productType === 'forward' ? 'With' : 'With',
+          'HIC Limit': standard === 'R129' ? '1000' : '1000',
+          'Chest Acc Limit': standard === 'R129' ? '55g' : '55g',
+          'Chest Deflection Limit': standard === 'R129' ? '50mm' : '50mm',
+          'Status': 'Pending',
+        };
+
+        matrix.push(test);
+      });
+    });
+
+    return matrix;
+  };
+
+  // 计算产品内部尺寸
+  const calculateInternalDimensions = (dummyMatrix: any[], productType: string) => {
+    if (dummyMatrix.length === 0) return null;
+
+    const maxHeight = Math.max(...dummyMatrix.map(d => d.height));
+    const maxWeight = Math.max(...dummyMatrix.map(d => d.weight));
+
+    const seatWidth = Math.max(30, Math.round(maxHeight * 0.35));
+    const seatDepth = Math.max(25, Math.round(maxHeight * 0.38));
+    const backHeight = Math.round(maxHeight * 0.72);
+    const headrestHeight = Math.round(maxHeight * 0.28);
+    const totalHeight = backHeight + headrestHeight;
+
+    // 靠背角度
+    const backrestAngle = productType === 'rearward' ? 45 : 105;
+
+    // 头托调节高度
+    const headrestAdjustmentRange = headrestHeight * 0.6;
+    const headrestPositions = Math.floor(headrestAdjustmentRange / 3) + 1;
+
+    // 倾斜角度范围
+    const reclineAngleMin = productType === 'rearward' ? 30 : 100;
+    const reclineAngleMax = productType === 'rearward' ? 55 : 115;
+    const reclinePositions = Math.floor((reclineAngleMax - reclineAngleMin) / 5) + 1;
+
+    return {
+      external: {
+        totalHeight: totalHeight + 10, // 包含ISOFIX接口
+        totalWidth: seatWidth + 20, // 包含侧翼
+        totalDepth: seatDepth + 30, // 包含底座
+        isoClass: calculateISOClass(dummyMatrix),
+      },
+      internal: {
+        seatWidth: seatWidth,
+        seatDepth: seatDepth,
+        backHeight: backHeight,
+        headrestHeight: headrestHeight,
+        headrestAdjustment: {
+          minHeight: backHeight + 5,
+          maxHeight: backHeight + headrestAdjustmentRange,
+          positions: headrestPositions,
+          adjustmentRange: `${headrestAdjustmentRange.toFixed(1)}cm`,
+        },
+        backrestAngle: {
+          angle: `${backrestAngle}°`,
+          fixed: false,
+        },
+        reclineAngle: {
+          minAngle: `${reclineAngleMin}°`,
+          maxAngle: `${reclineAngleMax}°`,
+          positions: reclinePositions,
+          range: `${reclineAngleMax - reclineAngleMin}°`,
+        },
+      },
+      safetySystem: {
+        harnessSlots: Math.ceil((maxHeight * 0.72) / 5),
+        harnessLength: 125,
+        chestClip: 'With',
+        buckle: 'Central',
+        sideImpactProtection: 'With',
+      },
+      capacity: {
+        maxHeight: maxHeight,
+        maxWeight: maxWeight,
+        maxAge: dummyMatrix[dummyMatrix.length - 1]?.age || 'Unknown',
+      },
+    };
+  };
+
   // 加载配置
   useEffect(() => {
     const saved = localStorage.getItem('crs_free_coze_config');
@@ -685,7 +917,8 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <Card className="bg-white/95 backdrop-blur">
             <CardHeader>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="integrated-design">综合设计</TabsTrigger>
                 <TabsTrigger value="dimensions">尺寸计算</TabsTrigger>
                 <TabsTrigger value="injury">伤害指标</TabsTrigger>
                 <TabsTrigger value="gps-anthro">GPS人体测量</TabsTrigger>
@@ -694,6 +927,503 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
               </TabsList>
             </CardHeader>
           </Card>
+
+          {/* 综合设计标签页 */}
+          <TabsContent value="integrated-design">
+            <Card className="bg-white/95 backdrop-blur">
+              <CardHeader>
+                <CardTitle>儿童安全座椅综合设计助手</CardTitle>
+                <CardDescription>输入身高或重量范围，自动生成完整的测试矩阵和产品尺寸规格</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* 输入区域 */}
+                <Card className="bg-gradient-to-br from-violet-50 to-purple-50 border-2 border-violet-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg">设计参数输入</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="inputType">输入类型</Label>
+                        <Select
+                          value={designInput.inputType}
+                          onValueChange={(value) => setDesignInput({ ...designInput, inputType: value as any })}
+                        >
+                          <SelectTrigger id="inputType">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="height">身高范围</SelectItem>
+                            <SelectItem value="weight">重量范围</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="standard">测试标准</Label>
+                        <Select
+                          value={designInput.standard}
+                          onValueChange={(value) => setDesignInput({ ...designInput, standard: value as any })}
+                        >
+                          <SelectTrigger id="standard">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="R129">ECE R129 (i-Size)</SelectItem>
+                            <SelectItem value="R44">ECE R44/04</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="productType">产品类型</Label>
+                        <Select
+                          value={designInput.productType}
+                          onValueChange={(value) => setDesignInput({ ...designInput, productType: value as any })}
+                        >
+                          <SelectTrigger id="productType">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="rearward">后向座椅 (Rearward Facing)</SelectItem>
+                            <SelectItem value="forward">前向座椅 (Forward Facing)</SelectItem>
+                            <SelectItem value="booster">增高垫 (Booster)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {designInput.inputType === 'height' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="minHeight">最小身高 (cm) *</Label>
+                          <Input
+                            id="minHeight"
+                            type="number"
+                            placeholder="例如: 40"
+                            value={designInput.minHeight}
+                            onChange={(e) => setDesignInput({ ...designInput, minHeight: e.target.value })}
+                            min="40"
+                            max="150"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">范围: 40-150 cm</p>
+                        </div>
+                        <div>
+                          <Label htmlFor="maxHeight">最大身高 (cm) *</Label>
+                          <Input
+                            id="maxHeight"
+                            type="number"
+                            placeholder="例如: 105"
+                            value={designInput.maxHeight}
+                            onChange={(e) => setDesignInput({ ...designInput, maxHeight: e.target.value })}
+                            min="40"
+                            max="150"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">范围: 40-150 cm</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="minWeight">最小重量 (kg) *</Label>
+                          <Input
+                            id="minWeight"
+                            type="number"
+                            step="0.1"
+                            placeholder="例如: 3.5"
+                            value={designInput.minWeight}
+                            onChange={(e) => setDesignInput({ ...designInput, minWeight: e.target.value })}
+                            min="0"
+                            max="50"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">范围: 0-50 kg</p>
+                        </div>
+                        <div>
+                          <Label htmlFor="maxWeight">最大重量 (kg) *</Label>
+                          <Input
+                            id="maxWeight"
+                            type="number"
+                            step="0.1"
+                            placeholder="例如: 18"
+                            value={designInput.maxWeight}
+                            onChange={(e) => setDesignInput({ ...designInput, maxWeight: e.target.value })}
+                            min="0"
+                            max="50"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">范围: 0-50 kg</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={calculateIntegratedDesign}
+                      disabled={isCalculating}
+                      className="w-full"
+                      style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
+                      size="lg"
+                    >
+                      {isCalculating ? '🔄 计算中...' : '🚀 生成设计报告'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* 结果展示区域 */}
+                {designResults && (
+                  <div className="space-y-6">
+                    {/* 1. 假人矩阵 */}
+                    <Card className="border-2 border-violet-200">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            🧪 1. 测试假人矩阵
+                          </CardTitle>
+                          <Badge className="bg-violet-500">
+                            {designResults.dummyMatrix.length} 个假人
+                          </Badge>
+                        </div>
+                        <CardDescription>
+                          根据输入范围和产品类型确定的测试假人
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse text-sm">
+                            <thead className="bg-violet-500 text-white">
+                              <tr>
+                                <th className="text-left p-3">假人</th>
+                                <th className="text-right p-3">身高</th>
+                                <th className="text-right p-3">重量</th>
+                                <th className="text-left p-3">年龄</th>
+                                <th className="text-left p-3">朝向</th>
+                                <th className="text-left p-3">包含原因</th>
+                                <th className="text-center p-3">测试状态</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {designResults.dummyMatrix.map((dummy, idx) => (
+                                <tr key={idx} className="border-b hover:bg-violet-50">
+                                  <td className="p-3 font-bold">{dummy.name}</td>
+                                  <td className="text-right p-3">{dummy.height} cm</td>
+                                  <td className="text-right p-3">{dummy.weight} kg</td>
+                                  <td className="p-3">{dummy.age}</td>
+                                  <td className="p-3">
+                                    <Badge variant={dummy.position.includes('Rearward') ? 'default' : 'secondary'}>
+                                      {dummy.position}
+                                    </Badge>
+                                  </td>
+                                  <td className="p-3 text-gray-600">{dummy.reason}</td>
+                                  <td className="text-center p-3">
+                                    <Badge className={dummy.test_required ? 'bg-emerald-500' : 'bg-gray-400'}>
+                                      {dummy.test_required ? '必需测试' : '可选'}
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 2. ISO尺寸分类 */}
+                    <Card className="border-2 border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          📦 2. 产品外尺寸分类
+                        </CardTitle>
+                        <CardDescription>
+                          基于最大假人规格的ISO尺寸分类
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+                          <div className="text-center">
+                            <div className="text-sm text-gray-600 mb-2">ISO尺寸分类</div>
+                            <div className="text-3xl font-bold text-blue-900 mb-4">
+                              {designResults.isoClass || '未确定'}
+                            </div>
+                            {designResults.internalDimensions?.external && (
+                              <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-blue-200">
+                                <div>
+                                  <div className="text-xs text-gray-600">总高度</div>
+                                  <div className="text-lg font-bold text-blue-700">
+                                    {designResults.internalDimensions.external.totalHeight} cm
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-600">总宽度</div>
+                                  <div className="text-lg font-bold text-blue-700">
+                                    {designResults.internalDimensions.external.totalWidth} cm
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-600">总深度</div>
+                                  <div className="text-lg font-bold text-blue-700">
+                                    {designResults.internalDimensions.external.totalDepth} cm
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 3. 碰撞测试矩阵 */}
+                    <Card className="border-2 border-emerald-200">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            💥 3. 碰撞测试矩阵
+                          </CardTitle>
+                          <Badge className="bg-emerald-500">
+                            {designResults.testMatrix.length} 项测试
+                          </Badge>
+                        </div>
+                        <CardDescription>
+                          基于{designInput.standard}标准的动态测试配置
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse text-xs">
+                            <thead className="bg-emerald-500 text-white">
+                              <tr>
+                                <th className="text-left p-2">Test #</th>
+                                <th className="text-left p-2">假人</th>
+                                <th className="text-left p-2">标准</th>
+                                <th className="text-left p-2">碰撞类型</th>
+                                <th className="text-left p-2">朝向</th>
+                                <th className="text-right p-2">速度</th>
+                                <th className="text-left p-2">安装</th>
+                                <th className="text-center p-2">状态</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {designResults.testMatrix.map((test, idx) => (
+                                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-emerald-50'}>
+                                  <td className="p-2 font-semibold">{test['Test #']}</td>
+                                  <td className="p-2 font-bold">{test.Dummy}</td>
+                                  <td className="p-2">
+                                    <Badge variant="outline">{test.Standard}</Badge>
+                                  </td>
+                                  <td className="p-2">{test.Impact}</td>
+                                  <td className="p-2">{test.Position}</td>
+                                  <td className="text-right p-2">{test['Speed (km/h)']} km/h</td>
+                                  <td className="p-2">{test.Installation}</td>
+                                  <td className="text-center p-2">
+                                    <Badge className={test.Status === 'Pending' ? 'bg-yellow-500' : 'bg-emerald-500'}>
+                                      {test.Status}
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="mt-4 p-3 bg-emerald-50 rounded-lg">
+                          <h4 className="font-semibold text-emerald-900 mb-2">测试标准限值</h4>
+                          <div className="grid grid-cols-3 gap-2 text-sm">
+                            <div>
+                              <span className="text-emerald-700">HIC限值:</span> {designResults.testMatrix[0]?.['HIC Limit']}
+                            </div>
+                            <div>
+                              <span className="text-emerald-700">胸部加速度:</span> {designResults.testMatrix[0]?.['Chest Acc Limit']}
+                            </div>
+                            <div>
+                              <span className="text-emerald-700">胸部变形:</span> {designResults.testMatrix[0]?.['Chest Deflection Limit']}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 4. 产品内部尺寸 */}
+                    <Card className="border-2 border-orange-200">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          ⚙️ 4. 产品内部尺寸
+                        </CardTitle>
+                        <CardDescription>
+                          座椅的内部结构和调节参数
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {designResults.internalDimensions && (
+                          <>
+                            {/* 基础尺寸 */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="bg-orange-50 p-4 rounded-lg text-center">
+                                <div className="text-xs text-gray-600 mb-1">座椅宽度</div>
+                                <div className="text-2xl font-bold text-orange-700">
+                                  {designResults.internalDimensions.internal.seatWidth} cm
+                                </div>
+                              </div>
+                              <div className="bg-orange-50 p-4 rounded-lg text-center">
+                                <div className="text-xs text-gray-600 mb-1">座椅深度</div>
+                                <div className="text-2xl font-bold text-orange-700">
+                                  {designResults.internalDimensions.internal.seatDepth} cm
+                                </div>
+                              </div>
+                              <div className="bg-orange-50 p-4 rounded-lg text-center">
+                                <div className="text-xs text-gray-600 mb-1">靠背高度</div>
+                                <div className="text-2xl font-bold text-orange-700">
+                                  {designResults.internalDimensions.internal.backHeight} cm
+                                </div>
+                              </div>
+                              <div className="bg-orange-50 p-4 rounded-lg text-center">
+                                <div className="text-xs text-gray-600 mb-1">头枕高度</div>
+                                <div className="text-2xl font-bold text-orange-700">
+                                  {designResults.internalDimensions.internal.headrestHeight} cm
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 靠背角度 */}
+                            <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-l-4 border-orange-500">
+                              <h4 className="font-semibold text-orange-900 mb-2">靠背角度</h4>
+                              <div className="flex items-center gap-6">
+                                <div>
+                                  <span className="text-sm text-orange-700">角度:</span>
+                                  <span className="text-xl font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.backrestAngle.angle}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">类型:</span>
+                                  <span className="text-sm font-semibold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.backrestAngle.fixed ? '固定' : '可调'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 头托调节 */}
+                            <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-l-4 border-orange-500">
+                              <h4 className="font-semibold text-orange-900 mb-2">头托调节高度</h4>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                  <span className="text-sm text-orange-700">最小高度:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.headrestAdjustment.minHeight} cm
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">最大高度:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.headrestAdjustment.maxHeight} cm
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">调节范围:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.headrestAdjustment.adjustmentRange}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="mt-2">
+                                <span className="text-sm text-orange-700">档位数量:</span>
+                                <span className="text-lg font-bold text-orange-900 ml-2">
+                                  {designResults.internalDimensions.internal.headrestAdjustment.positions} 档
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* 倾斜角度 */}
+                            <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-l-4 border-orange-500">
+                              <h4 className="font-semibold text-orange-900 mb-2">倾斜角度范围</h4>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                  <span className="text-sm text-orange-700">最小角度:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.reclineAngle.minAngle}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">最大角度:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.reclineAngle.maxAngle}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">角度范围:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.internal.reclineAngle.range}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="mt-2">
+                                <span className="text-sm text-orange-700">倾斜档位:</span>
+                                <span className="text-lg font-bold text-orange-900 ml-2">
+                                  {designResults.internalDimensions.internal.reclineAngle.positions} 档
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* 安全系统 */}
+                            <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-l-4 border-orange-500">
+                              <h4 className="font-semibold text-orange-900 mb-2">安全系统</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div>
+                                  <span className="text-orange-700">安全带插槽:</span>
+                                  <span className="font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.safetySystem.harnessSlots} 个
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-orange-700">安全带长度:</span>
+                                  <span className="font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.safetySystem.harnessLength} cm
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-orange-700">胸部夹扣:</span>
+                                  <span className="font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.safetySystem.chestClip}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-orange-700">侧撞保护:</span>
+                                  <span className="font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.safetySystem.sideImpactProtection}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 容量规格 */}
+                            <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-l-4 border-orange-500">
+                              <h4 className="font-semibold text-orange-900 mb-2">容量规格</h4>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                  <span className="text-sm text-orange-700">最大身高:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.capacity.maxHeight} cm
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">最大重量:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.capacity.maxWeight} kg
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-sm text-orange-700">最大年龄:</span>
+                                  <span className="text-lg font-bold text-orange-900 ml-2">
+                                    {designResults.internalDimensions.capacity.maxAge}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* 尺寸计算标签页 */}
           <TabsContent value="dimensions">
