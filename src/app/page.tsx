@@ -1134,6 +1134,54 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           </CardHeader>
         </Card>
 
+        {/* 手机安装引导卡片 - 仅在未安装时显示 */}
+        {!isInstalled && (
+          <Card className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="text-6xl">📱</div>
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-2xl font-bold mb-2">安装到手机，随时使用</h3>
+                  <p className="text-blue-100 mb-4">
+                    添加到主屏幕，离线也能使用，无需下载APP！
+                  </p>
+                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                    <Badge className="bg-white/20 text-white border border-white/30">
+                      Chrome浏览器
+                    </Badge>
+                    <Badge className="bg-white/20 text-white border border-white/30">
+                      安卓/iOS都支持
+                    </Badge>
+                    <Badge className="bg-white/20 text-white border border-white/30">
+                      免费永久使用
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={handleInstallClick}
+                    className="bg-white text-purple-600 hover:bg-blue-50 font-bold px-8 py-6 text-lg"
+                  >
+                    立即安装
+                  </Button>
+                  {!deferredPrompt && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-transparent text-white border-white/50 hover:bg-white/20"
+                      onClick={() => window.open('https://github.com/your-repo/blob/main/docs/手机安装指南.md', '_blank')}
+                    >
+                      查看安装教程
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <Card className="bg-white/95 backdrop-blur">
