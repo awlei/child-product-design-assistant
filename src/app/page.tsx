@@ -120,6 +120,12 @@ export default function ChildSafetyChairApp() {
   const [imageStyle, setImageStyle] = useState<'simple' | 'detailed' | 'cartoon'>('simple');
   const [gpsActiveTab, setGpsActiveTab] = useState('data-analysis');
 
+  // R129智能设计助手状态
+  const [r129Height, setR129Height] = useState('');
+  const [r129Consulting, setR129Consulting] = useState(false);
+  const [r129Response, setR129Response] = useState('');
+  const [r129StreamContent, setR129StreamContent] = useState('');
+
   const [hicLimit, setHicLimit] = useState(1000);
   const [accelerationLimit, setAccelerationLimit] = useState(50);
   const [injuryCriteria, setInjuryCriteria] = useState<string[]>([]);
@@ -253,6 +259,70 @@ export default function ChildSafetyChairApp() {
     };
     setInjuryResult(result);
     return result;
+  };
+
+  // R129智能设计助手函数
+  const consultR129Expert = async () => {
+    const height = parseInt(r129Height);
+    if (!height || height < 0 || height > 200) {
+      alert('请输入有效的身高（0-200cm）');
+      return;
+    }
+
+    setR129Consulting(true);
+    setR129Response('');
+    setR129StreamContent('');
+
+    try {
+      const response = await fetch('/api/r129-consultant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ height: height.toString() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('请求失败');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        let fullContent = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  fullContent += parsed.content;
+                  setR129StreamContent(fullContent);
+                }
+              } catch (e) {
+                // 忽略解析错误
+              }
+            }
+          }
+        }
+        setR129Response(fullContent);
+      }
+    } catch (error) {
+      console.error('R129 consultation error:', error);
+      setR129Response('咨询失败，请稍后重试');
+    } finally {
+      setR129Consulting(false);
+    }
   };
 
   // GPS人体测量工具辅助函数
@@ -429,10 +499,11 @@ export default function ChildSafetyChairApp() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <Card className="bg-white/95 backdrop-blur">
             <CardHeader>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="dimensions">尺寸计算</TabsTrigger>
                 <TabsTrigger value="injury">伤害指标</TabsTrigger>
                 <TabsTrigger value="gps-anthro">GPS人体测量</TabsTrigger>
+                <TabsTrigger value="r129-expert">R129专家</TabsTrigger>
                 <TabsTrigger value="config">配置</TabsTrigger>
               </TabsList>
             </CardHeader>
@@ -1077,6 +1148,118 @@ export default function ChildSafetyChairApp() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* R129智能设计助手标签页 */}
+          <TabsContent value="r129-expert">
+            <Card className="bg-white/95 backdrop-blur">
+              <CardHeader>
+                <CardTitle>R129智能设计助手</CardTitle>
+                <CardDescription>基于ECE R129（i-Size）标准的智能设计咨询</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label htmlFor="r129HeightInput">儿童身高 (cm) *</Label>
+                  <Input
+                    id="r129HeightInput"
+                    type="number"
+                    placeholder="输入儿童身高，例如：105"
+                    value={r129Height}
+                    onChange={(e) => setR129Height(e.target.value)}
+                    min="0"
+                    max="200"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">范围：0-200 cm</p>
+                </div>
+
+                <Button
+                  onClick={consultR129Expert}
+                  disabled={r129Consulting || !r129Height}
+                  className="w-full"
+                  style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
+                  size="lg"
+                >
+                  {r129Consulting ? '🤖 AI分析中...' : '🎓 咨询R129专家'}
+                </Button>
+
+                {/* AI响应显示区域 */}
+                {r129StreamContent && (
+                  <Card className="bg-gradient-to-br from-violet-50 to-purple-50 border-2 border-violet-200">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          📋 R129设计建议报告
+                        </CardTitle>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const content = r129StreamContent;
+                            const blob = new Blob([content], { type: 'text/markdown' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `R129-设计报告-${r129Height}cm.md`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                          }}
+                        >
+                          📥 导出报告
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm max-w-none prose-violet">
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: r129StreamContent
+                              .replace(/### /g, '<h3 class="text-lg font-bold text-violet-900 mt-6 mb-3">')
+                              .replace(/## /g, '<h2 class="text-xl font-bold text-violet-900 mt-6 mb-3">')
+                              .replace(/# /g, '<h1 class="text-2xl font-bold text-violet-900 mt-6 mb-3">')
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-violet-700">$1</strong>')
+                              .replace(/^- /g, '<li class="ml-4 text-gray-700">')
+                              .replace(/\n/g, '<br/>')
+                              .replace(/<li class="ml-4 text-gray-700">/g, '<li class="ml-4 text-gray-700">')
+                              .replace(/<br\/>/g, '<br/>'),
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 加载中提示 */}
+                {r129Consulting && (
+                  <Card className="border-2 border-blue-200 bg-blue-50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 border-3 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                        <p className="text-blue-900 font-medium">AI专家正在分析R129标准，请稍候...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 功能说明 */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                  <h4 className="font-semibold text-blue-900 mb-2">功能说明</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• 基于ECE R129（i-Size）最新标准提供专业建议</li>
+                    <li>• 自动判断身高组别和ISOFIX尺寸分类</li>
+                    <li>• 提供详细的设计建议和碰撞测试矩阵</li>
+                    <li>• 支持导出Markdown格式的专业报告</li>
+                  </ul>
+                  <h4 className="font-semibold text-blue-900 mt-4 mb-2">输入范围</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• 婴儿提篮：40-83 cm（15个月以下）</li>
+                    <li>• 后向座椅：40-105 cm</li>
+                    <li>• 增高垫：100-150 cm</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* 配置标签页 */}
