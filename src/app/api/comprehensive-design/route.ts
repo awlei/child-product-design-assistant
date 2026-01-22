@@ -99,13 +99,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { minHeight, maxHeight, minWeight, maxWeight, standard } = body;
 
-    // 验证输入
-    if (!minHeight || !maxHeight || !minWeight || !maxWeight || !standard) {
+    // 验证输入 - 至少需要提供身高范围或重量范围中的一种
+    const hasHeightRange = minHeight && maxHeight;
+    const hasWeightRange = minWeight && maxWeight;
+
+    if (!hasHeightRange && !hasWeightRange) {
       return NextResponse.json(
-        { error: '请提供完整的身高、体重范围和标准信息' },
+        { error: '请至少提供身高范围或重量范围' },
         { status: 400 }
       );
     }
+
+    if (!standard) {
+      return NextResponse.json(
+        { error: '请提供测试标准（R129或R44）' },
+        { status: 400 }
+      );
+    }
+
+    // 如果只提供了一种范围，自动补充另一种的默认值
+    const finalMinHeight = minHeight || '40';
+    const finalMaxHeight = maxHeight || '150';
+    const finalMinWeight = minWeight || '0';
+    const finalMaxWeight = maxWeight || '50';
 
     const config = new Config();
     const llmClient = new LLMClient(config);
@@ -113,9 +129,12 @@ export async function POST(request: NextRequest) {
 
     // 1. 生成设计方案
     const designPrompt = `现在请根据以下信息生成完整设计方案：
-- 身高范围：${minHeight} cm - ${maxHeight} cm
-- 体重范围：${minWeight} kg - ${maxWeight} kg
+- 身高范围：${finalMinHeight} cm - ${finalMaxHeight} cm
+- 体重范围：${finalMinWeight} kg - ${finalMaxWeight} kg
 - 选择的标准：${standard}
+
+${hasHeightRange ? '注意：用户提供了身高范围作为主要设计依据。' : ''}
+${hasWeightRange ? '注意：用户提供了体重范围作为主要设计依据。' : ''}
 
 请生成包含假人矩阵、ISOFIX尺寸分类、碰撞测试矩阵、产品内部尺寸设计和设计建议的完整报告。`;
 
@@ -151,8 +170,8 @@ export async function POST(request: NextRequest) {
     if (brandResults.length > 0) {
       const comparisonInput = `
 用户设计方案参数：
-- 身高范围：${minHeight} cm - ${maxHeight} cm
-- 体重范围：${minWeight} kg - ${maxWeight} kg
+- 身高范围：${finalMinHeight} cm - ${finalMaxHeight} cm
+- 体重范围：${finalMinWeight} kg - ${finalMaxWeight} kg
 - 选择的标准：${standard}
 
 搜索到的品牌产品信息：

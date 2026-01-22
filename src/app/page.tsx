@@ -175,39 +175,52 @@ export default function ChildSafetyChairApp() {
     setDesignContent('');
     setDesignResults(null);
 
-    try {
-      const { inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType } = designInput;
+    const { inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType } = designInput;
 
-      // 验证输入
-      if (inputType === 'height') {
-        if (!minHeight || !maxHeight || parseInt(minHeight) < 40 || parseInt(maxHeight) > 150) {
-          showToastMessage('❌ 请输入有效的身高范围（40-150cm）', 'error');
-          setIsCalculating(false);
-          return;
-        }
-      } else {
-        if (!minWeight || !maxWeight || parseFloat(minWeight) < 0 || parseFloat(maxWeight) > 50) {
-          showToastMessage('❌ 请输入有效的重量范围（0-50kg）', 'error');
-          setIsCalculating(false);
-          return;
-        }
+    // 验证输入
+    if (inputType === 'height') {
+      if (!minHeight || !maxHeight || parseInt(minHeight) < 40 || parseInt(maxHeight) > 150) {
+        showToastMessage('❌ 请输入有效的身高范围（40-150cm）', 'error');
+        setIsCalculating(false);
+        return;
       }
+    } else {
+      if (!minWeight || !maxWeight || parseFloat(minWeight) < 0 || parseFloat(maxWeight) > 50) {
+        showToastMessage('❌ 请输入有效的重量范围（0-50kg）', 'error');
+        setIsCalculating(false);
+        return;
+      }
+    }
 
+    // 准备请求数据
+    const requestData: any = {
+      minHeight: inputType === 'height' ? minHeight : undefined,
+      maxHeight: inputType === 'height' ? maxHeight : undefined,
+      minWeight: inputType === 'weight' ? minWeight : undefined,
+      maxWeight: inputType === 'weight' ? maxWeight : undefined,
+      standard,
+    };
+
+    // 创建超时控制器（120秒）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 120000);
+
+    try {
       // 调用API获取综合设计结果
       const response = await fetch('/api/comprehensive-design', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          minHeight,
-          maxHeight,
-          minWeight,
-          maxWeight,
-          standard,
-        }),
+        body: JSON.stringify(requestData),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('API请求失败');
+        const errorData = await response.json().catch(() => ({ error: '未知错误' }));
+        throw new Error(errorData.error || `API请求失败 (${response.status})`);
       }
 
       // 处理流式响应
@@ -253,22 +266,36 @@ export default function ChildSafetyChairApp() {
       }
 
       // 使用本地计算生成结构化数据用于表格展示
-      const dummyMatrix = generateDummyMatrix(inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType);
-      const isoClass = calculateISOClass(dummyMatrix);
-      const testMatrix = generateTestMatrixForDesign(dummyMatrix, standard, productType);
-      const internalDimensions = calculateInternalDimensions(dummyMatrix, productType);
+      try {
+        const dummyMatrix = generateDummyMatrix(inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType);
+        const isoClass = calculateISOClass(dummyMatrix);
+        const testMatrix = generateTestMatrixForDesign(dummyMatrix, standard, productType);
+        const internalDimensions = calculateInternalDimensions(dummyMatrix, productType);
 
-      setDesignResults({
-        dummyMatrix,
-        isoClass,
-        testMatrix,
-        internalDimensions,
-      });
+        setDesignResults({
+          dummyMatrix,
+          isoClass,
+          testMatrix,
+          internalDimensions,
+        });
+      } catch (localError) {
+        console.error('本地计算失败:', localError);
+      }
 
       showToastMessage('✅ 综合设计计算完成', 'success');
     } catch (error) {
       console.error('综合设计计算失败:', error);
-      showToastMessage('❌ 计算失败，请重试', 'error');
+
+      let errorMessage = '❌ 计算失败，请重试';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = '❌ 请求超时，请检查网络连接后重试';
+        } else {
+          errorMessage = `❌ ${error.message}`;
+        }
+      }
+
+      showToastMessage(errorMessage, 'error');
     } finally {
       setIsCalculating(false);
     }
