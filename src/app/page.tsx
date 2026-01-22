@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,7 @@ interface CozeConfig {
 }
 
 export default function ChildSafetyChairApp() {
+  const router = useRouter();
   const [globalHeight, setGlobalHeight] = useState(100);
   const [useCloudEngine, setUseCloudEngine] = useState(true);
   const [currentScheme, setCurrentScheme] = useState<ConfigScheme>('none');
@@ -246,6 +248,13 @@ export default function ChildSafetyChairApp() {
                 style={!useCloudEngine ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
               >
                 本地计算
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push('/gps-anthro')}
+                className="relative"
+              >
+                📊 GPS人体测量工具
               </Button>
               {useCloudEngine ? (
                 <Badge className="bg-gradient-to-r from-violet-500 to-purple-500">扣子智能体</Badge>
