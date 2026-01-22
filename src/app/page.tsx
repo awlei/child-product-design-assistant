@@ -160,24 +160,102 @@ export default function ChildSafetyChairApp() {
   } | null>(null);
 
   const [isCalculating, setIsCalculating] = useState(false);
+  const [brandComparison, setBrandComparison] = useState<{
+    analysis: string;
+    brands: Array<{ brand: string; products: any[] }>;
+  } | null>(null);
+  const [isSearchingBrands, setIsSearchingBrands] = useState(false);
+  const [designContent, setDesignContent] = useState('');
 
   // 综合计算函数
-  const calculateIntegratedDesign = () => {
+  const calculateIntegratedDesign = async () => {
     setIsCalculating(true);
+    setIsSearchingBrands(true);
+    setBrandComparison(null);
+    setDesignContent('');
+    setDesignResults(null);
 
-    setTimeout(() => {
+    try {
       const { inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType } = designInput;
 
-      // 1. 生成假人矩阵
+      // 验证输入
+      if (inputType === 'height') {
+        if (!minHeight || !maxHeight || parseInt(minHeight) < 40 || parseInt(maxHeight) > 150) {
+          showToastMessage('❌ 请输入有效的身高范围（40-150cm）', 'error');
+          setIsCalculating(false);
+          return;
+        }
+      } else {
+        if (!minWeight || !maxWeight || parseFloat(minWeight) < 0 || parseFloat(maxWeight) > 50) {
+          showToastMessage('❌ 请输入有效的重量范围（0-50kg）', 'error');
+          setIsCalculating(false);
+          return;
+        }
+      }
+
+      // 调用API获取综合设计结果
+      const response = await fetch('/api/comprehensive-design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          minHeight,
+          maxHeight,
+          minWeight,
+          maxWeight,
+          standard,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('API请求失败');
+      }
+
+      // 处理流式响应
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('无法获取响应流');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') {
+              setIsSearchingBrands(false);
+              break;
+            }
+
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (data.type === 'comparison') {
+                setBrandComparison({
+                  analysis: data.content,
+                  brands: data.brands,
+                });
+                setIsSearchingBrands(false);
+              } else if (data.type === 'design') {
+                setDesignContent(prev => prev + data.content);
+              }
+            } catch (e) {
+              // 忽略解析错误
+            }
+          }
+        }
+      }
+
+      // 使用本地计算生成结构化数据用于表格展示
       const dummyMatrix = generateDummyMatrix(inputType, minHeight, maxHeight, minWeight, maxWeight, standard, productType);
-
-      // 2. 计算ISO分类
       const isoClass = calculateISOClass(dummyMatrix);
-
-      // 3. 生成碰撞测试矩阵
       const testMatrix = generateTestMatrixForDesign(dummyMatrix, standard, productType);
-
-      // 4. 计算产品内部尺寸
       const internalDimensions = calculateInternalDimensions(dummyMatrix, productType);
 
       setDesignResults({
@@ -187,9 +265,13 @@ export default function ChildSafetyChairApp() {
         internalDimensions,
       });
 
-      setIsCalculating(false);
       showToastMessage('✅ 综合设计计算完成', 'success');
-    }, 1000);
+    } catch (error) {
+      console.error('综合设计计算失败:', error);
+      showToastMessage('❌ 计算失败，请重试', 'error');
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   // 生成假人矩阵
@@ -1068,9 +1150,81 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                 </Card>
 
                 {/* 结果展示区域 */}
-                {designResults && (
+                {(designResults || designContent || brandComparison) && (
                   <div className="space-y-6">
-                    {/* 1. 假人矩阵 */}
+                    {/* 0. 品牌对比分析 */}
+                    {isSearchingBrands && (
+                      <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50">
+                        <CardContent className="p-8 text-center">
+                          <div className="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                          <p className="text-indigo-900 font-semibold">🔍 正在搜索各大品牌产品信息...</p>
+                          <p className="text-sm text-indigo-700 mt-2">Cybex, Britax, Dorel, Graco, Maxi-Cosi</p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {brandComparison && (
+                      <Card className="border-2 border-indigo-200">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              🏢 0. 市场同类产品对比分析
+                            </CardTitle>
+                            <Badge className="bg-indigo-500">
+                              {brandComparison.brands.length} 个品牌
+                            </Badge>
+                          </div>
+                          <CardDescription>
+                            大品牌同类产品规格对比与设计建议
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {/* 品牌信息 */}
+                          <div className="mb-6">
+                            <h4 className="font-semibold text-indigo-900 mb-3">已搜索品牌</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {brandComparison.brands.map((brandItem, idx) => (
+                                <Badge key={idx} variant="outline" className="bg-indigo-50 border-indigo-300">
+                                  {brandItem.brand} ({brandItem.products.length} 款产品)
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* 对比分析内容 */}
+                          <div className="prose prose-sm max-w-none bg-white p-6 rounded-lg border border-indigo-100">
+                            <div className="whitespace-pre-wrap text-gray-700">
+                              {brandComparison.analysis}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* AI设计建议 */}
+                    {designContent && (
+                      <Card className="border-2 border-purple-200">
+                        <CardHeader>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            🤖 AI设计建议
+                          </CardTitle>
+                          <CardDescription>
+                            基于R129标准的智能化设计方案
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="prose prose-sm max-w-none bg-white p-6 rounded-lg border border-purple-100">
+                            <div className="whitespace-pre-wrap text-gray-700">
+                              {designContent}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {designResults && (
+                      <>
+                        {/* 1. 假人矩阵 */}
                     <Card className="border-2 border-violet-200">
                       <CardHeader>
                         <div className="flex items-center justify-between">
@@ -1419,6 +1573,8 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                         )}
                       </CardContent>
                     </Card>
+                  </>
+                    )}
                   </div>
                 )}
               </CardContent>
