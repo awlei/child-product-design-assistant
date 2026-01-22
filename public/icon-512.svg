@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#667eea"/>
+  <g transform="translate(128, 100)">
+    <!-- 座椅底座 -->
+    <path d="M20 280 L220 280 L250 320 L0 320 Z" fill="#764ba2"/>
+    <!-- 座椅主体 -->
+    <path d="M40 80 L200 80 L200 270 L40 270 Z" fill="#8b5cf6" stroke="#ffffff" stroke-width="8" rx="25"/>
+    <!-- 头枕 -->
+    <path d="M55 15 L185 15 L185 80 L55 80 Z" fill="#8b5cf6" stroke="#ffffff" stroke-width="8" rx="15"/>
+    <!-- 安全带 -->
+    <path d="M95 110 L95 200 L145 200 L145 110" stroke="#ffffff" stroke-width="12" fill="none"/>
+    <circle cx="120" cy="155" r="18" fill="#ffffff"/>
+    <!-- 儿童图标 -->
+    <circle cx="120" cy="50" r="25" fill="#fbbf24"/>
+    <path d="M100 80 L140 80 L140 150 L100 150 Z" fill="#fbbf24"/>
+  </g>
+  <!-- 文字 -->
+  <text x="256" y="430" text-anchor="middle" fill="#ffffff" font-size="48" font-weight="bold">座椅助手</text>
+  <text x="256" y="475" text-anchor="middle" fill="#ffffff" font-size="24" opacity="0.9">儿童安全座椅设计</text>
+</svg>

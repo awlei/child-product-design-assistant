@@ -1,0 +1,40 @@
+{
+  "name": "儿童安全座椅设计助手",
+  "short_name": "座椅助手",
+  "description": "专业的儿童安全座椅尺寸计算与伤害指标分析工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "shortcuts": [
+    {
+      "name": "尺寸计算",
+      "short_name": "尺寸",
+      "description": "快速计算座椅尺寸",
+      "url": "/#dimensions"
+    },
+    {
+      "name": "伤害指标",
+      "short_name": "伤害",
+      "description": "伤害指标检查",
+      "url": "/#injury"
+    }
+  ]
+}
