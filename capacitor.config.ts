@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.childproductdesign.assistant',
   appName: '儿童产品设计助手',
-  webDir: 'out',  // 修改为 out 目录（Next.js 静态导出输出）
+  webDir: 'out',  // 使用 Next.js 静态导出输出
   server: {
     androidScheme: 'https'
   },
