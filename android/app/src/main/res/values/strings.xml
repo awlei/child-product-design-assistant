@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">儿童产品设计助手</string>
+    <string name="title_activity_main">Child Product Design Assistant</string>
+    <string name="package_name">com.childproductdesign.assistant</string>
+    <string name="custom_url_scheme">com.childproductdesign.assistant</string>
+</resources>
