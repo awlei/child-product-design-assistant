@@ -50,15 +50,16 @@ jobs:
       # 构建Android APK
       - name: Build APK
         run: |
-          if [ -d "android" ]; then
-            echo "Android platform already exists, syncing..."
-            npx cap sync android
-          else
-            echo "Adding Android platform..."
-            npx cap add android
-            npx cap sync android
-          fi
+          echo "Cleaning Android directory..."
+          rm -rf android
+          echo "Adding Android platform..."
+          npx cap add android
+          echo "Syncing Android platform..."
+          npx cap sync android
+          echo "Setting Gradle permissions..."
           cd android
+          chmod +x gradlew
+          echo "Building APK..."
           ./gradlew assembleDebug
 
       # 上传APK文件
