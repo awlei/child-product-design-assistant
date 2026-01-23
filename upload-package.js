@@ -13,8 +13,8 @@ async function uploadPackage() {
     region: "cn-beijing",
   });
 
-  const packagePath = '/workspace/projects/child-product-design-assistant-v8.0.0-mobile.tar.gz';
-  const fileName = 'child-product-design-assistant-v8.0.0-mobile.tar.gz';
+  const packagePath = '/workspace/projects/child-product-design-assistant-v8.0.0-android-complete.tar.gz';
+  const fileName = 'child-product-design-assistant-v8.0.0-android-complete.tar.gz';
 
   // 读取文件内容
   const fileContent = fs.readFileSync(packagePath);
