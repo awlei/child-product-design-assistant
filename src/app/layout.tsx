@@ -4,23 +4,28 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: '儿童安全座椅设计助手_PWA_V7.5.0_免费智能体版',
-    template: '%s | 儿童安全座椅设计助手',
+    default: '儿童产品设计助手_PWA_V8.0.0_免费智能体版',
+    template: '%s | 儿童产品设计助手',
   },
   description:
-    '专业的儿童安全座椅尺寸计算与伤害指标分析工具，支持云端智能体和本地计算两种模式，提供免费的智能体服务。',
+    '专业的儿童产品设计助手，支持婴儿推车、儿童安全座椅、儿童高脚椅、婴儿床的尺寸计算、伤害指标分析与智能设计建议，提供云端智能体和本地计算两种模式，完全免费。',
   keywords: [
+    '儿童产品设计',
+    '婴儿推车',
     '儿童安全座椅',
-    '安全座椅尺寸',
+    '儿童高脚椅',
+    '婴儿床',
+    '尺寸计算',
     '伤害指标',
     'HIC',
     '3ms加速度',
-    '安全设计',
-    '智能体',
+    'ECE R129',
+    'FMVSS 213',
+    '智能设计',
     'PWA',
     '移动应用',
   ],
-  authors: [{ name: '儿童安全座椅设计团队' }],
+  authors: [{ name: '儿童产品设计团队' }],
   generator: 'Next.js PWA',
   manifest: '/manifest.json',
   viewport: {
