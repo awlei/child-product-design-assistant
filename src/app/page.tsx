@@ -15,6 +15,21 @@ import { Checkbox } from '@/components/ui/checkbox';
 type EngineMode = 'cloud' | 'local';
 type ConfigScheme = 'none' | 'bot' | 'workflow' | 'local';
 type StandardType = 'R129' | 'FMVSS213';
+type ProductType = 'stroller' | 'car-seat' | 'high-chair' | 'crib';
+
+interface ProductTypeOption {
+  value: ProductType;
+  labelCN: string;
+  labelEN: string;
+  icon: string;
+}
+
+const PRODUCT_TYPES: ProductTypeOption[] = [
+  { value: 'stroller', labelCN: '婴儿推车', labelEN: 'Baby Stroller', icon: '👶' },
+  { value: 'car-seat', labelCN: '儿童安全座椅', labelEN: 'Child Car Seat', icon: '🚗' },
+  { value: 'high-chair', labelCN: '儿童高脚椅', labelEN: 'High Chair', icon: '🪑' },
+  { value: 'crib', labelCN: '婴儿床', labelEN: 'Baby Crib', icon: '🛏️' },
+];
 
 interface ChildData {
   age: string;
@@ -67,6 +82,7 @@ export default function ChildSafetyChairApp() {
   const router = useRouter();
   const [globalHeight, setGlobalHeight] = useState(100);
   const [selectedStandard, setSelectedStandard] = useState<StandardType>('R129');
+  const [selectedProductType, setSelectedProductType] = useState<ProductType>('car-seat');
   const [useCloudEngine, setUseCloudEngine] = useState(true);
   const [currentScheme, setCurrentScheme] = useState<ConfigScheme>('none');
   const [cozeConfig, setCozeConfig] = useState<CozeConfig>({
@@ -166,6 +182,11 @@ export default function ChildSafetyChairApp() {
       standard: selectedStandard,
     }));
   }, [selectedStandard]);
+
+  // 根据产品类型获取中英文名称
+  const getProductTypeName = () => {
+    return PRODUCT_TYPES.find(t => t.value === selectedProductType) || PRODUCT_TYPES[1]; // 默认 car-seat
+  };
 
   const [designResults, setDesignResults] = useState<{
     dummyMatrix: any[];
@@ -1103,10 +1124,10 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <CardTitle className="text-2xl" style={{ color: '#667eea' }}>
-                  儿童安全座椅设计助手
+                  儿童产品设计助手 <span className="text-lg">/ Child Product Design Assistant</span>
                 </CardTitle>
                 <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold px-3 py-1">
-                  V7.5.0
+                  V8.0.0
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
@@ -1120,6 +1141,29 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                 )}
               </div>
             </div>
+
+            {/* 产品类型选择器 */}
+            <div className="flex items-center gap-4 mt-4 flex-wrap">
+              <span className="font-semibold text-sm text-gray-600">产品类型 / Product Type：</span>
+              <div className="flex flex-wrap gap-2">
+                {PRODUCT_TYPES.map((type) => (
+                  <Button
+                    key={type.value}
+                    variant={selectedProductType === type.value ? 'default' : 'outline'}
+                    onClick={() => setSelectedProductType(type.value)}
+                    className="relative"
+                    style={selectedProductType === type.value ? { background: 'linear-gradient(135deg, #667eea, #764ba2)' } : {}}
+                  >
+                    <span className="mr-1">{type.icon}</span>
+                    <span className="text-sm">
+                      <span className="font-medium">{type.labelCN}</span>
+                      <span className="ml-1 text-xs opacity-80">/ {type.labelEN}</span>
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center gap-4 mt-4 flex-wrap">
               <span className="font-semibold text-sm text-gray-600">计算引擎：</span>
               <Button
@@ -1226,9 +1270,9 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
               </div>
 
               <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="integrated-design">综合设计</TabsTrigger>
-                <TabsTrigger value="dimensions">尺寸计算</TabsTrigger>
-                <TabsTrigger value="injury">伤害指标</TabsTrigger>
+                <TabsTrigger value="integrated-design">综合设计 / Design</TabsTrigger>
+                <TabsTrigger value="dimensions">尺寸计算 / Size</TabsTrigger>
+                <TabsTrigger value="injury">伤害指标 / Injury</TabsTrigger>
                 <TabsTrigger value="gps-anthro">GPS人体测量</TabsTrigger>
                 <TabsTrigger value="r129-expert">
                   {selectedStandard === 'FMVSS213' ? 'FMVSS专家' : 'R129专家'}
@@ -1243,7 +1287,8 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
                 <CardTitle>
-                  {selectedStandard === 'FMVSS213' ? '儿童安全座椅综合设计助手 (美国FMVSS 213)' : '儿童安全座椅综合设计助手 (ECE R129)'}
+                  {getProductTypeName().labelCN} 综合设计助手 / Integrated Design Assistant
+                  {selectedStandard === 'FMVSS213' ? ' (FMVSS 213)' : ' (ECE R129)'}
                 </CardTitle>
                 <CardDescription>
                   输入身高或重量范围，自动生成完整的测试矩阵和产品尺寸规格
@@ -1381,7 +1426,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                       style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
                       size="lg"
                     >
-                      {isCalculating ? '🔄 计算中...' : '🚀 生成设计报告'}
+                      {isCalculating ? '🔄 计算中 / Calculating...' : '🚀 生成设计报告 / Generate Report'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -1443,7 +1488,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                       <Card className="border-2 border-purple-200">
                         <CardHeader>
                           <CardTitle className="text-lg flex items-center gap-2">
-                            🤖 AI设计建议
+                            🤖 AI设计建议 / AI Design Recommendations
                           </CardTitle>
                           <CardDescription>
                             基于R129标准的智能化设计方案
@@ -1823,10 +1868,11 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
                 <CardTitle>
-                  {selectedStandard === 'FMVSS213' ? '座椅尺寸计算 (FMVSS 213)' : '座椅尺寸计算 (R129)'}
+                  {getProductTypeName().labelCN} 尺寸计算 / Size Calculator
+                  {selectedStandard === 'FMVSS213' ? ' (FMVSS 213)' : ' (R129)'}
                 </CardTitle>
                 <CardDescription>
-                  根据儿童身高计算安全座椅的各项尺寸参数
+                  根据儿童身高计算{getProductTypeName().labelCN}的各项尺寸参数
                   {selectedStandard === 'FMVSS213' && ' · 基于美国FMVSS 213标准'}
                 </CardDescription>
               </CardHeader>
@@ -1864,13 +1910,13 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                   style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
                   size="lg"
                 >
-                  开始计算
+                  开始计算 / Calculate
                 </Button>
 
                 {dimensionsResult && (
                   <Card className="bg-blue-50 border-l-4 border-blue-500">
                     <CardHeader>
-                      <CardTitle className="text-lg">计算结果</CardTitle>
+                      <CardTitle className="text-lg">计算结果 / Calculation Results</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1893,7 +1939,8 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
                 <CardTitle>
-                  {selectedStandard === 'FMVSS213' ? '伤害指标分析 (FMVSS 213)' : '伤害指标分析 (R129)'}
+                  伤害指标分析 / Injury Analysis
+                  {selectedStandard === 'FMVSS213' ? ' (FMVSS 213)' : ' (R129)'}
                 </CardTitle>
                 <CardDescription>
                   分析碰撞测试中的各项伤害指标
@@ -1944,20 +1991,20 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                   style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
                   size="lg"
                 >
-                  开始分析
+                  开始分析 / Analyze
                 </Button>
 
                 {injuryResult && (
                   <Card className="bg-blue-50 border-l-4 border-blue-500">
                     <CardHeader>
-                      <CardTitle className="text-lg">分析结果</CardTitle>
+                      <CardTitle className="text-lg">分析结果 / Results</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {Object.entries(injuryResult).map(([key, value]) => {
                         if (key === '建议') {
                           return (
                             <div key={key} className="bg-white p-4 rounded-lg">
-                              <div className="text-sm font-semibold text-blue-600 mb-2">设计建议</div>
+                              <div className="text-sm font-semibold text-blue-600 mb-2">设计建议 / Design Recommendations</div>
                               <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
                                 {(value as string[]).map((item, index) => (
                                   <li key={index}>{item}</li>
@@ -1974,7 +2021,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                             <div className="flex justify-between items-center">
                               <span className="text-lg font-bold text-blue-800">{metric.值}</span>
                               <Badge className={isPass ? 'bg-emerald-500' : 'bg-red-500'}>
-                                {isPass ? '通过' : '未通过'}
+                                {isPass ? '通过 / Pass' : '未通过 / Fail'}
                               </Badge>
                             </div>
                             <div className="text-xs text-gray-500 mt-1">限值: {metric.限值}</div>
@@ -1994,13 +2041,13 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
               <CardHeader>
                 <Tabs value={gpsActiveTab} onValueChange={setGpsActiveTab}>
                   <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="data-analysis">数据分析</TabsTrigger>
-                    <TabsTrigger value="seat-design">座椅设计</TabsTrigger>
-                    <TabsTrigger value="test-matrix">测试矩阵</TabsTrigger>
+                    <TabsTrigger value="data-analysis">数据分析 / Analysis</TabsTrigger>
+                    <TabsTrigger value="seat-design">{getProductTypeName().labelCN}设计 / Design</TabsTrigger>
+                    <TabsTrigger value="test-matrix">测试矩阵 / Matrix</TabsTrigger>
                     <TabsTrigger value="r129-compliance">
-                      {selectedStandard === 'FMVSS213' ? 'FMVSS法规' : 'R129法规'}
+                      {selectedStandard === 'FMVSS213' ? 'FMVSS法规 / FMVSS' : 'R129法规 / R129'}
                     </TabsTrigger>
-                    <TabsTrigger value="dummies">假人数据</TabsTrigger>
+                    <TabsTrigger value="dummies">假人数据 / Dummies</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </CardHeader>
@@ -2010,7 +2057,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             {gpsActiveTab === 'data-analysis' && (
               <Card className="bg-white/95 backdrop-blur">
                 <CardHeader>
-                  <CardTitle>儿童人体测量数据</CardTitle>
+                  <CardTitle>儿童人体测量数据 / Child Anthropometric Data</CardTitle>
                   <CardDescription>查询和分析不同地区儿童的身高体重数据</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -2121,8 +2168,8 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             {gpsActiveTab === 'seat-design' && (
               <Card className="bg-white/95 backdrop-blur">
                 <CardHeader>
-                  <CardTitle>座椅尺寸计算器</CardTitle>
-                  <CardDescription>根据儿童身高计算座椅的关键尺寸，并生成简笔画示意图</CardDescription>
+                  <CardTitle>{getProductTypeName().labelCN} 尺寸计算器 / Product Size Calculator</CardTitle>
+                  <CardDescription>根据儿童身高计算{getProductTypeName().labelCN}的关键尺寸，并生成简笔画示意图</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -2409,7 +2456,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             {gpsActiveTab === 'test-matrix' && (
               <Card className="bg-white/95 backdrop-blur">
                 <CardHeader>
-                  <CardTitle>动态测试矩阵生成器</CardTitle>
+                  <CardTitle>动态测试矩阵生成器 / Test Matrix Generator</CardTitle>
                   <CardDescription>
                     {selectedStandard === 'FMVSS213'
                       ? '基于FMVSS 213标准生成动态测试矩阵，支持导出为Excel格式'
@@ -2588,7 +2635,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             {gpsActiveTab === 'dummies' && (
               <Card className="bg-white/95 backdrop-blur">
                 <CardHeader>
-                  <CardTitle>碰撞测试假人数据</CardTitle>
+                  <CardTitle>碰撞测试假人数据 / Crash Test Dummy Data</CardTitle>
                   <CardDescription>用于碰撞测试的ATD假人规格</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -2653,7 +2700,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                             <td className="text-right p-3">{dummy.mass}</td>
                             <td className="text-right p-3">
                               <Button size="sm" variant="outline">
-                                选择
+                                选择 / Select
                               </Button>
                             </td>
                           </tr>
@@ -2671,7 +2718,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
                 <CardTitle>
-                  {selectedStandard === 'FMVSS213' ? 'FMVSS 213智能设计助手' : 'R129智能设计助手'}
+                  {selectedStandard === 'FMVSS213' ? 'FMVSS 213专家 / FMVSS Expert' : 'R129专家 / R129 Expert'}
                 </CardTitle>
                 <CardDescription>
                   {selectedStandard === 'FMVSS213'
