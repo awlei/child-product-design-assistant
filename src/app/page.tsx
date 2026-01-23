@@ -159,11 +159,6 @@ export default function ChildSafetyChairApp() {
   const [accelerationLimit, setAccelerationLimit] = useState(50);
   const [injuryCriteria, setInjuryCriteria] = useState<string[]>([]);
 
-  // PWA安装状态
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-
   // 综合设计状态
   const [designInput, setDesignInput] = useState({
     inputType: 'height', // 'height' or 'weight'
@@ -532,73 +527,6 @@ export default function ChildSafetyChairApp() {
     updateInjuryLimits();
     loadGpsData();
   }, []);
-
-  // PWA安装提示
-  useEffect(() => {
-    // 检查是否已经安装
-    const checkInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches ||
-          window.matchMedia('(display-mode: minimal-ui)').matches) {
-        setIsInstalled(true);
-      }
-    };
-    checkInstalled();
-
-    // 监听 beforeinstallprompt 事件
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallPrompt(true);
-      console.log('PWA安装提示已触发');
-    };
-
-    // 监听应用安装事件
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setShowInstallPrompt(false);
-      setDeferredPrompt(null);
-      console.log('PWA已安装');
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  // PWA安装处理函数
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      showToastMessage('PWA安装不可用，请使用Chrome浏览器访问', 'error');
-      return;
-    }
-
-    try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`用户选择: ${outcome}`);
-
-      if (outcome === 'accepted') {
-        showToastMessage('开始安装...', 'success');
-      } else {
-        showToastMessage('安装已取消', 'warning');
-      }
-
-      setShowInstallPrompt(false);
-      setDeferredPrompt(null);
-    } catch (error) {
-      console.error('PWA安装失败:', error);
-      showToastMessage('安装失败，请稍后重试', 'error');
-    }
-  };
-
-  const dismissInstallPrompt = () => {
-    setShowInstallPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
-  };
 
   // 加载GPS人体测量数据
   const loadGpsData = async () => {
@@ -1083,50 +1011,15 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="container mx-auto p-4">
-        {/* PWA安装提示 */}
-        {showInstallPrompt && !isInstalled && (
-          <Card className="mb-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl">📱</div>
-                  <div>
-                    <div className="font-bold text-lg">安装到手机</div>
-                    <div className="text-sm text-blue-100">添加到主屏幕，使用更便捷</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleInstallClick}
-                    className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
-                  >
-                    立即安装
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={dismissInstallPrompt}
-                    className="text-white hover:bg-white/20"
-                  >
-                    暂不安装
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Header */}
         <Card className="mb-6 bg-white/95 backdrop-blur">
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                <CardTitle className="text-2xl" style={{ color: '#667eea' }}>
-                  儿童产品设计助手 <span className="text-lg">/ Child Product Design Assistant</span>
+                <CardTitle className="text-xl md:text-2xl" style={{ color: '#667eea' }}>
+                  儿童产品设计助手 <span className="text-sm md:text-lg">/ Child Product Design Assistant</span>
                 </CardTitle>
-                <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold px-3 py-1">
+                <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold px-2 py-1">
                   V8.0.0
                 </Badge>
               </div>
@@ -1134,11 +1027,6 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                 <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs">
                   免费智能体版
                 </Badge>
-                {isInstalled && (
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs">
-                    已安装
-                  </Badge>
-                )}
               </div>
             </div>
 
@@ -1191,54 +1079,6 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           </CardHeader>
         </Card>
 
-        {/* 手机安装引导卡片 - 仅在未安装时显示 */}
-        {!isInstalled && (
-          <Card className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="text-6xl">📱</div>
-                <div className="flex-1 text-center md:text-left">
-                  <h3 className="text-2xl font-bold mb-2">安装到手机，随时使用</h3>
-                  <p className="text-blue-100 mb-4">
-                    添加到主屏幕，离线也能使用，无需下载APP！
-                  </p>
-                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <Badge className="bg-white/20 text-white border border-white/30">
-                      Chrome浏览器
-                    </Badge>
-                    <Badge className="bg-white/20 text-white border border-white/30">
-                      安卓/iOS都支持
-                    </Badge>
-                    <Badge className="bg-white/20 text-white border border-white/30">
-                      免费永久使用
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    onClick={handleInstallClick}
-                    className="bg-white text-purple-600 hover:bg-blue-50 font-bold px-8 py-6 text-lg"
-                  >
-                    立即安装
-                  </Button>
-                  {!deferredPrompt && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-transparent text-white border-white/50 hover:bg-white/20"
-                      onClick={() => window.open('https://github.com/your-repo/blob/main/docs/手机安装指南.md', '_blank')}
-                    >
-                      查看安装教程
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <Card className="bg-white/95 backdrop-blur">
@@ -1248,7 +1088,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                 <div className="flex items-center gap-2">
                   <Label htmlFor="standard-select" className="text-sm font-medium">选择标准：</Label>
                   <Select value={selectedStandard} onValueChange={(value) => setSelectedStandard(value as StandardType)}>
-                    <SelectTrigger id="standard-select" className="w-[200px]">
+                    <SelectTrigger id="standard-select" className="w-[180px] md:w-[200px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1269,15 +1109,35 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                 )}
               </div>
 
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="integrated-design">综合设计 / Design</TabsTrigger>
-                <TabsTrigger value="dimensions">尺寸计算 / Size</TabsTrigger>
-                <TabsTrigger value="injury">伤害指标 / Injury</TabsTrigger>
-                <TabsTrigger value="gps-anthro">GPS人体测量</TabsTrigger>
-                <TabsTrigger value="r129-expert">
-                  {selectedStandard === 'FMVSS213' ? 'FMVSS专家' : 'R129专家'}
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1 h-auto">
+                <TabsTrigger value="integrated-design" className="text-xs md:text-sm py-3 px-2 md:px-4">
+                  <span className="hidden md:inline">综合设计 / Design</span>
+                  <span className="md:hidden">综合设计</span>
                 </TabsTrigger>
-                <TabsTrigger value="config">配置</TabsTrigger>
+                <TabsTrigger value="dimensions" className="text-xs md:text-sm py-3 px-2 md:px-4">
+                  <span className="hidden md:inline">尺寸计算 / Size</span>
+                  <span className="md:hidden">尺寸计算</span>
+                </TabsTrigger>
+                <TabsTrigger value="injury" className="text-xs md:text-sm py-3 px-2 md:px-4">
+                  <span className="hidden md:inline">伤害指标 / Injury</span>
+                  <span className="md:hidden">伤害指标</span>
+                </TabsTrigger>
+                <TabsTrigger value="gps-anthro" className="text-xs md:text-sm py-3 px-2 md:px-4">
+                  <span className="hidden md:inline">GPS人体测量</span>
+                  <span className="md:hidden">GPS测量</span>
+                </TabsTrigger>
+                <TabsTrigger value="r129-expert" className="text-xs md:text-sm py-3 px-2 md:px-4">
+                  {selectedStandard === 'FMVSS213' ? (
+                    <span className="hidden md:inline">FMVSS专家</span>
+                  ) : (
+                    <span className="hidden md:inline">R129专家</span>
+                  )}
+                  <span className="md:hidden">标准专家</span>
+                </TabsTrigger>
+                <TabsTrigger value="config" className="text-xs md:text-sm py-3 px-2 md:px-4">
+                  <span className="hidden md:inline">配置</span>
+                  <span className="md:hidden">配置</span>
+                </TabsTrigger>
               </TabsList>
             </CardHeader>
           </Card>
@@ -2950,23 +2810,6 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           >
             {toastMessage}
           </div>
-        )}
-
-        {/* PWA安装提示 - 底部常驻提示（仅当未安装且未显示顶部提示时） */}
-        {!isInstalled && !showInstallPrompt && typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && (
-          <Card className="mt-6 bg-white/95 backdrop-blur border-2 border-dashed border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">💡</div>
-                <div className="flex-1">
-                  <div className="font-semibold text-blue-800 mb-1">安装到手机获得最佳体验</div>
-                  <div className="text-sm text-gray-600">
-                    在Chrome浏览器菜单中选择"添加到主屏幕"或点击上方安装按钮，即可离线使用！
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         {/* Loading Overlay */}
