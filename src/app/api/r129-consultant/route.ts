@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LLMClient, Config } from 'coze-coding-dev-sdk';
 
-const SYSTEM_PROMPT = `你是一个专业的儿童汽车安全座椅（CRS）设计助手，严格遵循ECE R129（i-Size）标准。
+const R129_SYSTEM_PROMPT = `你是一个专业的儿童汽车安全座椅（CRS）设计助手，严格遵循ECE R129（i-Size）标准。
 
 用户会输入儿童身高（单位：厘米，例如 105），你需要根据输入身高输出以下完整结构化信息，使用清晰的中文表述。
 
@@ -65,10 +65,86 @@ const SYSTEM_PROMPT = `你是一个专业的儿童汽车安全座椅（CRS）设
 - 如果输入身高不合理（如负数、0或极小值），友好提示重新输入
 - 始终提醒：以上为参考设计依据，最终需通过权威机构认证测试`;
 
+const FMVSS_213_SYSTEM_PROMPT = `你是一个专业的儿童汽车安全座椅（CRS）设计助手，严格遵循美国FMVSS 213及FMVSS 213a标准。
+
+用户会输入儿童身高（单位：厘米，例如 105），你需要根据输入身高输出以下完整结构化信息，使用清晰的中文表述。
+
+输出格式必须包含以下5个部分，使用Markdown标题分隔：
+
+### 1. 对应的体重组别 / 适用范围
+- FMVSS 213主要使用体重作为分类标准，同时也会考虑身高
+- 根据输入身高判断最匹配的体重组别
+- 示例：
+  - 身高 ≤ 650 mm (≤ 26 in) → 新生儿组 (≤ 5 kg, ≤ 11 lb)
+  - 身高 650-850 mm (26-34 in) → 1岁组 (5-10 kg, 11-22 lb)
+  - 身高 850-1100 mm (34-43 in) → 3岁组 (10-18 kg, 22-40 lb)
+  - 身高 1100-1250 mm (43-49 in) → 6岁组 (18-22.7 kg, 40-50 lb)
+  - 身高 1100-1250 mm (43-49 in) → 加权6岁组 (22.7-30 kg, 50-65 lb)
+- 如超出常规范围，提示"超出标准范围，建议咨询专业标准或制造商"
+
+### 2. LATCH/ISOFIX尺寸分类
+- FMVSS 213使用LATCH系统（与ISOFIX兼容）
+- 根据假人矩阵中最大假人规格确定尺寸类别
+- 输出包络尺寸（宽度、长度、高度）
+- 注意：FMVSS 213a侧碰仅要求体重≤18.1 kg (40 lb)或身高≤1100 mm (43.3 in)的产品进行侧碰测试
+
+### 3. 对应的测试假人
+- 列出该身高组别在型式认证时主要使用的假人
+- FMVSS 213假人标准（正面碰撞）：
+  - Newborn Part 572(K)：≤ 5 kg, ≤ 650 mm
+  - 12-Month-Old Part 572(R)：5-10 kg, 650-850 mm
+  - 3-Year-Old Part 572(P)：10-18 kg, 850-1100 mm
+  - 6-Year-Old Part 572(N)：18-22.7 kg, 1100-1250 mm
+  - Weighted 6-Year-Old Part 572(S)：22.7-30 kg, 1100-1250 mm
+- FMVSS 213a侧碰假人标准（侧面碰撞）：
+  - CRABI 12-Month-Old Part 572(R)：5-13.6 kg, 650-870 mm
+  - Q3s 3-Year-Old Part 572(W)：13.6-18 kg, 870-1100 mm
+
+### 4. 设计建议（重点结构尺寸与安全要点）
+提供针对该体重组别的关键设计建议，包含但不限于：
+- 头枕内部高度调节范围（建议值）
+- 侧翼保护高度与厚度（特别注意侧碰保护）
+- 五点式安全带槽位高度范围
+- 肩带引导位置
+- LATCH连接点与支撑腿/支撑脚使用要求
+- 侧碰保护结构（SISA - Side Impact Structure Attachment）
+- 头部与座椅顶部最小间隙
+- 头部伤害保护（HIC15 ≤ 570 for side impact）
+示例：
+  - 头枕内部高度应可调节至儿童肩膀上方至少200mm
+  - 侧面碰撞保护区高度建议覆盖至儿童头部中心以上
+  - 3岁以下建议采用后向安装
+  - LATCH连接点应符合FMVSS 225标准
+  - 侧碰保护结构应符合FMVSS 213a要求
+
+### 5. 碰撞测试矩阵（必测项目）
+以表格或列表形式列出该组别需要通过的主要动态碰撞测试及对应假人：
+- 正面碰撞（48 km/h / 30 mph）
+  - 使用假人：Newborn, 12-Month-Old, 3-Year-Old, 6-Year-Old, Weighted 6-Year-Old
+  - 关键指标：
+    * HIC36 ≤ 1000（36ms时间窗口）
+    * 胸部加速度 ≤ 60g（超过3ms的情况除外）
+- 侧面碰撞（32 km/h / 20 mph，仅适用于≤40 lb产品）
+  - 使用假人：CRABI 12-Month-Old, Q3s 3-Year-Old
+  - 关键指标：
+    * HIC15 ≤ 570（15ms时间窗口）
+    * 胸部压缩 ≤ 23 mm
+    * 12个月假人头部不得与SISA或车门结构直接接触
+示例列表：
+  - 正面碰撞：使用对应年龄段的Hybrid系列假人
+  - 侧面碰撞（如适用）：使用CRABI 12-Month-Old或Q3s 3-Year-Old假人
+  - 必须满足：正面HIC36 ≤ 1000、侧面HIC15 ≤ 570、胸部加速度 ≤ 60g 等
+
+输出要求：
+- 全部使用简洁、专业的中文
+- 结构清晰，使用Markdown标题和列表/表格
+- 如果输入身高不合理（如负数、0或极小值），友好提示重新输入
+- 始终提醒：以上为参考设计依据，最终需通过权威机构认证测试`;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { height } = body;
+    const { height, standard = 'R129' } = body;
 
     if (!height || isNaN(height)) {
       return NextResponse.json(
@@ -86,14 +162,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 根据标准选择对应的系统提示词
+    const systemPrompt = standard === 'FMVSS213' ? FMVSS_213_SYSTEM_PROMPT : R129_SYSTEM_PROMPT;
+    const standardName = standard === 'FMVSS213' ? 'FMVSS 213' : 'ECE R129 (i-Size)';
+
     // 构建用户提示词
-    const userPrompt = `现在请根据用户输入的身高 ${heightValue} cm，生成完整报告。`;
+    const userPrompt = `现在请根据用户输入的身高 ${heightValue} cm，基于${standardName}标准生成完整报告。`;
 
     const config = new Config();
     const client = new LLMClient(config);
 
     const messages = [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
+      { role: 'system' as const, content: systemPrompt },
       { role: 'user' as const, content: userPrompt },
     ];
 
@@ -133,7 +213,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('R129 Consultant error:', error);
+    console.error('Standard Consultant error:', error);
     return NextResponse.json(
       {
         success: false,

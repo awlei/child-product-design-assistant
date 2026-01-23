@@ -695,7 +695,7 @@ export default function ChildSafetyChairApp() {
     return result;
   };
 
-  // R129智能设计助手函数
+  // R129/FMVSS智能设计助手函数
   const consultR129Expert = async () => {
     const height = parseInt(r129Height);
     if (!height || height < 0 || height > 200) {
@@ -713,7 +713,10 @@ export default function ChildSafetyChairApp() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ height: height.toString() }),
+        body: JSON.stringify({
+          height: height.toString(),
+          standard: selectedStandard,
+        }),
       });
 
       if (!response.ok) {
@@ -1994,7 +1997,9 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                     <TabsTrigger value="data-analysis">数据分析</TabsTrigger>
                     <TabsTrigger value="seat-design">座椅设计</TabsTrigger>
                     <TabsTrigger value="test-matrix">测试矩阵</TabsTrigger>
-                    <TabsTrigger value="r129-compliance">R129法规</TabsTrigger>
+                    <TabsTrigger value="r129-compliance">
+                      {selectedStandard === 'FMVSS213' ? 'FMVSS法规' : 'R129法规'}
+                    </TabsTrigger>
                     <TabsTrigger value="dummies">假人数据</TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -2319,12 +2324,18 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
               </Card>
             )}
 
-            {/* R129法规标签页 */}
+            {/* R129/FMVSS法规标签页 */}
             {gpsActiveTab === 'r129-compliance' && (
               <Card className="bg-white/95 backdrop-blur">
                 <CardHeader>
-                  <CardTitle>R129法规适应性检查</CardTitle>
-                  <CardDescription>检查座椅设计是否符合ECE R129法规要求</CardDescription>
+                  <CardTitle>
+                    {selectedStandard === 'FMVSS213' ? 'FMVSS 213法规适应性检查' : 'R129法规适应性检查'}
+                  </CardTitle>
+                  <CardDescription>
+                    {selectedStandard === 'FMVSS213'
+                      ? '检查座椅设计是否符合美国FMVSS 213法规要求'
+                      : '检查座椅设计是否符合ECE R129法规要求'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2399,7 +2410,11 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
               <Card className="bg-white/95 backdrop-blur">
                 <CardHeader>
                   <CardTitle>动态测试矩阵生成器</CardTitle>
-                  <CardDescription>基于R129标准生成动态测试矩阵，支持导出为Excel格式</CardDescription>
+                  <CardDescription>
+                    {selectedStandard === 'FMVSS213'
+                      ? '基于FMVSS 213标准生成动态测试矩阵，支持导出为Excel格式'
+                      : '基于R129标准生成动态测试矩阵，支持导出为Excel格式'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* 配置区域 */}
@@ -2552,7 +2567,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                   <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                     <h4 className="font-semibold text-blue-900 mb-2">功能说明</h4>
                     <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• 基于R129（i-Size）标准生成动态测试矩阵</li>
+                      <li>• 基于{selectedStandard === 'FMVSS213' ? 'FMVSS 213（美国）' : 'R129（i-Size）'}标准生成动态测试矩阵</li>
                       <li>• 支持多种碰撞类型、假人类型、安装方式组合</li>
                       <li>• 自动配置测试参数（速度、安装方式等）</li>
                       <li>• 导出CSV文件，可直接导入Excel编辑</li>
@@ -2651,12 +2666,18 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
             )}
           </TabsContent>
 
-          {/* R129智能设计助手标签页 */}
+          {/* R129/FMVSS智能设计助手标签页 */}
           <TabsContent value="r129-expert">
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle>R129智能设计助手</CardTitle>
-                <CardDescription>基于ECE R129（i-Size）标准的智能设计咨询</CardDescription>
+                <CardTitle>
+                  {selectedStandard === 'FMVSS213' ? 'FMVSS 213智能设计助手' : 'R129智能设计助手'}
+                </CardTitle>
+                <CardDescription>
+                  {selectedStandard === 'FMVSS213'
+                    ? '基于美国FMVSS 213标准的智能设计咨询'
+                    : '基于ECE R129（i-Size）标准的智能设计咨询'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
@@ -2680,7 +2701,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                   style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
                   size="lg"
                 >
-                  {r129Consulting ? '🤖 AI分析中...' : '🎓 咨询R129专家'}
+                  {r129Consulting ? '🤖 AI分析中...' : `🎓 咨询${selectedStandard === 'FMVSS213' ? 'FMVSS' : 'R129'}专家`}
                 </Button>
 
                 {/* AI响应显示区域 */}
@@ -2689,7 +2710,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          📋 R129设计建议报告
+                          📋 {selectedStandard === 'FMVSS213' ? 'FMVSS 213' : 'R129'}设计建议报告
                         </CardTitle>
                         <Button
                           size="sm"
@@ -2700,7 +2721,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                             const url = window.URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = `R129-设计报告-${r129Height}cm.md`;
+                            a.download = `${selectedStandard === 'FMVSS213' ? 'FMVSS-213' : 'R129'}-设计报告-${r129Height}cm.md`;
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);
