@@ -1,0 +1,209 @@
+{
+  "standard": "FMVSS 213",
+  "name": "美国联邦机动车安全标准 第213号",
+  "description": "美国联邦机动车安全标准第213号 - 儿童约束系统及侧面碰撞保护（FMVSS 213a）",
+  "version": "FMVSS 213 & 213a (Effective June 30, 2025)",
+  "weightGroups": [
+    {
+      "id": "group-0",
+      "name": "新生儿",
+      "weightMinKg": 0,
+      "weightMaxKg": 5,
+      "weightMinLb": 0,
+      "weightMaxLb": 11,
+      "heightMinMm": 0,
+      "heightMaxMm": 650,
+      "heightMinIn": 0,
+      "heightMaxIn": 26,
+      "dummy": "Newborn Part 572(K)",
+      "dummyCode": "572K",
+      "h36Limit": null,
+      "chestAccelerationG": null,
+      "hicLimit": null,
+      "chestCompressionMm": null,
+      "description": "新生儿假人"
+    },
+    {
+      "id": "group-1",
+      "name": "1岁",
+      "weightMinKg": 5,
+      "weightMaxKg": 10,
+      "weightMinLb": 11,
+      "weightMaxLb": 22,
+      "heightMinMm": 650,
+      "heightMaxMm": 850,
+      "heightMinIn": 26,
+      "heightMaxIn": 34,
+      "dummy": "CRABI 12-Month-Old Part 572(R)",
+      "dummyCode": "572R",
+      "h36Limit": 1000,
+      "chestAccelerationG": 60,
+      "hic15Limit": null,
+      "chestCompressionMm": null,
+      "description": "12个月儿童假人"
+    },
+    {
+      "id": "group-2",
+      "name": "3岁",
+      "weightMinKg": 10,
+      "weightMaxKg": 18,
+      "weightMinLb": 22,
+      "weightMaxLb": 40,
+      "heightMinMm": 850,
+      "heightMaxMm": 1100,
+      "heightMinIn": 34,
+      "heightMaxIn": 43,
+      "dummy": "Q3s 3-Year-Old Part 572(W)",
+      "dummyCode": "572W",
+      "h36Limit": 1000,
+      "chestAccelerationG": 60,
+      "hic15Limit": 570,
+      "chestCompressionMm": 23,
+      "description": "3岁儿童假人（侧碰专用Q3s）"
+    },
+    {
+      "id": "group-3",
+      "name": "6岁",
+      "weightMinKg": 18,
+      "weightMaxKg": 22.7,
+      "weightMinLb": 40,
+      "weightMaxLb": 50,
+      "heightMinMm": 1100,
+      "heightMaxMm": 1250,
+      "heightMinIn": 43,
+      "heightMaxIn": 49,
+      "dummy": "6-Year-Old Part 572(N) (Hybrid III)",
+      "dummyCode": "572N",
+      "h36Limit": 1000,
+      "chestAccelerationG": 60,
+      "hic15Limit": null,
+      "chestCompressionMm": null,
+      "description": "6岁儿童假人（Hybrid III）"
+    },
+    {
+      "id": "group-4",
+      "name": "10岁",
+      "weightMinKg": 22.7,
+      "weightMaxKg": 30,
+      "weightMinLb": 50,
+      "weightMaxLb": 65,
+      "heightMinMm": 1100,
+      "heightMaxMm": 1250,
+      "heightMinIn": 43,
+      "heightMaxIn": 49,
+      "dummy": "6-Year-Old Part 572(S) (Weighted Hybrid III)",
+      "dummyCode": "572S",
+      "h36Limit": null,
+      "chestAccelerationG": null,
+      "hic15Limit": null,
+      "chestCompressionMm": null,
+      "description": "加权6岁儿童假人（Hybrid III）"
+    }
+  ],
+  "injuryCriteria": {
+    "frontal": {
+      "name": "正面碰撞伤害指标",
+      "description": "FMVSS 213 正面碰撞测试要求",
+      "criteria": [
+        {
+          "name": "HIC36 (头部伤害准则)",
+          "value": 1000,
+          "unit": "",
+          "description": "36ms时间窗口内的头部伤害准则，不得超过1000",
+          "applicableGroups": ["group-1", "group-2"]
+        },
+        {
+          "name": "胸部加速度",
+          "value": 60,
+          "unit": "g",
+          "description": "胸部加速度不得超过60g（超过3ms的情况除外）",
+          "applicableGroups": ["group-1", "group-2"]
+        }
+      ]
+    },
+    "side": {
+      "name": "侧面碰撞伤害指标",
+      "description": "FMVSS 213a 侧面碰撞测试要求",
+      "criteria": [
+        {
+          "name": "HIC15 (头部伤害准则)",
+          "value": 570,
+          "unit": "",
+          "description": "15ms时间窗口内的头部伤害准则，不得超过570",
+          "applicableGroups": ["group-2"]
+        },
+        {
+          "name": "胸部压缩量",
+          "value": 23,
+          "unit": "mm",
+          "description": "胸部最大压缩量不得超过23毫米",
+          "applicableGroups": ["group-2"]
+        },
+        {
+          "name": "头部接触约束",
+          "value": 0,
+          "unit": "mm",
+          "description": "12个月假人的头部不得与SISA或车门结构直接接触",
+          "applicableGroups": ["group-1"]
+        }
+      ]
+    }
+  },
+  "excursionLimits": {
+    "frontal": {
+      "description": "正面碰撞位移限制",
+      "limits": [
+        {
+          "position": "头部",
+          "limitMm": 813,
+          "limitIn": 32,
+          "reference": "FISA Point Z",
+          "description": "头部不得超过Point Z前方813mm"
+        },
+        {
+          "position": "膝部",
+          "limitMm": 915,
+          "limitIn": 36,
+          "reference": "FISA Point Z",
+          "description": "膝部枢轴点不得超过Point Z前方915mm"
+        }
+      ]
+    }
+  },
+  "testRequirements": {
+    "frontal": {
+      "name": "正面碰撞测试",
+      "speed": "48 km/h (30 mph)",
+      "description": "模拟正面碰撞的动态滑车测试",
+      "testDummies": ["Newborn", "12-Month-Old", "3-Year-Old", "6-Year-Old", "Weighted 6-Year-Old"]
+    },
+    "side": {
+      "name": "侧面碰撞测试",
+      "speed": "32 km/h (20 mph)",
+      "description": "模拟车辆对车辆侧面碰撞的动态滑车测试",
+      "testDummies": ["CRABI 12-Month-Old", "Q3s 3-Year-Old"],
+      "coverage": "适用于体重≤18.1 kg (40 lb)或身高≤1100 mm (43.3 in)的儿童约束系统"
+    }
+  },
+  "installationMethods": [
+    "LATCH (Lower Anchors and Tethers for Children)",
+    "Vehicle Seat Belt (Type 1 Lap Belt)",
+    "Vehicle Seat Belt (Type 2 Lap and Shoulder Belt)"
+  ],
+  "keyDifferences": {
+    "vsECE_R129": [
+      "FMVSS 213使用体重作为主要分类标准，ECE R129使用身高作为主要分类标准",
+      "FMVSS 213的HIC36阈值为1000（36ms），ECE R129的HIC15阈值为1000（15ms），计算时间窗口不同",
+      "FMVSS 213a侧碰HIC15阈值为570，比R129侧碰更严格",
+      "FMVSS 213使用Hybrid系列假人，ECE R129使用Q系列假人（Q1, Q1.5, Q3, Q6等）",
+      "FMVSS 213侧碰仅要求体重≤40 lb的产品，ECE R129要求所有产品都进行侧碰测试",
+      "FMVSS 213使用LATCH系统，ECE R129使用ISOFIX系统"
+    ]
+  },
+  "implementationDate": "2025-06-30",
+  "references": [
+    "49 CFR Part 571 FMVSS No. 213",
+    "49 CFR Part 571 FMVSS No. 213a",
+    "TP-213-11 Laboratory Test Procedure"
+  ]
+}

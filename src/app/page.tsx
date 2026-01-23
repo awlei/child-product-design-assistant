@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 type EngineMode = 'cloud' | 'local';
 type ConfigScheme = 'none' | 'bot' | 'workflow' | 'local';
+type StandardType = 'R129' | 'FMVSS213';
 
 interface ChildData {
   age: string;
@@ -65,6 +66,7 @@ interface CozeConfig {
 export default function ChildSafetyChairApp() {
   const router = useRouter();
   const [globalHeight, setGlobalHeight] = useState(100);
+  const [selectedStandard, setSelectedStandard] = useState<StandardType>('R129');
   const [useCloudEngine, setUseCloudEngine] = useState(true);
   const [currentScheme, setCurrentScheme] = useState<ConfigScheme>('none');
   const [cozeConfig, setCozeConfig] = useState<CozeConfig>({
@@ -153,9 +155,17 @@ export default function ChildSafetyChairApp() {
     maxHeight: '',
     minWeight: '',
     maxWeight: '',
-    standard: 'R129', // 'R44', 'R129'
+    standard: 'R129', // 'R44', 'R129', 'FMVSS213'
     productType: 'forward', // 'rearward', 'forward', 'booster'
   });
+
+  // 同步全局标准选择到综合设计
+  useEffect(() => {
+    setDesignInput(prev => ({
+      ...prev,
+      standard: selectedStandard,
+    }));
+  }, [selectedStandard]);
 
   const [designResults, setDesignResults] = useState<{
     dummyMatrix: any[];
@@ -1186,12 +1196,40 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <Card className="bg-white/95 backdrop-blur">
             <CardHeader>
+              {/* 标准切换器 */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="standard-select" className="text-sm font-medium">选择标准：</Label>
+                  <Select value={selectedStandard} onValueChange={(value) => setSelectedStandard(value as StandardType)}>
+                    <SelectTrigger id="standard-select" className="w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="R129">ECE R129 (i-Size)</SelectItem>
+                      <SelectItem value="FMVSS213">FMVSS 213 (美国)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedStandard === 'FMVSS213' && (
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                    🇺🇸 美国标准
+                  </Badge>
+                )}
+                {selectedStandard === 'R129' && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-300">
+                    🇪🇺 欧洲标准
+                  </Badge>
+                )}
+              </div>
+
               <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="integrated-design">综合设计</TabsTrigger>
                 <TabsTrigger value="dimensions">尺寸计算</TabsTrigger>
                 <TabsTrigger value="injury">伤害指标</TabsTrigger>
                 <TabsTrigger value="gps-anthro">GPS人体测量</TabsTrigger>
-                <TabsTrigger value="r129-expert">R129专家</TabsTrigger>
+                <TabsTrigger value="r129-expert">
+                  {selectedStandard === 'FMVSS213' ? 'FMVSS专家' : 'R129专家'}
+                </TabsTrigger>
                 <TabsTrigger value="config">配置</TabsTrigger>
               </TabsList>
             </CardHeader>
@@ -1201,8 +1239,13 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           <TabsContent value="integrated-design">
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle>儿童安全座椅综合设计助手</CardTitle>
-                <CardDescription>输入身高或重量范围，自动生成完整的测试矩阵和产品尺寸规格</CardDescription>
+                <CardTitle>
+                  {selectedStandard === 'FMVSS213' ? '儿童安全座椅综合设计助手 (美国FMVSS 213)' : '儿童安全座椅综合设计助手 (ECE R129)'}
+                </CardTitle>
+                <CardDescription>
+                  输入身高或重量范围，自动生成完整的测试矩阵和产品尺寸规格
+                  {selectedStandard === 'FMVSS213' && ' · 支持美国FMVSS 213标准'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* 输入区域 */}
@@ -1232,7 +1275,10 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                         <Label htmlFor="standard">测试标准</Label>
                         <Select
                           value={designInput.standard}
-                          onValueChange={(value) => setDesignInput({ ...designInput, standard: value as any })}
+                          onValueChange={(value) => {
+                            setDesignInput({ ...designInput, standard: value as any });
+                            setSelectedStandard(value as StandardType);
+                          }}
                         >
                           <SelectTrigger id="standard">
                             <SelectValue />
@@ -1240,6 +1286,7 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
                           <SelectContent>
                             <SelectItem value="R129">ECE R129 (i-Size)</SelectItem>
                             <SelectItem value="R44">ECE R44/04</SelectItem>
+                            <SelectItem value="FMVSS213">FMVSS 213 (美国)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1772,8 +1819,13 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           <TabsContent value="dimensions">
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle>座椅尺寸计算</CardTitle>
-                <CardDescription>根据儿童身高计算安全座椅的各项尺寸参数</CardDescription>
+                <CardTitle>
+                  {selectedStandard === 'FMVSS213' ? '座椅尺寸计算 (FMVSS 213)' : '座椅尺寸计算 (R129)'}
+                </CardTitle>
+                <CardDescription>
+                  根据儿童身高计算安全座椅的各项尺寸参数
+                  {selectedStandard === 'FMVSS213' && ' · 基于美国FMVSS 213标准'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1837,8 +1889,14 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
           <TabsContent value="injury">
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle>伤害指标分析</CardTitle>
-                <CardDescription>分析碰撞测试中的各项伤害指标</CardDescription>
+                <CardTitle>
+                  {selectedStandard === 'FMVSS213' ? '伤害指标分析 (FMVSS 213)' : '伤害指标分析 (R129)'}
+                </CardTitle>
+                <CardDescription>
+                  分析碰撞测试中的各项伤害指标
+                  {selectedStandard === 'FMVSS213' && ' · 正面HIC36≤1000，侧碰HIC15≤570'}
+                  {selectedStandard === 'R129' && ' · HIC15≤1000，胸部加速度≤55g'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
