@@ -1,0 +1,64 @@
+# GitHub Actions工作流：自动构建Android APK
+# 儿童产品设计助手 V8.0.0
+
+name: Build Android APK
+
+# 触发条件
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 设置Node.js环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 安装pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      # 安装项目依赖
+      - name: Install dependencies
+        run: pnpm install
+
+      # 构建Web应用
+      - name: Build app
+        run: pnpm run build
+
+      # 设置Java环境
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 设置Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 构建Android APK
+      - name: Build APK
+        run: |
+          npx cap add android
+          npx cap sync android
+          cd android
+          ./gradlew assembleDebug
+
+      # 上传APK文件
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
