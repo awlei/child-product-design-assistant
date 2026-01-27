@@ -11,24 +11,11 @@ import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCh
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
-// 新的设计报告接口 - 三模块结构
+// 设计报告接口 - 使用自然语言markdown格式
 interface DesignReport {
-  module1: {
-    title: string;
-    content: string;
-  };
-  module2: {
-    title: string;
-    requirements: string[];
-  };
-  module3: {
-    title: string;
-    features: Array<{
-      name: string;
-      implementation: string;
-      safetyValue: string;
-    }>;
-  };
+  content: string; // AI生成的markdown格式内容
+  standard: string; // 使用的标准
+  timestamp: string; // 生成时间
 }
 
 // 错误详情接口
@@ -176,18 +163,15 @@ export default function CarSeatDesignPage() {
 
       console.log('Full content from AI:', fullContent);
 
-      // 解析JSON格式的报告
-      const parseResult = parseJsonReport(fullContent);
-      if (parseResult.success && parseResult.report) {
-        setReport(parseResult.report);
-      } else {
-        // 解析失败，显示详细错误
-        setError('生成报告格式错误');
-        setErrorDetails({
-          message: parseResult.error || '未知错误',
-          rawContent: fullContent.substring(0, 500) + (fullContent.length > 500 ? '...' : ''),
-          parseError: parseResult.parseError,
+      // 直接保存AI输出的markdown内容，不解析JSON
+      if (fullContent && fullContent.trim().length > 0) {
+        setReport({
+          content: fullContent,
+          standard: getStandardName(standard),
+          timestamp: new Date().toISOString(),
         });
+      } else {
+        setError('生成报告失败，AI未返回任何内容');
       }
     } catch (err) {
       console.error('生成报告错误:', err);
@@ -237,171 +221,6 @@ export default function CarSeatDesignPage() {
     }
   };
 
-  // 改进的JSON解析函数 - 支持多种格式和详细错误诊断
-  const parseJsonReport = (content: string): { success: boolean; report?: DesignReport; error?: string; parseError?: string } => {
-    console.log('Starting JSON parsing...');
-    console.log('Content length:', content.length);
-    console.log('Content preview:', content.substring(0, 300) + '...');
-
-    // 预处理：移除markdown代码块标记
-    let cleanedContent = content.trim();
-
-    // 方法1: 移除 ```json 和 ``` 标记
-    cleanedContent = cleanedContent.replace(/^```json\s*\n?/i, '');
-    cleanedContent = cleanedContent.replace(/^```\s*\n?/, '');
-    cleanedContent = cleanedContent.replace(/\n?```\s*$/, '');
-    cleanedContent = cleanedContent.trim();
-
-    console.log('Cleaned content preview:', cleanedContent.substring(0, 300) + '...');
-
-    // 方法2: 直接尝试解析清理后的内容
-    try {
-      console.log('Method 1: Trying to parse cleaned content as JSON...');
-      const parsed = JSON.parse(cleanedContent);
-      console.log('Method 1: Direct parse successful');
-      const report = validateAndNormalize(parsed);
-      if (report) {
-        return { success: true, report };
-      } else {
-        console.error('Method 1: Validation failed');
-        return { success: false, error: 'JSON结构不符合要求' };
-      }
-    } catch (e) {
-      console.log('Method 1: Direct parse failed, trying method 2...');
-    }
-
-    // 方法3: 提取第一个完整的JSON对象（处理可能有多个JSON的情况）
-    try {
-      console.log('Method 2: Extracting first JSON object from original content...');
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('Method 2: No JSON found in original content');
-
-        // 尝试从清理后的内容中提取
-        console.log('Method 2: Trying to extract from cleaned content...');
-        const cleanedJsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
-        if (!cleanedJsonMatch) {
-          console.error('Method 2: No JSON found in cleaned content either');
-          return {
-            success: false,
-            error: 'AI未返回JSON格式的内容',
-            parseError: '未找到JSON对象',
-          };
-        }
-
-        const jsonStr = cleanedJsonMatch[0];
-        console.log('Method 2: Found JSON in cleaned content, length:', jsonStr.length);
-
-        const parsed = JSON.parse(jsonStr);
-        console.log('Method 2: JSON parsed successfully');
-
-        const normalized = validateAndNormalize(parsed);
-        if (normalized) {
-          console.log('Method 2: Validation successful');
-          return { success: true, report: normalized };
-        } else {
-          console.error('Method 2: Validation failed');
-          return {
-            success: false,
-            error: 'JSON结构不符合要求',
-            parseError: '缺少必要的模块（module1/module2/module3）',
-          };
-        }
-      }
-
-      const jsonStr = jsonMatch[0];
-      console.log('Method 2: Found JSON, length:', jsonStr.length);
-
-      const parsed = JSON.parse(jsonStr);
-      console.log('Method 2: JSON parsed successfully');
-
-      const normalized = validateAndNormalize(parsed);
-      if (normalized) {
-        console.log('Method 2: Validation successful');
-        return { success: true, report: normalized };
-      } else {
-        console.error('Method 2: Validation failed');
-        return {
-          success: false,
-          error: 'JSON结构不符合要求',
-          parseError: '缺少必要的模块（module1/module2/module3）',
-        };
-      }
-    } catch (e) {
-      console.error('Method 2: Parse failed', e);
-      return {
-        success: false,
-        error: 'JSON解析失败',
-        parseError: e instanceof Error ? e.message : '未知解析错误',
-      };
-    }
-  };
-
-  // 验证和标准化报告数据
-  const validateAndNormalize = (parsed: any): DesignReport | null => {
-    console.log('Validating report structure...');
-
-    // 检查必需的模块
-    if (!parsed.module1) {
-      console.error('Missing module1');
-      return null;
-    }
-    if (!parsed.module2) {
-      console.error('Missing module2');
-      return null;
-    }
-    if (!parsed.module3) {
-      console.error('Missing module3');
-      return null;
-    }
-
-    // 验证module1
-    if (typeof parsed.module1.content !== 'string') {
-      console.error('Invalid module1.content type:', typeof parsed.module1.content);
-      parsed.module1.content = String(parsed.module1.content || '');
-    }
-
-    // 验证module2
-    if (!Array.isArray(parsed.module2.requirements)) {
-      console.error('Invalid module2.requirements type:', typeof parsed.module2.requirements);
-      if (typeof parsed.module2.requirements === 'string') {
-        // 如果是字符串，尝试按换行符分割
-        parsed.module2.requirements = parsed.module2.requirements.split('\n').filter((r: string) => r.trim());
-      } else {
-        parsed.module2.requirements = [];
-      }
-    }
-
-    // 验证module3
-    if (!Array.isArray(parsed.module3.features)) {
-      console.error('Invalid module3.features type:', typeof parsed.module3.features);
-      parsed.module3.features = [];
-    }
-
-    // 标准化features
-    parsed.module3.features = parsed.module3.features.map((f: any) => ({
-      name: f.name || '未命名功能',
-      implementation: f.implementation || '暂无说明',
-      safetyValue: f.safetyValue || '暂无说明',
-    }));
-
-    console.log('Validation successful');
-    return {
-      module1: {
-        title: parsed.module1.title || '产品定位与适用标准',
-        content: parsed.module1.content,
-      },
-      module2: {
-        title: parsed.module2.title || '关键技术要求',
-        requirements: parsed.module2.requirements,
-      },
-      module3: {
-        title: parsed.module3.title || '核心安全功能推荐',
-        features: parsed.module3.features,
-      },
-    };
-  };
-
   const getStandardName = (std: StandardType): string => {
     switch (std) {
       case 'R129':
@@ -413,6 +232,48 @@ export default function CarSeatDesignPage() {
       default:
         return '';
     }
+  };
+
+  // 简单的markdown渲染函数
+  const renderMarkdown = (text: string): string => {
+    let html = text;
+
+    // 转义HTML标签
+    html = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // 标题 (## 或 ###)
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // 粗体
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // 斜体
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+    // 无序列表
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+    // 有序列表
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+    // 链接
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    // 段落
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = '<p>' + html + '</p>';
+
+    // 移除空段落
+    html = html.replace(/<p>\s*<\/p>/g, '');
+
+    // 修复列表嵌套问题
+    html = html.replace(/<\/p><ul>/g, '<ul>');
+    html = html.replace(/<\/ul><p>/g, '</ul>');
+
+    return html;
   };
 
   return (
@@ -599,94 +460,33 @@ export default function CarSeatDesignPage() {
           </CardContent>
         </Card>
 
-        {/* 设计报告 - 三模块结构 */}
+        {/* 设计报告 - 使用自然语言markdown格式 */}
         {report && (
           <div className="space-y-6">
-            {/* 模块1：产品定位与适用标准 */}
+            {/* 报告头部 */}
             <Card className="bg-white/95 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3" style={{ color: '#667eea' }}>
-                  <Badge className="bg-purple-600 text-white px-2 py-0">01</Badge>
-                  <ShieldCheck className="w-6 h-6" />
-                  {report.module1.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Card className="bg-purple-50 border-purple-200">
-                  <CardContent className="p-4">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {report.module1.content}
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">设计报告</h3>
+                    <p className="text-sm text-gray-600">
+                      标准：{report.standard} · 生成时间：{new Date(report.timestamp).toLocaleString('zh-CN')}
                     </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <Badge className="bg-purple-600 text-white">
+                    已生成
+                  </Badge>
+                </div>
               </CardContent>
             </Card>
 
-            {/* 模块2：关键技术要求 */}
+            {/* Markdown内容渲染 */}
             <Card className="bg-white/95 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3" style={{ color: '#667eea' }}>
-                  <Badge className="bg-blue-600 text-white px-2 py-0">02</Badge>
-                  <Settings className="w-6 h-6" />
-                  {report.module2.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {report.module2.requirements.map((req, idx) => (
-                  <Card key={idx} className="bg-blue-50 border-blue-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
-                          {idx + 1}
-                        </div>
-                        <p className="text-gray-700 flex-1">{req}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {report.module2.requirements.length === 0 && (
-                  <p className="text-gray-500 italic">暂无技术要求</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 模块3：核心安全功能推荐 */}
-            <Card className="bg-white/95 backdrop-blur">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3" style={{ color: '#667eea' }}>
-                  <Badge className="bg-green-600 text-white px-2 py-0">03</Badge>
-                  <ShieldCheck className="w-6 h-6" />
-                  {report.module3.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {report.module3.features.map((feature, idx) => (
-                  <Card key={idx} className="bg-green-50 border-green-200">
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
-                            {idx + 1}
-                          </div>
-                          <h4 className="font-bold text-gray-900">{feature.name}</h4>
-                        </div>
-                        <div className="space-y-2 ml-8">
-                          <div>
-                            <span className="font-semibold text-gray-700">技术实现：</span>
-                            <span className="text-gray-600 ml-2">{feature.implementation}</span>
-                          </div>
-                          <div>
-                            <span className="font-semibold text-gray-700">安全价值：</span>
-                            <span className="text-gray-600 ml-2">{feature.safetyValue}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {report.module3.features.length === 0 && (
-                  <p className="text-gray-500 italic">暂无安全功能推荐</p>
-                )}
+              <CardContent className="p-6">
+                <div
+                  className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-strong:text-gray-900 prose-p:text-gray-700 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700 prose-a:text-purple-600"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(report.content) }}
+                />
               </CardContent>
             </Card>
 
