@@ -21,18 +21,6 @@ interface ProductCard {
 
 const PRODUCT_CARDS: ProductCard[] = [
   {
-    id: 'stroller',
-    title: '婴儿推车',
-    titleEn: 'Baby Stroller',
-    icon: '👶',
-    iconComponent: <Baby className="w-8 h-8" />,
-    description: 'GPS推车数据、尺寸规范、安全测试',
-    descriptionEn: 'GPS stroller data, size standards, safety testing',
-    color: '#667eea',
-    path: '/stroller',
-    features: ['GPS R016标准', 'EN 1888规范', '推车尺寸计算'],
-  },
-  {
     id: 'car-seat',
     title: '儿童安全座椅',
     titleEn: 'Child Car Seat',
@@ -43,6 +31,18 @@ const PRODUCT_CARDS: ProductCard[] = [
     color: '#764ba2',
     path: '/gps-anthro',
     features: ['人体测量数据', '座椅尺寸计算', 'R129/FMVSS标准', '伤害指标分析'],
+  },
+  {
+    id: 'stroller',
+    title: '婴儿推车',
+    titleEn: 'Baby Stroller',
+    icon: '👶',
+    iconComponent: <Baby className="w-8 h-8" />,
+    description: 'GPS推车数据、尺寸规范、安全测试',
+    descriptionEn: 'GPS stroller data, size standards, safety testing',
+    color: '#667eea',
+    path: '/stroller',
+    features: ['GPS R016标准', 'EN 1888规范', '推车尺寸计算'],
   },
   {
     id: 'high-chair',
