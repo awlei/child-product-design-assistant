@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1075,6 +1076,52 @@ Drawing style: Clean technical schematic with clear dimensions labeled, engineer
               ) : (
                 <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600">本地计算</Badge>
               )}
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* 产品设计助手入口 */}
+        <Card className="mb-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none shadow-xl">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl md:text-2xl flex items-center gap-2">
+                  🎨 AI 智能产品设计助手
+                </CardTitle>
+                <CardDescription className="text-purple-100 mt-2">
+                  与专业设计师对话，获取定制化的产品设计方案
+                </CardDescription>
+              </div>
+              <Link href="/product-design">
+                <Button className="bg-white text-purple-600 hover:bg-purple-50 font-semibold">
+                  开始设计
+                  <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div className="text-2xl mb-1">👶</div>
+                <div className="text-xs font-medium">推车设计</div>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div className="text-2xl mb-1">🚗</div>
+                <div className="text-xs font-medium">安全座椅</div>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div className="text-2xl mb-1">🪑</div>
+                <div className="text-xs font-medium">儿童家具</div>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div className="text-2xl mb-1">🎮</div>
+                <div className="text-xs font-medium">玩具设计</div>
+              </div>
+              <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm col-span-2 md:col-span-1">
+                <div className="text-2xl mb-1">🎁</div>
+                <div className="text-xs font-medium">其他用品</div>
+              </div>
             </div>
           </CardHeader>
         </Card>
