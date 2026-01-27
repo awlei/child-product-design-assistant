@@ -168,6 +168,37 @@ export default function CarSeatDesignPage() {
         return null;
       }
 
+      // 并行执行：生成报告内容 + 联网搜索品牌信息
+      const [brandSearchResult] = await Promise.allSettled([
+        // 联网搜索品牌参数
+        (async () => {
+          try {
+            console.log('[APK Mode] Starting brand search...');
+            const brandResponse = await fetch('/api/brand-search', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                standard,
+                heightRange,
+                weightRange,
+              }),
+            });
+            
+            if (brandResponse.ok) {
+              const data = await brandResponse.json();
+              console.log('[APK Mode] Brand search result:', data.success, data.structuredProducts?.length);
+              return data;
+            }
+            return null;
+          } catch (err) {
+            console.error('[APK Mode] Brand search failed:', err);
+            return null;
+          }
+        })(),
+      ]);
+
+      const brandData = brandSearchResult.status === 'fulfilled' ? brandSearchResult.value : null;
+
       // 生成Markdown格式的报告
       let standardName = '';
       switch (std as string) {
@@ -299,6 +330,52 @@ ${matchedGroup.weight_range || '未指定'}
 3. 定期进行质量检查和测试
 4. 产品使用说明需包含详细的安装和使用指南
 
+---
+
+## 9. 主流品牌产品对比
+
+`;
+
+      // 添加品牌搜索结果
+      if (brandData && brandData.success && brandData.structuredProducts && brandData.structuredProducts.length > 0) {
+        markdown += `以下是基于${standardName}标准，适用范围${rangeStr}的主流品牌产品对比：
+
+| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 | 评级 | 价格 |
+|------|------|---------------|----------|----------|-----------|------|------|
+`;
+
+        brandData.structuredProducts.forEach((product: any) => {
+          const height = product.heightRange || '-';
+          const weight = product.weightRange || '-';
+          const installation = product.installation || '-';
+          const sideImpact = product.sideImpact || '-';
+          const orientation = product.orientation || '-';
+          const rating = product.adacRating || product.crRating || '-';
+          const price = product.priceRange || '-';
+
+          markdown += `| ${product.brand} | ${product.model} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} | ${rating} | ${price} |
+`;
+        });
+
+        // 添加AI总结
+        if (brandData.summary) {
+          markdown += `
+### 市场分析总结
+
+${brandData.summary}
+`;
+        }
+      } else {
+        markdown += `
+⚠️ **暂未获取到品牌对比数据**
+
+原因：联网搜索失败或无匹配结果。
+
+**建议**：请稍后重试，或访问Web版使用完整AI功能获取品牌对比数据。
+`;
+      }
+
+      markdown += `
 ---
 
 **报告生成时间**: ${new Date().toLocaleString('zh-CN')}
@@ -489,14 +566,85 @@ ${matchedGroup.weight_range || '未指定'}
         });
         console.log('报告已设置，数据来源:', dataSource);
 
-        // 加载测试矩阵数据
-        const matrixData = await loadTestMatrixData(standard, heightRange, weightRange);
-        if (matrixData) {
-          setTestMatrixData(matrixData);
-          console.log('测试矩阵数据已加载:', matrixData);
+        // 并行执行：加载测试矩阵数据 + 联网搜索品牌信息
+        const [matrixData, brandSearchResult] = await Promise.allSettled([
+          loadTestMatrixData(standard, heightRange, weightRange),
+          // 联网搜索品牌参数
+          (async () => {
+            try {
+              console.log('[Web Mode] Starting brand search...');
+              const brandResponse = await fetch('/api/brand-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  standard,
+                  heightRange,
+                  weightRange,
+                }),
+              });
+              
+              if (brandResponse.ok) {
+                const data = await brandResponse.json();
+                console.log('[Web Mode] Brand search result:', data.success, data.structuredProducts?.length);
+                return data;
+              }
+              return null;
+            } catch (err) {
+              console.error('[Web Mode] Brand search failed:', err);
+              return null;
+            }
+          })(),
+        ]);
+
+        // 设置测试矩阵数据
+        if (matrixData.status === 'fulfilled' && matrixData.value) {
+          setTestMatrixData(matrixData.value);
+          console.log('测试矩阵数据已加载:', matrixData.value);
         } else {
           console.log('未找到匹配的测试矩阵数据');
           setTestMatrixData(null);
+        }
+
+        // 如果品牌搜索成功，添加到报告中
+        if (brandSearchResult.status === 'fulfilled' && brandSearchResult.value && brandSearchResult.value.success) {
+          const brandData = brandSearchResult.value;
+          
+          if (brandData.structuredProducts && brandData.structuredProducts.length > 0) {
+            const brandSection = `
+
+## 9. 主流品牌产品对比
+
+以下是基于${standard === 'R129' ? 'ECE R129 (i-Size)' : standard === 'FMVSS213' ? 'FMVSS 213' : 'ECE R44'}标准，适用范围${heightRange || weightRange}的主流品牌产品对比：
+
+| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 | 评级 | 价格 |
+|------|------|---------------|----------|----------|-----------|------|------|
+${brandData.structuredProducts.map((product: any) => {
+  const height = product.heightRange || '-';
+  const weight = product.weightRange || '-';
+  const installation = product.installation || '-';
+  const sideImpact = product.sideImpact || '-';
+  const orientation = product.orientation || '-';
+  const rating = product.adacRating || product.crRating || '-';
+  const price = product.priceRange || '-';
+  return `| ${product.brand} | ${product.model} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} | ${rating} | ${price} |`;
+}).join('\n')}
+`;
+
+            // 添加AI总结
+            if (brandData.summary) {
+              const summarySection = `
+### 市场分析总结
+
+${brandData.summary}
+`;
+              
+              // 更新报告内容
+              setReport(prev => prev ? {
+                ...prev,
+                content: fullContent + brandSection + summarySection,
+              } : null);
+            }
+          }
         }
       } else {
         console.error('AI未返回任何内容，fullContent为空');
