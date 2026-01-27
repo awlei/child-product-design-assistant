@@ -241,11 +241,23 @@ export default function CarSeatDesignPage() {
   const parseJsonReport = (content: string): { success: boolean; report?: DesignReport; error?: string; parseError?: string } => {
     console.log('Starting JSON parsing...');
     console.log('Content length:', content.length);
+    console.log('Content preview:', content.substring(0, 300) + '...');
 
-    // 方法1: 直接尝试解析整个内容
+    // 预处理：移除markdown代码块标记
+    let cleanedContent = content.trim();
+
+    // 方法1: 移除 ```json 和 ``` 标记
+    cleanedContent = cleanedContent.replace(/^```json\s*\n?/i, '');
+    cleanedContent = cleanedContent.replace(/^```\s*\n?/, '');
+    cleanedContent = cleanedContent.replace(/\n?```\s*$/, '');
+    cleanedContent = cleanedContent.trim();
+
+    console.log('Cleaned content preview:', cleanedContent.substring(0, 300) + '...');
+
+    // 方法2: 直接尝试解析清理后的内容
     try {
-      console.log('Method 1: Trying to parse entire content as JSON...');
-      const parsed = JSON.parse(content);
+      console.log('Method 1: Trying to parse cleaned content as JSON...');
+      const parsed = JSON.parse(cleanedContent);
       console.log('Method 1: Direct parse successful');
       const report = validateAndNormalize(parsed);
       if (report) {
@@ -258,22 +270,47 @@ export default function CarSeatDesignPage() {
       console.log('Method 1: Direct parse failed, trying method 2...');
     }
 
-    // 方法2: 提取第一个完整的JSON对象
+    // 方法3: 提取第一个完整的JSON对象（处理可能有多个JSON的情况）
     try {
-      console.log('Method 2: Extracting first JSON object...');
+      console.log('Method 2: Extracting first JSON object from original content...');
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('Method 2: No JSON found');
-        return {
-          success: false,
-          error: 'AI未返回JSON格式的内容',
-          parseError: '未找到JSON对象',
-        };
+        console.error('Method 2: No JSON found in original content');
+
+        // 尝试从清理后的内容中提取
+        console.log('Method 2: Trying to extract from cleaned content...');
+        const cleanedJsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+        if (!cleanedJsonMatch) {
+          console.error('Method 2: No JSON found in cleaned content either');
+          return {
+            success: false,
+            error: 'AI未返回JSON格式的内容',
+            parseError: '未找到JSON对象',
+          };
+        }
+
+        const jsonStr = cleanedJsonMatch[0];
+        console.log('Method 2: Found JSON in cleaned content, length:', jsonStr.length);
+
+        const parsed = JSON.parse(jsonStr);
+        console.log('Method 2: JSON parsed successfully');
+
+        const normalized = validateAndNormalize(parsed);
+        if (normalized) {
+          console.log('Method 2: Validation successful');
+          return { success: true, report: normalized };
+        } else {
+          console.error('Method 2: Validation failed');
+          return {
+            success: false,
+            error: 'JSON结构不符合要求',
+            parseError: '缺少必要的模块（module1/module2/module3）',
+          };
+        }
       }
 
       const jsonStr = jsonMatch[0];
       console.log('Method 2: Found JSON, length:', jsonStr.length);
-      console.log('Method 2: JSON preview:', jsonStr.substring(0, 200) + '...');
 
       const parsed = JSON.parse(jsonStr);
       console.log('Method 2: JSON parsed successfully');
