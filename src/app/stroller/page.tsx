@@ -39,25 +39,21 @@ interface StrollerData {
     harness_type: string;
     recommended_dummy: string[];
   }>;
-  safety_requirements: Array<{
-    id: string;
-    name_cn: string;
-    name_en: string;
-    description_cn: string;
-    description_en: string;
+  test_requirements: Array<{
+    test_name: string;
+    test_name_cn: string;
+    description: string;
+    pass_criteria: string;
   }>;
-  dimension_requirements: Array<{
-    name_cn: string;
-    name_en: string;
-    min_value?: number;
-    max_value?: number;
+  dimensional_requirements: Record<string, {
+    min?: number;
+    recommended?: string;
     unit: string;
+    description: string;
   }>;
-  ergonomic_requirements: Array<{
-    name_cn: string;
-    name_en: string;
-    description_cn: string;
-    description_en: string;
+  ergonomic_requirements: Record<string, {
+    description: string;
+    recommended_values?: string[];
   }>;
   safety_features: Array<{
     name_cn: string;
@@ -379,12 +375,48 @@ export default function StrollerPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-3">安全测试要求</h3>
                   <div className="space-y-2">
-                    {strollerData?.safety_requirements.map((req) => (
-                      <Card key={req.id} className="border-l-4 border-purple-500">
+                    {strollerData?.test_requirements?.map((req, idx) => (
+                      <Card key={idx} className="border-l-4 border-purple-500">
                         <CardContent className="p-4">
-                          <div className="font-semibold">{req.name_cn} / {req.name_en}</div>
-                          <p className="text-sm text-gray-600 mt-1">{req.description_cn}</p>
-                          <p className="text-sm text-gray-500 mt-1 italic">{req.description_en}</p>
+                          <div className="font-semibold">{req.test_name_cn} / {req.test_name}</div>
+                          <p className="text-sm text-gray-600 mt-1">{req.description}</p>
+                          <p className="text-sm text-gray-500 mt-1 italic">通过标准: {req.pass_criteria}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">尺寸要求</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {strollerData?.dimensional_requirements && Object.entries(strollerData.dimensional_requirements).map(([key, req]) => (
+                      <Card key={key} className="border-l-4 border-blue-500">
+                        <CardContent className="p-4">
+                          <div className="font-semibold">{key}</div>
+                          <p className="text-sm text-gray-600 mt-1">{req.description}</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            最小: {req.min || '-'} {req.unit} | 推荐: {req.recommended || '-'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">人机工程要求</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {strollerData?.ergonomic_requirements && Object.entries(strollerData.ergonomic_requirements).map(([key, req]) => (
+                      <Card key={key} className="border-l-4 border-green-500">
+                        <CardContent className="p-4">
+                          <div className="font-semibold">{key}</div>
+                          <p className="text-sm text-gray-600 mt-1">{req.description}</p>
+                          {req.recommended_values && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              推荐: {req.recommended_values.join(', ')}
+                            </p>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
