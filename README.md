@@ -111,6 +111,64 @@ coze build
 coze start
 ```
 
+## 📱 Android APK构建
+
+### 自动构建（推荐）
+
+项目配置了GitHub Actions自动化构建，每次推送代码到`main`分支会自动触发APK构建。
+
+**构建步骤**：
+1. 推送代码到GitHub main分支
+2. GitHub Actions自动触发构建
+3. 构建完成后，APK会上传为GitHub Artifacts
+
+**下载APK**：
+1. 访问GitHub仓库的Actions页面
+2. 点击最近的构建任务
+3. 在Artifacts部分下载APK文件
+
+**手动触发构建**：
+- 访问GitHub仓库的Actions页面
+- 选择"Build Android APK"工作流
+- 点击"Run workflow"按钮
+
+### 本地构建APK
+
+如果需要在本地构建APK：
+
+```bash
+# 1. 构建Web应用
+pnpm run build
+
+# 2. 添加Android平台
+npx cap add android
+
+# 3. 同步资源
+npx cap sync android
+
+# 4. 构建APK
+cd android
+./gradlew assembleDebug
+```
+
+构建完成后，APK文件位于：`android/app/build/outputs/apk/debug/app-debug.apk`
+
+**系统要求**：
+- Java 17+
+- Android SDK
+- Gradle
+
+**安装Android SDK**：
+```bash
+# macOS
+brew install android-sdk
+
+# Ubuntu/Debian
+sudo apt-get install android-sdk
+
+# 或使用Android Studio
+```
+
 ## 🔐 环境变量
 
 创建 `.env.local` 文件：
