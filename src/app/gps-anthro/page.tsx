@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCheck, Bug, X } from 'lucide-react';
+import { isNativeApp } from '@/lib/capacitor-utils';
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
@@ -94,6 +95,13 @@ export default function CarSeatDesignPage() {
   // 测试矩阵数据
   const [testMatrixData, setTestMatrixData] = useState<TestMatrixData | null>(null);
 
+  // 检测是否为原生应用
+  const [isNative, setIsNative] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsNative(isNativeApp());
+  }, []);
+
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
     setInputType(value === 'R129' ? 'height' : 'weight');
@@ -109,6 +117,16 @@ export default function CarSeatDesignPage() {
   };
 
   const handleGenerateReport = async () => {
+    // APK中禁用AI功能
+    if (isNative) {
+      setError('APK版暂不支持AI生成功能');
+      setErrorDetails({
+        message: 'APK版暂不支持AI生成功能，请使用Web浏览器访问应用',
+        rawContent: '此功能在APK中不可用',
+      });
+      return;
+    }
+
     // 验证输入
     if (inputType === 'height') {
       if (!minHeight || !maxHeight) {
@@ -299,6 +317,12 @@ export default function CarSeatDesignPage() {
   // 审核报告函数
   const handleAuditReport = async () => {
     if (!report) return;
+
+    // APK中禁用AI功能
+    if (isNative) {
+      setAuditError('APK版暂不支持AI审核功能，请使用Web浏览器访问应用');
+      return;
+    }
 
     setIsAuditing(true);
     setAuditError('');
