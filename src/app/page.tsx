@@ -84,17 +84,17 @@ const PRODUCT_CARDS: ProductCard[] = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #E8F5E9 0%, #E0F2F1 50%, #E3F2FD 100%)' }}>
       <div className="container mx-auto px-4 py-8 md:py-12">
         {/* 顶部标题 */}
         <div className="text-center mb-8 md:mb-12">
-          <CardTitle className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
+          <CardTitle className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
             儿童产品设计助手
           </CardTitle>
-          <CardDescription className="text-lg md:text-xl text-purple-100">
+          <CardDescription className="text-lg md:text-xl text-gray-700">
             Child Product Design Assistant
           </CardDescription>
-          <Badge className="mt-4 bg-white/20 text-white border-white/30 text-sm">
+          <Badge className="mt-4 bg-white text-gray-800 border-gray-200 text-sm">
             安全第一 · 符合法规 · 专业设计
           </Badge>
         </div>
@@ -165,14 +165,14 @@ export default function HomePage() {
 
         {/* 底部提示 */}
         <div className="mt-12 md:mt-16 text-center">
-          <Card className="max-w-2xl mx-auto bg-white/20 backdrop-blur-sm border-white/30">
+          <Card className="max-w-2xl mx-auto bg-white/50 backdrop-blur-sm border-white/50 shadow-lg">
             <CardContent className="p-6">
-              <p className="text-white text-sm md:text-base">
+              <p className="text-gray-800 text-sm md:text-base">
                 <strong className="font-semibold">安全提示：</strong>
                 最终产品必须通过权威机构检测认证，本系统提供的设计方案仅供参考。
                 请严格遵守GB/EN/ASTM等国际安全标准。
               </p>
-              <p className="text-purple-200 text-xs mt-2">
+              <p className="text-gray-600 text-xs mt-2">
                 Safety Reminder: Final products must be certified by authoritative institutions. Design proposals are for reference only.
               </p>
             </CardContent>
@@ -181,7 +181,7 @@ export default function HomePage() {
 
         {/* 版本信息 */}
         <div className="mt-8 text-center">
-          <Badge variant="outline" className="bg-white/20 text-white border-white/30 text-xs">
+          <Badge variant="outline" className="bg-white text-gray-600 border-gray-200 text-xs">
             V8.1.0 · Professional Design Assistant
           </Badge>
         </div>
