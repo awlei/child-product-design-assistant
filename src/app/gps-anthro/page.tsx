@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCheck, Bug, X } from 'lucide-react';
+import { Shield, Sparkles, Loader2, CheckCircle, CheckCircle2, AlertCircle, AlertTriangle, Settings, ShieldCheck, Bug, X, Lightbulb } from 'lucide-react';
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
@@ -93,6 +93,9 @@ export default function CarSeatDesignPage() {
 
   // 测试矩阵数据
   const [testMatrixData, setTestMatrixData] = useState<TestMatrixData | null>(null);
+  
+  // 数据验证结果
+  const [dataValidation, setDataValidation] = useState<any>(null);
 
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
@@ -571,10 +574,13 @@ ${brandData.summary}
           })(),
         ]);
 
-        // 设置测试矩阵数据
+        // 设置测试矩阵数据和验证结果
         if (matrixData.status === 'fulfilled' && matrixData.value) {
-          setTestMatrixData(matrixData.value);
-          console.log('测试矩阵数据已加载:', matrixData.value);
+          const { data, validation } = matrixData.value;
+          setTestMatrixData(data);
+          setDataValidation(validation);
+          console.log('测试矩阵数据已加载:', data);
+          console.log('数据验证结果:', validation);
         } else {
           console.log('未找到匹配的测试矩阵数据');
           setTestMatrixData(null);
@@ -705,7 +711,7 @@ ${brandData.summary}
     std: StandardType,
     heightRange: string | null,
     weightRange: string | null
-  ): Promise<TestMatrixData | null> => {
+  ): Promise<{ data: TestMatrixData | null; validation: any } | null> => {
     try {
       const response = await fetch('/data/test-matrix-data.json');
       if (!response.ok) {
@@ -733,17 +739,48 @@ ${brandData.summary}
       }
 
       // 匹配最接近的组
+      let matchedGroup: TestMatrixData | null = null;
       for (const group of groups) {
         const groupParts = std === 'R129'
           ? group.height_range.split('-').map((s) => parseInt(s.replace('cm', '')))
           : group.weight_range.split('-').map((s) => parseInt(s.replace('kg', '')));
 
         if (inputValue >= groupParts[0] && inputValue <= groupParts[1]) {
-          return group;
+          matchedGroup = group;
+          break;
         }
       }
 
-      return null;
+      if (!matchedGroup) {
+        return { data: null, validation: null };
+      }
+
+      // 调用验证API验证数据准确性
+      let validationResult: any = null;
+      try {
+        console.log('[Frontend] Validating local data...');
+        const validationResponse = await fetch('/api/validate-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            standard: std,
+            heightRange,
+            weightRange,
+            localData: matchedGroup,
+          }),
+        });
+
+        if (validationResponse.ok) {
+          validationResult = await validationResponse.json();
+          console.log('[Frontend] Validation result:', validationResult);
+        } else {
+          console.warn('[Frontend] Validation API returned error');
+        }
+      } catch (validationError) {
+        console.error('[Frontend] Validation error:', validationError);
+      }
+
+      return { data: matchedGroup, validation: validationResult };
     } catch (error) {
       console.error('Error loading test matrix data:', error);
       return null;
@@ -1117,6 +1154,89 @@ ${brandData.summary}
                       ))}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 数据验证结果 */}
+            {dataValidation && (
+              <Card className={`${
+                dataValidation.is_valid ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'
+              }`}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {dataValidation.is_valid ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    )}
+                    数据验证结果 (AI智能核对)
+                  </CardTitle>
+                  <CardDescription>
+                    智能体验证本地数据准确性的结果
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* 验证状态 */}
+                  <div className="flex items-center gap-2">
+                    <Badge className={
+                      dataValidation.is_valid
+                        ? 'bg-green-600 text-white'
+                        : 'bg-yellow-600 text-white'
+                    }>
+                      {dataValidation.is_valid ? '验证通过' : '需要注意'}
+                    </Badge>
+                    <span className="text-sm text-gray-600">
+                      共检查 {dataValidation.checked_count} 项数据
+                    </span>
+                  </div>
+
+                  {/* 验证说明 */}
+                  {dataValidation.explanation && (
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-sm text-gray-700">{dataValidation.explanation}</p>
+                    </div>
+                  )}
+
+                  {/* 发现的问题 */}
+                  {dataValidation.issues && dataValidation.issues.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">发现的问题</h4>
+                      <div className="space-y-2">
+                        {dataValidation.issues.map((issue: any, idx: number) => (
+                          <div key={idx} className="bg-white p-3 rounded border border-yellow-200">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">{issue.item}</p>
+                                <p className="text-sm text-gray-600 mt-1">{issue.issue}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 建议的修正 */}
+                  {dataValidation.issues && dataValidation.issues.length > 0 && dataValidation.issues.some((i: any) => i.suggestion) && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">建议的修正</h4>
+                      <div className="space-y-2">
+                        {dataValidation.issues.filter((i: any) => i.suggestion).map((issue: any, idx: number) => (
+                          <div key={idx} className="bg-white p-3 rounded border border-blue-200">
+                            <div className="flex items-start gap-2">
+                              <Lightbulb className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">{issue.category}</p>
+                                <p className="text-sm text-gray-600 mt-1">{issue.suggestion}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
