@@ -1,0 +1,338 @@
+{
+  "version": "1.0.0",
+  "standard": "ECE R129 (i-Size)",
+  "description": "儿童安全座椅测试矩阵数据",
+  "r129_height_groups": [
+    {
+      "height_range": "40-60cm",
+      "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
+      "dummies": ["Q0"],
+      "weight_range": "0-10kg",
+      "age_range": "新生儿-6个月",
+      "design_requirements": {
+        "head_rest_height": "可调节至7档，最小35cm",
+        "harness_width": "20-25mm",
+        "seat_angle": "135-145度（后向）",
+        "shoulder_width": "180-230mm",
+        "hip_width": "160-200mm",
+        "internal_length": "350-400mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Q0"],
+          "speed": "50 km/h",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
+        },
+        {
+          "test_type": "后面碰撞",
+          "dummies": ["Q0"],
+          "speed": "30 km/h",
+          "deceleration": "15-20g",
+          "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
+        },
+        {
+          "test_type": "侧面碰撞",
+          "dummies": ["Q0"],
+          "speed": "24 km/h",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "height_range": "60-75cm",
+      "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
+      "dummies": ["Q1", "Q1.5"],
+      "weight_range": "9-11kg",
+      "age_range": "9-12个月",
+      "design_requirements": {
+        "head_rest_height": "可调节至7档，范围40-60cm",
+        "harness_width": "22-26mm",
+        "seat_angle": "135-145度（后向）",
+        "shoulder_width": "210-260mm",
+        "hip_width": "190-230mm",
+        "internal_length": "400-450mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Q1", "Q1.5"],
+          "speed": "50 km/h",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
+        },
+        {
+          "test_type": "后面碰撞",
+          "dummies": ["Q1", "Q1.5"],
+          "speed": "30 km/h",
+          "deceleration": "15-20g",
+          "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
+        },
+        {
+          "test_type": "侧面碰撞",
+          "dummies": ["Q1", "Q1.5"],
+          "speed": "24 km/h",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "height_range": "75-87cm",
+      "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
+      "dummies": ["Q3"],
+      "weight_range": "15kg",
+      "age_range": "15-18个月",
+      "design_requirements": {
+        "head_rest_height": "可调节至7档，范围55-75cm",
+        "harness_width": "25-28mm",
+        "seat_angle": "130-140度（后向）",
+        "shoulder_width": "240-290mm",
+        "hip_width": "210-250mm",
+        "internal_length": "450-500mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Q3"],
+          "speed": "50 km/h",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
+        },
+        {
+          "test_type": "后面碰撞",
+          "dummies": ["Q3"],
+          "speed": "30 km/h",
+          "deceleration": "15-20g",
+          "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
+        },
+        {
+          "test_type": "侧面碰撞",
+          "dummies": ["Q3"],
+          "speed": "24 km/h",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "height_range": "87-105cm",
+      "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
+      "dummies": ["Q3", "Q6"],
+      "weight_range": "15-22kg",
+      "age_range": "18-36个月",
+      "design_requirements": {
+        "head_rest_height": "可调节至7-10档，范围70-90cm",
+        "harness_width": "25-28mm",
+        "seat_angle": "30-45度（前向）",
+        "shoulder_width": "260-320mm",
+        "hip_width": "230-280mm",
+        "internal_length": "500-550mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Q3", "Q6"],
+          "speed": "50 km/h",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
+        },
+        {
+          "test_type": "后面碰撞",
+          "dummies": ["Q3", "Q6"],
+          "speed": "30 km/h",
+          "deceleration": "15-20g",
+          "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
+        },
+        {
+          "test_type": "侧面碰撞",
+          "dummies": ["Q3", "Q6"],
+          "speed": "24 km/h",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "height_range": "105-125cm",
+      "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
+      "dummies": ["Q6", "Q10"],
+      "weight_range": "22-36kg",
+      "age_range": "3-7岁",
+      "design_requirements": {
+        "head_rest_height": "可调节至8-12档，范围90-120cm",
+        "harness_width": "28-32mm",
+        "seat_angle": "25-35度（前向）",
+        "shoulder_width": "300-370mm",
+        "hip_width": "270-320mm",
+        "internal_length": "550-650mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Q6", "Q10"],
+          "speed": "50 km/h",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC36 ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
+        },
+        {
+          "test_type": "后面碰撞",
+          "dummies": ["Q6", "Q10"],
+          "speed": "30 km/h",
+          "deceleration": "15-20g",
+          "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
+        },
+        {
+          "test_type": "侧面碰撞",
+          "dummies": ["Q6", "Q10"],
+          "speed": "24 km/h",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC36 ≤ 1000", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "height_range": "125-150cm",
+      "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
+      "dummies": ["Q10"],
+      "weight_range": "36kg",
+      "age_range": "7-12岁",
+      "design_requirements": {
+        "head_rest_height": "可调节至10-15档，范围120-150cm",
+        "harness_width": "30-35mm（或使用车辆安全带）",
+        "seat_angle": "20-30度（前向）",
+        "shoulder_width": "340-420mm",
+        "hip_width": "300-360mm",
+        "internal_length": "650-750mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Q10"],
+          "speed": "50 km/h",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC36 ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
+        },
+        {
+          "test_type": "后面碰撞",
+          "dummies": ["Q10"],
+          "speed": "30 km/h",
+          "deceleration": "15-20g",
+          "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
+        },
+        {
+          "test_type": "侧面碰撞",
+          "dummies": ["Q10"],
+          "speed": "24 km/h",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC36 ≤ 1000", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    }
+  ],
+  "fmvss_213_weight_groups": [
+    {
+      "weight_range": "0-13kg",
+      "isofix_size_class": "Universal (A, B1, B2, C, D)",
+      "dummies": ["CRABI 12mo", "CRABI 18mo", "Hybrid III 3yo"],
+      "height_range": "0-80cm",
+      "age_range": "0-12个月",
+      "design_requirements": {
+        "head_rest_height": "可调节至7档，最小35cm",
+        "harness_width": "20-25mm",
+        "seat_angle": "135-145度（后向）",
+        "shoulder_width": "180-250mm",
+        "hip_width": "160-220mm",
+        "internal_length": "350-450mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["CRABI 12mo", "CRABI 18mo", "Hybrid III 3yo"],
+          "speed": "48 km/h (30 mph)",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 60g"]
+        },
+        {
+          "test_type": "侧面碰撞 (FMVSS 213a)",
+          "dummies": ["CRABI 12mo", "CRABI 18mo", "Hybrid III 3yo"],
+          "speed": "32 km/h (20 mph)",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC ≤ 890", "chest_accel ≤ 60g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "weight_range": "9-18kg",
+      "isofix_size_class": "Universal (A, B1, B2, C, D)",
+      "dummies": ["Hybrid III 3yo", "Hybrid III 6yo"],
+      "height_range": "75-105cm",
+      "age_range": "9个月-4岁",
+      "design_requirements": {
+        "head_rest_height": "可调节至7-10档，范围40-85cm",
+        "harness_width": "25-28mm",
+        "seat_angle": "30-45度（前向/后向）",
+        "shoulder_width": "240-320mm",
+        "hip_width": "210-280mm",
+        "internal_length": "450-550mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Hybrid III 3yo", "Hybrid III 6yo"],
+          "speed": "48 km/h (30 mph)",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 60g"]
+        },
+        {
+          "test_type": "侧面碰撞 (FMVSS 213a)",
+          "dummies": ["Hybrid III 3yo", "Hybrid III 6yo"],
+          "speed": "32 km/h (20 mph)",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC ≤ 890", "chest_accel ≤ 60g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    },
+    {
+      "weight_range": "18-36kg",
+      "isofix_size_class": "Universal (A, B1, B2, C, D)",
+      "dummies": ["Hybrid III 6yo", "Hybrid III 10yo"],
+      "height_range": "105-150cm",
+      "age_range": "4-12岁",
+      "design_requirements": {
+        "head_rest_height": "可调节至10-15档，范围85-140cm",
+        "harness_width": "28-35mm（或使用车辆安全带）",
+        "seat_angle": "20-35度（前向）",
+        "shoulder_width": "300-400mm",
+        "hip_width": "270-350mm",
+        "internal_length": "550-700mm"
+      },
+      "test_matrix": [
+        {
+          "test_type": "正面碰撞",
+          "dummies": ["Hybrid III 6yo", "Hybrid III 10yo"],
+          "speed": "48 km/h (30 mph)",
+          "deceleration": "28-32g",
+          "injury_criteria": ["HIC ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 60g"]
+        },
+        {
+          "test_type": "侧面碰撞 (FMVSS 213a)",
+          "dummies": ["Hybrid III 6yo", "Hybrid III 10yo"],
+          "speed": "32 km/h (20 mph)",
+          "deceleration": "20-25g",
+          "injury_criteria": ["HIC ≤ 890", "chest_accel ≤ 60g", "abdominal_force ≤ 2.5kN"]
+        }
+      ]
+    }
+  ],
+  "design_tips": [
+    "头托内部高度应比儿童头顶高出至少10-15cm，提供头部保护",
+    "肩带应通过或略高于儿童肩膀，确保碰撞时力传递到盆骨",
+    "座椅角度应根据儿童年龄调整：新生儿135-145度，幼儿45-50度，儿童30-45度",
+    "侧撞保护系统应始终处于工作状态，可折叠侧翼应展开",
+    "头枕高度应调节至儿童眼睛与头枕顶部齐平",
+    "五点式安全带应紧贴儿童身体，手指间隙不超过2cm"
+  ]
+}

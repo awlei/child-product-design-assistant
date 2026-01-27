@@ -11,6 +11,38 @@ import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCh
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
+// 测试矩阵数据接口
+interface TestMatrixData {
+  height_range: string;
+  isofix_size_class: string;
+  dummies: string[];
+  weight_range: string;
+  age_range: string;
+  design_requirements: {
+    head_rest_height: string;
+    harness_width: string;
+    seat_angle: string;
+    shoulder_width: string;
+    hip_width: string;
+    internal_length: string;
+  };
+  test_matrix: Array<{
+    test_type: string;
+    dummies: string[];
+    speed: string;
+    deceleration: string;
+    injury_criteria: string[];
+  }>;
+}
+
+interface TestMatrixResponse {
+  version: string;
+  standard: string;
+  r129_height_groups: TestMatrixData[];
+  fmvss_213_weight_groups: TestMatrixData[];
+  design_tips: string[];
+}
+
 // 设计报告接口 - 使用自然语言markdown格式
 interface DesignReport {
   content: string; // AI生成的markdown格式内容
@@ -59,6 +91,9 @@ export default function CarSeatDesignPage() {
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [auditError, setAuditError] = useState('');
 
+  // 测试矩阵数据
+  const [testMatrixData, setTestMatrixData] = useState<TestMatrixData | null>(null);
+
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
     setInputType(value === 'R129' ? 'height' : 'weight');
@@ -69,6 +104,8 @@ export default function CarSeatDesignPage() {
     setMaxWeight('');
     setError('');
     setErrorDetails(null);
+    setTestMatrixData(null);
+    setReport(null);
   };
 
   const handleGenerateReport = async () => {
@@ -219,6 +256,16 @@ export default function CarSeatDesignPage() {
           dataSource: dataSource,
         });
         console.log('报告已设置，数据来源:', dataSource);
+
+        // 加载测试矩阵数据
+        const matrixData = await loadTestMatrixData(standard, heightRange, weightRange);
+        if (matrixData) {
+          setTestMatrixData(matrixData);
+          console.log('测试矩阵数据已加载:', matrixData);
+        } else {
+          console.log('未找到匹配的测试矩阵数据');
+          setTestMatrixData(null);
+        }
       } else {
         console.error('AI未返回任何内容，fullContent为空');
         setError('生成报告失败，AI未返回任何内容');
@@ -299,6 +346,56 @@ export default function CarSeatDesignPage() {
     }
   };
 
+  // 加载测试矩阵数据
+  const loadTestMatrixData = async (
+    std: StandardType,
+    heightRange: string | null,
+    weightRange: string | null
+  ): Promise<TestMatrixData | null> => {
+    try {
+      const response = await fetch('/data/test-matrix-data.json');
+      if (!response.ok) {
+        throw new Error('Failed to load test matrix data');
+      }
+
+      const data: TestMatrixResponse = await response.json();
+
+      // 根据标准选择对应的数据组
+      let groups: TestMatrixData[] = [];
+      let inputValue: number = 0;
+
+      if (std === 'R129' && heightRange) {
+        groups = data.r129_height_groups;
+        // 计算身高中位数
+        const parts = heightRange.split('-');
+        inputValue = (parseInt(parts[0]) + parseInt(parts[1])) / 2;
+      } else if (std === 'FMVSS213' && weightRange) {
+        groups = data.fmvss_213_weight_groups;
+        // 计算体重中位数
+        const parts = weightRange.split('-');
+        inputValue = (parseFloat(parts[0]) + parseFloat(parts[1])) / 2;
+      } else {
+        return null;
+      }
+
+      // 匹配最接近的组
+      for (const group of groups) {
+        const groupParts = std === 'R129'
+          ? group.height_range.split('-').map((s) => parseInt(s.replace('cm', '')))
+          : group.weight_range.split('-').map((s) => parseInt(s.replace('kg', '')));
+
+        if (inputValue >= groupParts[0] && inputValue <= groupParts[1]) {
+          return group;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error loading test matrix data:', error);
+      return null;
+    }
+  };
+
   // 简单的markdown渲染函数
   const renderMarkdown = (text: string): string => {
     let html = text;
@@ -359,7 +456,7 @@ export default function CarSeatDesignPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm px-3 py-1">
-                  V8.3.0
+                  V8.4.0
                 </Badge>
                 <Button
                   variant="outline"
@@ -568,6 +665,107 @@ export default function CarSeatDesignPage() {
                 />
               </CardContent>
             </Card>
+
+            {/* 测试矩阵数据 */}
+            {testMatrixData && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-blue-600" />
+                    测试矩阵与设计要求
+                  </CardTitle>
+                  <CardDescription>
+                    基于输入范围匹配的官方测试数据
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Envelope 和 测试假人 */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">ISOFIX Size Class (Envelope)</h4>
+                      <Badge className="bg-blue-600 text-white text-sm px-3 py-1">
+                        {testMatrixData.isofix_size_class}
+                      </Badge>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">测试假人</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {testMatrixData.dummies.map((dummy, idx) => (
+                          <Badge key={idx} className="bg-green-600 text-white">
+                            {dummy}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 设计要求 */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">设计要求</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <span className="text-gray-600">头托高度:</span> {testMatrixData.design_requirements.head_rest_height}
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <span className="text-gray-600">安全带宽度:</span> {testMatrixData.design_requirements.harness_width}
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <span className="text-gray-600">座椅角度:</span> {testMatrixData.design_requirements.seat_angle}
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <span className="text-gray-600">肩宽:</span> {testMatrixData.design_requirements.shoulder_width}
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <span className="text-gray-600">臀宽:</span> {testMatrixData.design_requirements.hip_width}
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <span className="text-gray-600">内部长度:</span> {testMatrixData.design_requirements.internal_length}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 撞击测试矩阵 */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">撞击测试矩阵</h4>
+                    <div className="space-y-3">
+                      {testMatrixData.test_matrix.map((test, idx) => (
+                        <Card key={idx} className="bg-white border border-blue-200">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge className="bg-purple-600 text-white text-xs">
+                                {test.test_type}
+                              </Badge>
+                              <span className="text-sm text-gray-600">{test.speed}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm">
+                                <span className="text-gray-600">假人:</span>{' '}
+                                {test.dummies.map((d, i) => (
+                                  <Badge key={i} className="bg-green-600 text-white text-xs ml-1">
+                                    {d}
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="text-sm">
+                                <span className="text-gray-600">减速度:</span> {test.deceleration}
+                              </div>
+                              <div className="text-sm">
+                                <span className="text-gray-600">伤害指标:</span>{' '}
+                                {test.injury_criteria.map((c, i) => (
+                                  <span key={i} className="inline-block bg-yellow-100 text-yellow-800 text-xs px-1 py-0.5 rounded ml-1">
+                                    {c}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 安全提醒 */}
             <Card className="bg-red-50 border-red-200">
