@@ -7,16 +7,28 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCheck } from 'lucide-react';
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
+// 新的设计报告接口 - 三模块结构
 interface DesignReport {
-  productPosition: string;
-  technicalRequirements: string[];
-  safetyFeatures: string[];
-  brandComparison: string;
-  designSuggestions: string;
+  module1: {
+    title: string;
+    content: string;
+  };
+  module2: {
+    title: string;
+    requirements: string[];
+  };
+  module3: {
+    title: string;
+    features: Array<{
+      name: string;
+      implementation: string;
+      safetyValue: string;
+    }>;
+  };
 }
 
 export default function CarSeatDesignPage() {
@@ -122,13 +134,61 @@ export default function CarSeatDesignPage() {
         }
       }
 
-      // 改进的报告内容解析
-      setReport(parseReport(fullContent));
+      // 解析JSON格式的报告
+      const parsedReport = parseJsonReport(fullContent);
+      if (parsedReport) {
+        setReport(parsedReport);
+      } else {
+        setError('生成报告格式错误，请重试');
+      }
     } catch (err) {
       console.error('生成报告错误:', err);
       setError('生成报告失败，请稍后重试');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // 解析JSON格式的报告
+  const parseJsonReport = (content: string): DesignReport | null => {
+    try {
+      // 尝试提取JSON部分
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('No JSON found in content');
+        return null;
+      }
+
+      const jsonStr = jsonMatch[0];
+      const parsed = JSON.parse(jsonStr);
+
+      // 验证结构
+      if (!parsed.module1 || !parsed.module2 || !parsed.module3) {
+        console.error('Invalid report structure');
+        return null;
+      }
+
+      return {
+        module1: {
+          title: parsed.module1.title || '产品定位与适用标准',
+          content: parsed.module1.content || '',
+        },
+        module2: {
+          title: parsed.module2.title || '关键技术要求',
+          requirements: Array.isArray(parsed.module2.requirements)
+            ? parsed.module2.requirements
+            : [],
+        },
+        module3: {
+          title: parsed.module3.title || '核心安全功能推荐',
+          features: Array.isArray(parsed.module3.features)
+            ? parsed.module3.features
+            : [],
+        },
+      };
+    } catch (e) {
+      console.error('Failed to parse JSON report:', e);
+      return null;
     }
   };
 
@@ -143,103 +203,6 @@ export default function CarSeatDesignPage() {
       default:
         return '';
     }
-  };
-
-  // 改进的报告解析函数
-  const parseReport = (content: string): DesignReport => {
-    return {
-      productPosition: extractSection(content, ['产品定位', '适用标准']),
-      technicalRequirements: extractList(content, ['关键技术', '技术要求']),
-      safetyFeatures: extractList(content, ['核心安全功能', '安全功能']),
-      brandComparison: extractSection(content, ['品牌', '主流品牌']),
-      designSuggestions: extractSection(content, ['设计建议', '人体工程学']),
-    };
-  };
-
-  // 改进的章节提取函数 - 支持多个关键词
-  const extractSection = (content: string, keywords: string[]): string => {
-    const lines = content.split('\n');
-    let section = '';
-    let inSection = false;
-    let foundKeyword = '';
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // 检查是否匹配任一关键词
-      for (const keyword of keywords) {
-        if (line.includes(keyword) && (line.startsWith('###') || line.startsWith('#'))) {
-          inSection = true;
-          foundKeyword = keyword;
-          continue;
-        }
-      }
-
-      // 如果找到了关键词，开始收集内容
-      if (inSection && line.trim() !== foundKeyword) {
-        // 检查是否到达下一个章节
-        if (line.startsWith('###') || line.startsWith('#')) {
-          // 如果包含其他关键词，停止
-          const isNextSection = keywords.some(k => line.includes(k) && k !== foundKeyword);
-          if (isNextSection && !line.includes(foundKeyword)) {
-            break;
-          }
-        }
-
-        // 收集内容，跳过空行和标题
-        if (line.trim() && !line.startsWith('###') && !line.startsWith('#')) {
-          section += line + '\n';
-        }
-      }
-    }
-
-    return section.trim();
-  };
-
-  // 改进的列表提取函数 - 支持多个关键词
-  const extractList = (content: string, keywords: string[]): string[] => {
-    const lines = content.split('\n');
-    let items: string[] = [];
-    let inList = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // 检查是否匹配任一关键词
-      for (const keyword of keywords) {
-        if (line.includes(keyword) && (line.startsWith('###') || line.startsWith('#'))) {
-          inList = true;
-          break;
-        }
-      }
-
-      // 如果在列表区域，提取列表项
-      if (inList) {
-        // 检查是否到达下一个章节
-        if (line.startsWith('###')) {
-          const isNextSection = keywords.some(k => line.includes(k));
-          if (isNextSection) {
-            break;
-          }
-        }
-
-        // 提取列表项
-        if (line.startsWith('- ') || line.startsWith('* ')) {
-          const item = line.replace(/^- /, '').replace(/^\* /, '').trim();
-          if (item) {
-            items.push(item);
-          }
-        } else if (line.match(/^\d+\./)) {
-          // 处理数字列表
-          const item = line.replace(/^\d+\.\s*/, '').trim();
-          if (item) {
-            items.push(item);
-          }
-        }
-      }
-    }
-
-    return items;
   };
 
   return (
@@ -259,7 +222,7 @@ export default function CarSeatDesignPage() {
                 </CardDescription>
               </div>
               <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm px-3 py-1">
-                V8.0.0
+                V8.1.0
               </Badge>
             </div>
           </CardHeader>
@@ -273,7 +236,7 @@ export default function CarSeatDesignPage() {
               开始设计
             </CardTitle>
             <CardDescription>
-              输入儿童身高或体重范围，生成专业的设计报告
+              输入儿童身高或体重范围，生成专业的设计建议
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -375,125 +338,116 @@ export default function CarSeatDesignPage() {
               {isGenerating ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  正在生成设计报告...
+                  正在生成设计建议...
                 </>
               ) : (
                 <>
                   <Sparkles className="w-5 h-5 mr-2" />
-                  生成设计报告
+                  生成设计建议
                 </>
               )}
             </Button>
           </CardContent>
         </Card>
 
-        {/* 设计报告 */}
+        {/* 设计报告 - 三模块结构 */}
         {report && (
-          <Card className="bg-white/95 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                设计报告
-              </CardTitle>
-              <CardDescription>
-                基于 {getStandardName(standard)} 标准的专业设计建议
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 产品定位与适用标准 */}
-              <section>
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: '#667eea' }}>
-                  <Shield className="w-5 h-5" />
-                  产品定位与适用标准
-                </h3>
+          <div className="space-y-6">
+            {/* 模块1：产品定位与适用标准 */}
+            <Card className="bg-white/95 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2" style={{ color: '#667eea' }}>
+                  <ShieldCheck className="w-6 h-6" />
+                  {report.module1.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <Card className="bg-purple-50 border-purple-200">
                   <CardContent className="p-4">
-                    <p className="whitespace-pre-wrap text-gray-700">{report.productPosition}</p>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {report.module1.content}
+                    </p>
                   </CardContent>
                 </Card>
-              </section>
+              </CardContent>
+            </Card>
 
-              {/* 关键技术要求 */}
-              <section>
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: '#667eea' }}>
-                  <Shield className="w-5 h-5" />
-                  关键技术要求
-                </h3>
-                <div className="grid gap-2">
-                  {report.technicalRequirements.map((item, idx) => (
-                    <Card key={idx} className="bg-blue-50 border-blue-200">
-                      <CardContent className="p-3">
-                        <p className="text-gray-700">{item}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </section>
+            {/* 模块2：关键技术要求 */}
+            <Card className="bg-white/95 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2" style={{ color: '#667eea' }}>
+                  <Settings className="w-6 h-6" />
+                  {report.module2.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {report.module2.requirements.map((req, idx) => (
+                  <Card key={idx} className="bg-blue-50 border-blue-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                          {idx + 1}
+                        </div>
+                        <p className="text-gray-700 flex-1">{req}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
 
-              {/* 核心安全功能推荐 */}
-              <section>
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: '#667eea' }}>
-                  <Shield className="w-5 h-5" />
-                  核心安全功能推荐
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {report.safetyFeatures.map((item, idx) => (
-                    <Card key={idx} className="bg-green-50 border-green-200">
-                      <CardContent className="p-3">
-                        <p className="text-gray-700">{item}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </section>
+            {/* 模块3：核心安全功能推荐 */}
+            <Card className="bg-white/95 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2" style={{ color: '#667eea' }}>
+                  <ShieldCheck className="w-6 h-6" />
+                  {report.module3.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {report.module3.features.map((feature, idx) => (
+                  <Card key={idx} className="bg-green-50 border-green-200">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <h4 className="font-bold text-gray-900">{feature.name}</h4>
+                        </div>
+                        <div className="space-y-2 ml-7">
+                          <div>
+                            <span className="font-semibold text-gray-700">技术实现：</span>
+                            <span className="text-gray-600 ml-2">{feature.implementation}</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-gray-700">安全价值：</span>
+                            <span className="text-gray-600 ml-2">{feature.safetyValue}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
 
-              {/* 主流品牌参数对比 */}
-              <section>
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: '#667eea' }}>
-                  <Shield className="w-5 h-5" />
-                  主流品牌参数对比
-                </h3>
-                <Card className="bg-yellow-50 border-yellow-200">
-                  <CardContent className="p-4">
-                    <div className="whitespace-pre-wrap text-gray-700 font-mono text-sm overflow-x-auto">
-                      {report.brandComparison}
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-
-              {/* 设计建议与人体工程学要点 */}
-              <section>
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: '#667eea' }}>
-                  <Shield className="w-5 h-5" />
-                  设计建议与人体工程学要点
-                </h3>
-                <Card className="bg-pink-50 border-pink-200">
-                  <CardContent className="p-4">
-                    <p className="whitespace-pre-wrap text-gray-700">{report.designSuggestions}</p>
-                  </CardContent>
-                </Card>
-              </section>
-
-              {/* 安全提醒 */}
-              <Card className="bg-red-50 border-red-200">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-bold text-red-800 mb-2">重要安全提醒</h4>
-                      <ul className="text-sm text-red-700 space-y-1">
-                        <li>• 儿童安全座椅必须购买已通过官方认证的产品</li>
-                        <li>• 设计方案仅作开发参考，不可直接用于生产</li>
-                        <li>• 最终产品必须通过权威机构（TÜV、ADAC、中国CCC）型式认证</li>
-                        <li>• 必须通过实车碰撞测试验证安全性</li>
-                      </ul>
-                    </div>
+            {/* 安全提醒 */}
+            <Card className="bg-red-50 border-red-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-red-800 mb-2">重要安全提醒</h4>
+                    <ul className="text-sm text-red-700 space-y-1">
+                      <li>• 儿童安全座椅必须购买已通过官方认证的产品</li>
+                      <li>• 设计建议仅作开发参考，不可直接用于生产</li>
+                      <li>• 最终产品必须通过权威机构（TÜV、ADAC、中国CCC）型式认证</li>
+                      <li>• 必须通过实车碰撞测试验证安全性</li>
+                    </ul>
                   </div>
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
