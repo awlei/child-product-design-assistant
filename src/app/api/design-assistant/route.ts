@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SearchClient, Config } from 'coze-coding-dev-sdk';
+import { SearchClient, Config as SearchConfig, LLMClient, Config } from 'coze-coding-dev-sdk';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { generateLocalAdvice, formatLocalAdvice, LocalKnowledgeRequest } from '@/lib/localKnowledge';
-
-// 豆包大语言模型配置
-const DOUBAO_API_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-const DOUBAO_MODEL = 'doubao-pro-32k-240628';
 
 // 读取技术数据
 function loadTechnicalData() {
@@ -186,7 +182,7 @@ async function searchBrandParameters(
   weightRange: string | null
 ): Promise<string> {
   try {
-    const config = new Config();
+    const config = new SearchConfig();
     const client = new SearchClient(config);
 
     let searchQuery = '';
@@ -208,12 +204,6 @@ async function searchBrandParameters(
 
 export async function POST(request: NextRequest) {
   try {
-    // 检查API Key是否配置，如果未配置则直接使用本地知识库
-    if (!process.env.DOUBAO_API_KEY || process.env.DOUBAO_API_KEY.trim() === '') {
-      console.log('[API] DOUBAO_API_KEY未配置，切换到本地知识库');
-      return await handleLocalKnowledgeFallback(request);
-    }
-
     const { standard, heightRange, weightRange } = await request.json();
 
     // 加载技术数据
@@ -235,21 +225,21 @@ export async function POST(request: NextRequest) {
 **安全标准**: ECE R129 (i-Size)
 **身高范围**: ${heightRange}
 
-请严格按照三个模块的要求输出JSON格式的设计建议。`;
+请严格按照三个模块的要求输出设计建议（使用markdown格式，不要JSON）。`;
     } else if (standard === 'FMVSS213') {
       userMessage = `请为以下体重范围生成儿童安全座椅设计建议：
 
 **安全标准**: FMVSS 213
 **体重范围**: ${weightRange}
 
-请严格按照三个模块的要求输出JSON格式的设计建议。`;
+请严格按照三个模块的要求输出设计建议（使用markdown格式，不要JSON）。`;
     } else if (standard === 'R44') {
       userMessage = `请为以下体重范围生成儿童安全座椅设计建议：
 
 **安全标准**: ECE R44/04
 **体重范围**: ${weightRange}
 
-请严格按照三个模块的要求输出JSON格式的设计建议。`;
+请严格按照三个模块的要求输出设计建议（使用markdown格式，不要JSON）。`;
     }
 
     // 添加品牌搜索结果
@@ -270,100 +260,64 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    // 调用豆包API
-    const response = await fetch(DOUBAO_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.DOUBAO_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: DOUBAO_MODEL,
-        messages: fullMessages,
+    console.log('[API] 开始调用免费大模型API...');
+
+    // 使用LLMClient调用免费大模型
+    const config = new Config();
+    const llmClient = new LLMClient(config);
+
+    try {
+      // 使用流式输出
+      const stream = llmClient.stream(fullMessages, {
+        model: 'doubao-seed-1-8-251228',
         temperature: 0.7,
-        max_tokens: 2000,
-        stream: true,
-      }),
-    });
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Doubao API error:', error);
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    // 返回流式响应
-    return new Response(
-      new ReadableStream({
-        async start(controller) {
-          const reader = response.body?.getReader();
-          const encoder = new TextEncoder();
-
-          try {
-            if (!reader) {
-              throw new Error('Response body is null');
-            }
-
-            console.log('[API] 开始处理豆包API流式响应...');
+      // 返回流式响应
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            const encoder = new TextEncoder();
             let chunkCount = 0;
 
-            while (true) {
-              const { done, value } = await reader.read();
+            try {
+              console.log('[API] 开始处理流式响应...');
 
-              if (done) {
-                console.log(`[API] 流式响应结束，总共处理 ${chunkCount} 个chunk`);
-                break;
-              }
-
-              chunkCount++;
-              // 解析SSE数据
-              const chunk = new TextDecoder().decode(value);
-              const lines = chunk.split('\n').filter(line => line.trim());
-
-              for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const data = line.slice(6);
-
-                  if (data === '[DONE]') {
-                    console.log('[API] 收到[DONE]标记');
-                    break;
-                  }
-
-                  try {
-                    const parsed = JSON.parse(data);
-                    const content = parsed.choices?.[0]?.delta?.content;
-
-                    if (content) {
-                      console.log(`[API] 提取到content (长度 ${content.length}): ${content.substring(0, 50)}`);
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
-                    } else {
-                      console.log('[API] 收到数据但没有content字段:', JSON.stringify(parsed).substring(0, 200));
-                    }
-                  } catch (e) {
-                    console.error('[API] Error parsing SSE data:', line, e);
-                  }
+              for await (const chunk of stream) {
+                if (chunk.content) {
+                  chunkCount++;
+                  const content = chunk.content.toString();
+                  console.log(`[API] 发送chunk ${chunkCount}: ${content.substring(0, 30)}...`);
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
                 }
               }
+
+              console.log(`[API] 流式响应完成，共发送 ${chunkCount} 个chunk`);
+            } catch (error) {
+              console.error('[API] 流式处理错误:', error);
+              controller.error(error);
+            } finally {
+              controller.close();
             }
-          } catch (error) {
-            console.error('[API] Stream error:', error);
-            controller.error(error);
-          } finally {
-            controller.close();
-          }
-        },
-      }),
-      {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      }
-    );
+          },
+        }),
+        {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Data-Source': 'free-llm-api',
+          },
+        }
+      );
+    } catch (llmError) {
+      console.error('[API] LLM调用失败，切换到本地知识库:', llmError);
+      // LLM失败时切换到本地知识库
+      return await handleLocalKnowledgeFallback(request);
+    }
   } catch (error) {
-    console.error('[API] AI服务失败，尝试使用本地知识库:', error);
-    // 尝试使用本地知识库作为fallback
+    console.error('[API] 处理请求失败，尝试使用本地知识库:', error);
+    // 整体失败时切换到本地知识库
     return await handleLocalKnowledgeFallback(request);
   }
 }
@@ -477,4 +431,3 @@ function parseRange(rangeStr: string): { min: number; max: number } | undefined 
 
   return undefined;
 }
-

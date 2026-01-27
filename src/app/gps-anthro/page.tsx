@@ -16,7 +16,7 @@ interface DesignReport {
   content: string; // AI生成的markdown格式内容
   standard: string; // 使用的标准
   timestamp: string; // 生成时间
-  dataSource: 'ai' | 'local'; // 数据来源：AI或本地知识库
+  dataSource: 'ai' | 'local' | 'free-llm-api'; // 数据来源：AI、本地知识库或免费大模型
 }
 
 // 错误详情接口
@@ -134,7 +134,7 @@ export default function CarSeatDesignPage() {
       const decoder = new TextDecoder();
       let fullContent = '';
       let rawChunks: string[] = []; // 记录所有原始chunk
-      const dataSource = response.headers.get('X-Data-Source') as 'ai' | 'local' || 'ai';
+      const dataSource = response.headers.get('X-Data-Source') as 'ai' | 'local' | 'free-llm-api' || 'ai';
 
       if (!reader) {
         throw new Error('无法获取响应流');
@@ -359,7 +359,7 @@ export default function CarSeatDesignPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm px-3 py-1">
-                  V8.2.0
+                  V8.3.0
                 </Badge>
                 <Button
                   variant="outline"
@@ -543,6 +543,12 @@ export default function CarSeatDesignPage() {
                       <Badge className="bg-blue-600 text-white flex items-center gap-1">
                         <Settings className="w-3 h-3" />
                         本地知识库
+                      </Badge>
+                    )}
+                    {report.dataSource === 'free-llm-api' && (
+                      <Badge className="bg-green-600 text-white flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        免费AI模型
                       </Badge>
                     )}
                     <Badge className="bg-purple-600 text-white">
