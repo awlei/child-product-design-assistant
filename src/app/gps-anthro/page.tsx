@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCheck, Bug, X } from 'lucide-react';
-import { isNativeApp } from '@/lib/capacitor-utils';
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
@@ -94,13 +93,6 @@ export default function CarSeatDesignPage() {
 
   // 测试矩阵数据
   const [testMatrixData, setTestMatrixData] = useState<TestMatrixData | null>(null);
-
-  // 检测是否为原生应用
-  const [isNative, setIsNative] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsNative(isNativeApp());
-  }, []);
 
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
@@ -434,29 +426,8 @@ ${brandData.summary}
     const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
 
     try {
-      // APK模式：使用本地数据生成报告
-      if (isNative) {
-        console.log('APK模式，使用本地数据生成报告');
-        const localReport = await generateLocalReport(standard, heightRange, weightRange);
-        if (localReport) {
-          setReport(localReport);
-          // 加载测试矩阵数据
-          const matrixData = await loadTestMatrixData(standard, heightRange, weightRange);
-          if (matrixData) {
-            setTestMatrixData(matrixData);
-          }
-        } else {
-          setError('未找到匹配的本地数据，请检查输入范围');
-          setErrorDetails({
-            message: `未找到符合${heightRange || weightRange}范围的本地数据`,
-            rawContent: `标准: ${standard}, 范围: ${heightRange || weightRange}`,
-          });
-        }
-        setIsGenerating(false);
-        return;
-      }
-
-      // Web模式：调用AI API生成报告
+      // 统一使用免费智能体API生成报告（APK和Web版本一致）
+      console.log('使用免费智能体API生成报告');
       const response = await fetch('/api/design-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -682,38 +653,7 @@ ${brandData.summary}
   const handleAuditReport = async () => {
     if (!report) return;
 
-    // APK模式：显示简化审核信息
-    if (isNative) {
-      setIsAuditing(true);
-      setAuditError('');
-      
-      // 模拟延迟
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 返回基于本地数据的审核结果
-      setAuditResult({
-        audit_passed: true,
-        audit_score: 85,
-        issues: [
-          {
-            type: '设计规范',
-            severity: 'INFO',
-            description: '报告已包含所有必需的设计要求',
-            suggestion: '建议按照本地数据中的参数进行产品设计',
-          },
-        ],
-        summary: '基于本地知识的审核完成。报告内容符合ECE R129/FMVSS 213标准要求，包含了ISOFIX尺寸分类、测试假人、碰撞测试矩阵和设计要求等关键信息。',
-        recommendations: [
-          '严格按照ISOFIX尺寸分类进行产品设计',
-          '确保碰撞测试符合标准要求',
-          '定期进行产品质量检查',
-        ],
-      });
-      setIsAuditing(false);
-      return;
-    }
-
-    // Web模式：调用AI API审核
+    // 统一使用免费智能体API审核报告（APK和Web版本一致）
     setIsAuditing(true);
     setAuditError('');
     setAuditResult(null);

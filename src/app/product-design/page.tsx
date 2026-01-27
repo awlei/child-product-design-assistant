@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Send, MessageSquare, User, Bot, Sparkles, ChevronRight, Loader2, AlertCircle, Smartphone } from 'lucide-react';
-import { isNativeApp } from '@/lib/capacitor-utils';
+import { ArrowLeft, Send, MessageSquare, User, Bot, Sparkles, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -57,14 +56,8 @@ export default function ProductDesignPage() {
   const [streamContent, setStreamContent] = useState('');
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
   const [collectedInfo, setCollectedInfo] = useState<string[]>([]);
-  const [isNative, setIsNative] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // 检测是否为原生应用
-  useEffect(() => {
-    setIsNative(isNativeApp());
-  }, []);
 
   // 加载产品分类数据
   useEffect(() => {
@@ -321,85 +314,6 @@ export default function ProductDesignPage() {
       </div>
     </div>
   );
-
-  // 如果是原生应用（APK/IPA），显示提示页面
-  if (isNative) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full shadow-xl">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                <Smartphone className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-gray-800">APK版功能说明</CardTitle>
-            <CardDescription className="text-base text-gray-600 mt-2">
-              Mobile App Feature Notice
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-1">此功能在APK中不可用</h3>
-                  <p className="text-sm text-gray-600">
-                    AI设计助手功能仅在Web浏览器中可用。
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-800">可用的功能：</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>尺寸计算器</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>伤害指标分析</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>GPS人体测量数据查询</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>婴儿推车、高脚椅、婴儿床标准查询</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>综合设计工具</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-800 mb-2">如何使用AI功能？</h4>
-              <p className="text-sm text-gray-600 mb-2">
-                如需使用AI设计助手功能，请使用Web浏览器访问应用：
-              </p>
-              <div className="bg-white border border-gray-200 rounded p-2">
-                <code className="text-xs text-blue-600 break-all">
-                  https://child-product-design-assistant.vercel.app
-                </code>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => window.history.back()}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-            >
-              返回
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
