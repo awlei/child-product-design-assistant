@@ -16,6 +16,7 @@ interface DesignReport {
   content: string; // AI生成的markdown格式内容
   standard: string; // 使用的标准
   timestamp: string; // 生成时间
+  dataSource: 'ai' | 'local'; // 数据来源：AI或本地知识库
 }
 
 // 错误详情接口
@@ -133,12 +134,13 @@ export default function CarSeatDesignPage() {
       const decoder = new TextDecoder();
       let fullContent = '';
       let rawChunks: string[] = []; // 记录所有原始chunk
+      const dataSource = response.headers.get('X-Data-Source') as 'ai' | 'local' || 'ai';
 
       if (!reader) {
         throw new Error('无法获取响应流');
       }
 
-      console.log('开始处理流式响应...');
+      console.log('[前端] 开始处理流式响应，数据来源:', dataSource);
       let chunkCount = 0;
 
       while (true) {
@@ -214,8 +216,9 @@ export default function CarSeatDesignPage() {
           content: fullContent,
           standard: getStandardName(standard),
           timestamp: new Date().toISOString(),
+          dataSource: dataSource,
         });
-        console.log('报告已设置');
+        console.log('报告已设置，数据来源:', dataSource);
       } else {
         console.error('AI未返回任何内容，fullContent为空');
         setError('生成报告失败，AI未返回任何内容');
@@ -535,9 +538,17 @@ export default function CarSeatDesignPage() {
                       标准：{report.standard} · 生成时间：{new Date(report.timestamp).toLocaleString('zh-CN')}
                     </p>
                   </div>
-                  <Badge className="bg-purple-600 text-white">
-                    已生成
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {report.dataSource === 'local' && (
+                      <Badge className="bg-blue-600 text-white flex items-center gap-1">
+                        <Settings className="w-3 h-3" />
+                        本地知识库
+                      </Badge>
+                    )}
+                    <Badge className="bg-purple-600 text-white">
+                      已生成
+                    </Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>

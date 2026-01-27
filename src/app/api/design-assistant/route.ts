@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SearchClient, Config } from 'coze-coding-dev-sdk';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { generateLocalAdvice, formatLocalAdvice, LocalKnowledgeRequest } from '@/lib/localKnowledge';
 
 // 豆包大语言模型配置
 const DOUBAO_API_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
@@ -207,16 +208,10 @@ async function searchBrandParameters(
 
 export async function POST(request: NextRequest) {
   try {
-    // 检查API Key是否配置
+    // 检查API Key是否配置，如果未配置则直接使用本地知识库
     if (!process.env.DOUBAO_API_KEY || process.env.DOUBAO_API_KEY.trim() === '') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'DOUBAO_API_KEY未配置',
-          details: '请在.env文件中配置DOUBAO_API_KEY环境变量，或联系开发团队获取API Key。',
-        },
-        { status: 500 }
-      );
+      console.log('[API] DOUBAO_API_KEY未配置，切换到本地知识库');
+      return await handleLocalKnowledgeFallback(request);
     }
 
     const { standard, heightRange, weightRange } = await request.json();
@@ -367,14 +362,119 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Design assistant error:', error);
+    console.error('[API] AI服务失败，尝试使用本地知识库:', error);
+    // 尝试使用本地知识库作为fallback
+    return await handleLocalKnowledgeFallback(request);
+  }
+}
+
+/**
+ * 处理本地知识库fallback方案
+ */
+async function handleLocalKnowledgeFallback(request: NextRequest) {
+  try {
+    const { standard, heightRange, weightRange, productType } = await request.json();
+
+    console.log('[API] 本地知识库fallback - 参数:', { standard, heightRange, weightRange, productType });
+
+    // 转换标准名称
+    let localStandard: 'ECE_R129' | 'FMVSS_213' | 'ECE_R44';
+    if (standard === 'R129') {
+      localStandard = 'ECE_R129';
+    } else if (standard === 'FMVSS213') {
+      localStandard = 'FMVSS_213';
+    } else if (standard === 'R44') {
+      localStandard = 'ECE_R44';
+    } else {
+      console.log('[API] 不支持的标准:', standard);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unknown standard',
+          details: `不支持的标准: ${standard}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 解析范围
+    const localRequest: LocalKnowledgeRequest = {
+      productType: productType || 'child-safety-seat',
+      standard: localStandard,
+      heightRange: heightRange ? parseRange(heightRange) : undefined,
+      weightRange: weightRange ? parseRange(weightRange) : undefined,
+    };
+
+    console.log('[API] 本地知识库请求:', localRequest);
+
+    // 生成本地建议
+    const advice = await generateLocalAdvice(localRequest);
+    console.log('[API] 本地建议生成成功，sections数量:', advice.sections.length);
+
+    const markdownContent = formatLocalAdvice(advice);
+    console.log('[API] Markdown内容长度:', markdownContent.length);
+
+    // 模拟流式响应，将本地内容逐字发送
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          const chars = markdownContent.split('');
+
+          // 模拟打字机效果，每100ms发送5个字符
+          for (let i = 0; i < chars.length; i += 5) {
+            const chunk = chars.slice(i, i + 5).join('');
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+            await new Promise(resolve => setTimeout(resolve, 30));
+          }
+
+          controller.close();
+        },
+      }),
+      {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'X-Data-Source': 'local-knowledge-base',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('[API] 本地知识库处理失败:', error);
+    console.error('[API] 错误堆栈:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to generate design report',
+        error: 'Failed to generate design report from local knowledge base',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
 }
+
+/**
+ * 解析范围字符串（如 "40-105 cm" 或 "0-13kg"）
+ */
+function parseRange(rangeStr: string): { min: number; max: number } | undefined {
+  try {
+    // 移除空格和单位
+    const cleaned = rangeStr.trim().replace(/cm|kg|kg\)|cm\)|\s/g, '');
+    const parts = cleaned.split('-');
+
+    if (parts.length === 2) {
+      const min = parseFloat(parts[0]);
+      const max = parseFloat(parts[1]);
+
+      if (!isNaN(min) && !isNaN(max)) {
+        return { min, max };
+      }
+    }
+  } catch (error) {
+    console.error('[API] 解析范围失败:', rangeStr, error);
+  }
+
+  return undefined;
+}
+

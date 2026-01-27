@@ -1,0 +1,2 @@
+:HL["/_next/static/chunks/811c36d62f2c9dfa.css","style"]
+0:{"buildId":"xyHk8YHz-yI8NWG6eYgkT","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"gps-anthro","paramType":null,"paramKey":"gps-anthro","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

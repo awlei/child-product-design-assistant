@@ -1,0 +1,272 @@
+{
+  "standard_info": {
+    "name": "GB 28007 & EN 1130 & ASTM F1169",
+    "description": "婴儿床安全标准",
+    "version": "Latest",
+    "effective_date": "2011-08-01"
+  },
+  "test_dummies": [
+    {
+      "name": "Q0 (Newborn)",
+      "stature": 50,
+      "weight": 3.5,
+      "age": "0-6 months",
+      "suitable": true,
+      "reason": "适合新生儿使用，需要平躺设计"
+    },
+    {
+      "name": "Q1 (Infant)",
+      "stature": 75,
+      "weight": 9.7,
+      "age": "6-12 months",
+      "suitable": true,
+      "reason": "适合婴儿使用"
+    },
+    {
+      "name": "Q1.5 (Toddler)",
+      "stature": 87.5,
+      "weight": 11.5,
+      "age": "12-18 months",
+      "suitable": true,
+      "reason": "适合幼儿使用"
+    },
+    {
+      "name": "Q3 (Child)",
+      "stature": 105,
+      "weight": 15,
+      "age": "3 years",
+      "suitable": true,
+      "reason": "接近建议使用年龄上限"
+    },
+    {
+      "name": "Q6 (School age)",
+      "stature": 125,
+      "weight": 21.5,
+      "age": "6 years",
+      "suitable": false,
+      "reason": "超过建议使用年龄"
+    }
+  ],
+  "crib_types": [
+    {
+      "type": "Standard Crib",
+      "name_cn": "标准婴儿床",
+      "name_en": "Standard Crib",
+      "min_weight": 0,
+      "max_weight": 15,
+      "min_age": "0 months",
+      "max_age": "3 years",
+      "features": ["固定高度", "围栏间隙安全", "坚固结构"]
+    },
+    {
+      "type": "Convertible Crib",
+      "name_cn": "可转换婴儿床",
+      "name_en": "Convertible Crib",
+      "min_weight": 0,
+      "max_weight": 25,
+      "min_age": "0 months",
+      "max_age": "5 years",
+      "features": ["可转换为 toddler床", "可调节高度", "多功能设计"]
+    },
+    {
+      "type": "Portable Crib",
+      "name_cn": "便携式婴儿床",
+      "name_en": "Portable Crib",
+      "min_weight": 0,
+      "max_weight": 12,
+      "min_age": "0 months",
+      "max_age": "2 years",
+      "features": ["轻便", "可折叠", "适合出行"]
+    },
+    {
+      "type": "Bassinet",
+      "name_cn": "婴儿摇篮",
+      "name_en": "Bassinet",
+      "min_weight": 0,
+      "max_weight": 8,
+      "min_age": "0 months",
+      "max_age": "6 months",
+      "features": ["小巧", "轻便", "适合新生儿"]
+    },
+    {
+      "type": "Co-sleeper",
+      "name_cn": "亲子床",
+      "name_en": "Co-sleeper",
+      "min_weight": 0,
+      "max_weight": 10,
+      "min_age": "0 months",
+      "max_age": "12 months",
+      "features": ["可接父母床", "方便夜间喂养", "安全围栏"]
+    }
+  ],
+  "safety_requirements": [
+    {
+      "id": "slat_spacing",
+      "name_cn": "围栏间隙",
+      "name_en": "Slat Spacing",
+      "description_cn": "围栏间隙不得大于60mm，防止儿童头部卡住",
+      "description_en": "Gap between slats must not exceed 60mm to prevent head entrapment"
+    },
+    {
+      "id": "mattress_height",
+      "name_cn": "床垫高度",
+      "name_en": "Mattress Height",
+      "description_cn": "床垫上表面到围栏顶部距离不得小于50cm",
+      "description_en": "Distance from mattress surface to top of side rails must be at least 50cm"
+    },
+    {
+      "id": "corner_posts",
+      "name_cn": "角柱高度",
+      "name_en": "Corner Posts",
+      "description_cn": "角柱突出部分高度不得超过1.5mm",
+      "description_en": "Protrusion of corner posts must not exceed 1.5mm"
+    },
+    {
+      "id": "cutouts",
+      "name_cn": "开口设计",
+      "name_en": "Cutouts",
+      "description_cn": "围栏上不得有任何可导致儿童卡住的开口",
+      "description_en": "No openings on side rails that could cause entrapment"
+    },
+    {
+      "id": "hardware",
+      "name_cn": "硬件安全",
+      "name_en": "Hardware Safety",
+      "description_cn": "所有紧固件必须可靠锁定，不得松动",
+      "description_en": "All fasteners must be securely locked, no loosening"
+    },
+    {
+      "id": "paint_finish",
+      "name_cn": "涂料安全",
+      "name_en": "Paint and Finish",
+      "description_cn": "涂料必须符合GB 6675玩具安全标准",
+      "description_en": "Paint must comply with GB 6675 toy safety standards"
+    },
+    {
+      "id": "stability",
+      "name_cn": "稳定性",
+      "name_en": "Stability",
+      "description_cn": "床体必须稳定，不得倾倒",
+      "description_en": "Crib must be stable, must not tip over"
+    },
+    {
+      "id": "drop_side",
+      "name_cn": "侧板安全",
+      "name_en": "Drop Side Safety",
+      "description_cn": "如设计有可降侧板，必须配备可靠的锁定装置",
+      "description_en": "If designed with drop side, must have reliable locking mechanism"
+    }
+  ],
+  "dimension_requirements": [
+    {
+      "name_cn": "内部长度",
+      "name_en": "Interior Length",
+      "min_value": 120,
+      "max_value": 140,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "内部宽度",
+      "name_en": "Interior Width",
+      "min_value": 60,
+      "max_value": 80,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "围栏高度",
+      "name_en": "Side Rail Height",
+      "min_value": 66,
+      "max_value": 90,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "床垫厚度",
+      "name_en": "Mattress Thickness",
+      "min_value": 10,
+      "max_value": 15,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "床脚高度",
+      "name_en": "Leg Height",
+      "min_value": 15,
+      "max_value": 25,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "围栏厚度",
+      "name_en": "Slat Thickness",
+      "min_value": 15,
+      "max_value": 25,
+      "unit": "mm"
+    }
+  ],
+  "safety_features": [
+    {
+      "name_cn": "坚固结构",
+      "name_en": "Sturdy construction",
+      "importance": "critical"
+    },
+    {
+      "name_cn": "安全围栏间隙",
+      "name_en": "Safe slat spacing",
+      "importance": "critical"
+    },
+    {
+      "name_cn": "防倾倒设计",
+      "name_en": "Anti-tip design",
+      "importance": "critical"
+    },
+    {
+      "name_cn": "可调节床垫高度",
+      "name_en": "Adjustable mattress height",
+      "importance": "important"
+    },
+    {
+      "name_cn": "脚轮锁",
+      "name_en": "Wheel locks",
+      "importance": "important"
+    },
+    {
+      "name_cn": "防夹手设计",
+      "name_en": "Anti-pinch design",
+      "importance": "important"
+    },
+    {
+      "name_cn": "透气材料",
+      "name_en": "Breathable materials",
+      "importance": "recommended"
+    },
+    {
+      "name_cn": "可转换为其他家具",
+      "name_en": "Convertible to other furniture",
+      "importance": "recommended"
+    }
+  ],
+  "ergonomic_requirements": [
+    {
+      "name_cn": "平坦舒适睡眠面",
+      "name_en": "Flat and comfortable sleeping surface",
+      "description_cn": "床垫应平坦，符合新生儿睡眠需求",
+      "description_en": "Mattress should be flat, meeting newborn sleep needs"
+    },
+    {
+      "name_cn": "良好通风",
+      "name_en": "Good ventilation",
+      "description_cn": "床体应保证良好通风，避免闷热",
+      "description_en": "Crib should ensure good ventilation, avoid overheating"
+    },
+    {
+      "name_cn": "安全护栏",
+      "name_en": "Safe guardrails",
+      "description_cn": "围栏应提供足够保护，防止儿童翻越",
+      "description_en": "Guardrails should provide sufficient protection, prevent climbing over"
+    },
+    {
+      "name_cn": "易于清洁",
+      "name_en": "Easy to clean",
+      "description_cn": "材料应易于清洁，保持卫生",
+      "description_en": "Materials should be easy to clean, maintain hygiene"
+    }
+  ]
+}

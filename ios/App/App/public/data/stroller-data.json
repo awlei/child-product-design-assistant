@@ -1,0 +1,321 @@
+{
+  "standard_info": {
+    "name": "UN Regulation No. 16 (R016) & EN 1888-2012",
+    "description": "儿童推车安全标准",
+    "version": "R016r10e",
+    "effective_date": "2024-01-01"
+  },
+  "test_dummies": [
+    {
+      "name": "Q0 (Newborn)",
+      "stature": 50,
+      "weight": 3.5,
+      "age": "0-6 months",
+      "position": "Lie flat",
+      "harness_required": false,
+      "shoulder_width": 18,
+      "hip_width": 16,
+      "backrest_length": 70
+    },
+    {
+      "name": "Q1 (Infant)",
+      "stature": 75,
+      "weight": 9.7,
+      "age": "12 months",
+      "position": "Reclined/Semi-reclined",
+      "harness_required": true,
+      "shoulder_width": 19,
+      "hip_width": 18,
+      "backrest_length": 45
+    },
+    {
+      "name": "Q1.5 (Toddler)",
+      "stature": 87.5,
+      "weight": 11.5,
+      "age": "18 months",
+      "position": "Semi-reclined/Upright",
+      "harness_required": true,
+      "shoulder_width": 20,
+      "hip_width": 19,
+      "backrest_length": 40
+    },
+    {
+      "name": "Q3 (Child)",
+      "stature": 105,
+      "weight": 15,
+      "age": "3 years",
+      "position": "Upright",
+      "harness_required": true,
+      "shoulder_width": 23,
+      "hip_width": 22,
+      "backrest_length": 35
+    },
+    {
+      "name": "Q6 (School age)",
+      "stature": 125,
+      "weight": 21.5,
+      "age": "6 years",
+      "position": "Upright",
+      "harness_required": true,
+      "shoulder_width": 26,
+      "hip_width": 25,
+      "backrest_length": 30
+    },
+    {
+      "name": "Q10 (Pre-teen)",
+      "stature": 138,
+      "weight": 32,
+      "age": "10 years",
+      "position": "Upright",
+      "harness_required": true,
+      "shoulder_width": 28,
+      "hip_width": 27,
+      "backrest_length": 28
+    }
+  ],
+  "stroller_types": [
+    {
+      "type": "Bassinet/Carrycot",
+      "name_cn": "婴儿提篮",
+      "name_en": "Baby Bassinet",
+      "min_weight": 0,
+      "max_weight": 9,
+      "min_height": 50,
+      "max_height": 67,
+      "position": "Lie flat",
+      "harness_type": "None or 3-point",
+      "recommended_dummy": ["Q0"]
+    },
+    {
+      "type": "Compact Stroller",
+      "name_cn": "轻便推车",
+      "name_en": "Lightweight Stroller",
+      "min_weight": 6,
+      "max_weight": 15,
+      "min_height": 67,
+      "max_height": 100,
+      "position": "Reclined/Upright",
+      "harness_type": "5-point",
+      "recommended_dummy": ["Q1", "Q1.5", "Q3"]
+    },
+    {
+      "type": "Full-size Stroller",
+      "name_cn": "标准推车",
+      "name_en": "Standard Stroller",
+      "min_weight": 0,
+      "max_weight": 22,
+      "min_height": 50,
+      "max_height": 125,
+      "position": "Multi-position",
+      "harness_type": "5-point",
+      "recommended_dummy": ["Q0", "Q1", "Q1.5", "Q3", "Q6"]
+    },
+    {
+      "type": "Jogging Stroller",
+      "name_cn": "运动推车",
+      "name_en": "Jogging Stroller",
+      "min_weight": 6,
+      "max_weight": 25,
+      "min_height": 67,
+      "max_height": 130,
+      "position": "Reclined/Upright",
+      "harness_type": "5-point",
+      "recommended_dummy": ["Q1", "Q1.5", "Q3", "Q6"]
+    },
+    {
+      "type": "Double/Twin Stroller",
+      "name_cn": "双胞胎推车",
+      "name_en": "Double Stroller",
+      "min_weight": 0,
+      "max_weight": 36,
+      "min_height": 50,
+      "max_height": 125,
+      "position": "Multi-position",
+      "harness_type": "5-point x 2",
+      "recommended_dummy": ["Q0", "Q1", "Q1.5", "Q3"]
+    }
+  ],
+  "test_requirements": [
+    {
+      "test_name": "Stability Test",
+      "test_name_cn": "稳定性测试",
+      "description": "前向、后向、侧向倾倒测试",
+      "pass_criteria": "不倾倒或倾倒角度<15°",
+      "angle": "15°"
+    },
+    {
+      "test_name": "Parking Brake Test",
+      "test_name_cn": "驻车制动测试",
+      "description": "在斜坡上测试制动性能",
+      "pass_criteria": "不滑动，制动距离<100mm",
+      "slope": "12°"
+    },
+    {
+      "test_name": "Harness Strength Test",
+      "test_name_cn": "安全带强度测试",
+      "description": "安全带拉力测试",
+      "pass_criteria": "无断裂，永久变形<25mm",
+      "force": "300N"
+    },
+    {
+      "test_name": "Structural Integrity",
+      "test_name_cn": "结构完整性测试",
+      "description": "框架强度和耐用性测试",
+      "pass_criteria": "无变形、断裂或功能失效",
+      "cycles": "10,000 cycles"
+    },
+    {
+      "test_name": "Entrapment Hazard",
+      "test_name_cn": "夹伤风险测试",
+      "description": "测试活动部件的夹伤风险",
+      "pass_criteria": "所有测试探针通过",
+      "probes": ["5mm", "7mm", "12mm"]
+    },
+    {
+      "test_name": "Finger Entrapment",
+      "test_name_cn": "手指夹伤测试",
+      "description": "测试可折叠机构的夹伤风险",
+      "pass_criteria": "无>7mm的开口，力>50N"
+      },
+    {
+      "test_name": "Impact Test",
+      "test_name_cn": "冲击测试",
+      "description": "带假人进行冲击测试",
+      "pass_criteria": "假人位移<300mm，加速度<50g",
+      "impact": "1m drop"
+    },
+    {
+      "test_name": "Load Test",
+      "test_name_cn": "负载测试",
+      "description": "施加3倍最大承载重量",
+      "pass_criteria": "无永久变形>25mm",
+      "load": "3x max weight"
+    }
+  ],
+  "dimensional_requirements": {
+    "seat_width": {
+      "min": 30,
+      "recommended": "35-45",
+      "unit": "cm",
+      "description": "座椅宽度，影响舒适性和安全性"
+    },
+    "seat_depth": {
+      "min": 25,
+      "recommended": "30-40",
+      "unit": "cm",
+      "description": "座椅深度，影响腿部支撑"
+    },
+    "backrest_height": {
+      "min": 50,
+      "recommended": "60-80",
+      "unit": "cm",
+      "description": "靠背高度，影响头部保护"
+    },
+    "wheel_size": {
+      "min_front": 12,
+      "min_rear": 20,
+      "recommended": "Front: 15-20cm, Rear: 25-30cm",
+      "unit": "cm",
+      "description": "轮子尺寸，影响通过性和操控性"
+    },
+    "handle_height": {
+      "adjustable": true,
+      "min": 85,
+      "max": 115,
+      "unit": "cm",
+      "description": "推手高度，应可调节适应不同身高的家长"
+    },
+    "overall_width": {
+      "min": 45,
+      "max": 65,
+      "unit": "cm",
+      "description": "整体宽度，影响通过门廊的便利性"
+    },
+    "overall_height": {
+      "folded": 25,
+      "unfolded": 100,
+      "unit": "cm",
+      "description": "折叠和展开高度，影响便携性和存储"
+    },
+    "weight_capacity": {
+      "min": 15,
+      "recommended": "18-25",
+      "max": 36,
+      "unit": "kg",
+      "description": "最大承载重量"
+    }
+  },
+  "ergonomic_requirements": {
+    "handle_grip": {
+      "diameter": "25-35mm",
+      "shape": "Ergonomic, soft grip",
+      "adjustable_height": true,
+      "description": "推手设计应符合人体工程学"
+    },
+    "recline_positions": {
+      "min": 2,
+      "recommended": "3-4",
+      "positions": ["Lie flat", "Reclined", "Semi-reclined", "Upright"],
+      "description": "倾斜角度调节位置"
+    },
+    "leg_rest": {
+      "adjustable": true,
+      "positions": ["Down", "Mid", "Up"],
+      "description": "腿部支撑，应有可调节功能"
+    },
+    "canopy_coverage": {
+      "min": "70%",
+      "recommended": "UPF 50+",
+      "description": "遮阳覆盖率，保护儿童免受紫外线"
+    },
+    "storage_basket": {
+      "min_volume": 10,
+      "recommended": 15,
+      "unit": "L",
+      "description": "储物篮容量"
+    },
+    "suspension": {
+      "recommended": true,
+      "type": "Front and rear shock absorption",
+      "description": "减震系统，提升乘坐舒适性"
+    }
+  },
+  "safety_features": [
+    {
+      "feature": "5-point harness",
+      "name_cn": "五点式安全带",
+      "importance": "Critical",
+      "description": "双肩带、腰带、裆带，确保儿童牢固固定"
+    },
+    {
+      "feature": "Parking brake",
+      "name_cn": "驻车制动",
+      "importance": "Critical",
+      "description": "前后轮联动制动，防止意外滑动"
+    },
+    {
+      "feature": "Wrist strap",
+      "name_cn": "腕带",
+      "importance": "Important",
+      "description": "防止推车意外滑走"
+    },
+    {
+      "feature": "Tether anchor",
+      "name_cn": "系绳固定点",
+      "importance": "Important",
+      "description": "用于运动推车，确保安全"
+    },
+    {
+      "feature": "Child lock",
+      "name_cn": "儿童锁",
+      "importance": "Important",
+      "description": "防止儿童意外操作折叠机构"
+    },
+    {
+      "feature": "Reflectors",
+      "name_cn": "反光条",
+      "importance": "Recommended",
+      "description": "提升夜间可视性"
+    }
+  ]
+}

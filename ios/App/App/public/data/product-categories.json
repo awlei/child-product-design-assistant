@@ -1,0 +1,240 @@
+{
+  "categories": [
+    {
+      "id": "stroller",
+      "nameCN": "推车设计",
+      "nameEN": "Stroller Design",
+      "icon": "👶",
+      "color": "#667eea",
+      "descriptionCN": "婴儿推车、轻便推车、双胞胎推车等",
+      "descriptionEN": "Baby strollers, lightweight strollers, twin strollers, etc.",
+      "standards": ["GB 14748", "EN 1888", "ASTM F833", "GPS R016"],
+      "questions": [
+        {
+          "id": "age",
+          "textCN": "目标儿童年龄范围",
+          "textEN": "Target child age range",
+          "type": "select",
+          "optionsCN": ["0-6个月新生儿", "6-12个月婴儿", "12-36个月幼儿", "3-6岁学龄前", "6岁以上"],
+          "optionsEN": ["0-6 months newborn", "6-12 months infant", "12-36 months toddler", "3-6 years preschool", "6+ years"]
+        },
+        {
+          "id": "weight",
+          "textCN": "预计使用体重范围",
+          "textEN": "Expected weight range",
+          "type": "select",
+          "optionsCN": ["0-9kg", "9-15kg", "15-22kg", "22-36kg"],
+          "optionsEN": ["0-9kg", "9-15kg", "15-22kg", "22-36kg"]
+        },
+        {
+          "id": "height",
+          "textCN": "预计使用身高范围",
+          "textEN": "Expected height range",
+          "type": "select",
+          "optionsCN": ["40-67cm", "67-100cm", "100-125cm", "125-150cm"],
+          "optionsEN": ["40-67cm", "67-100cm", "100-125cm", "125-150cm"]
+        },
+        {
+          "id": "scenario",
+          "textCN": "使用场景与需求",
+          "textEN": "Usage scenario and requirements",
+          "type": "select",
+          "optionsCN": ["日常散步", "旅行出行", "越野路况", "双胞胎/二胎", "可折叠收纳", "亲子互动"],
+          "optionsEN": ["Daily walking", "Travel", "Off-road", "Twins/Second child", "Foldable storage", "Parent-child interaction"]
+        },
+        {
+          "id": "preference",
+          "textCN": "其他偏好",
+          "textEN": "Other preferences",
+          "type": "select",
+          "optionsCN": ["轻便优先", "颜值优先", "可调节高度", "环保材料", "高性价比"],
+          "optionsEN": ["Lightweight first", "Appearance first", "Adjustable height", "Eco-friendly materials", "High cost-performance"]
+        }
+      ]
+    },
+    {
+      "id": "car-seat",
+      "nameCN": "儿童安全座椅设计",
+      "nameEN": "Child Car Seat Design",
+      "icon": "🚗",
+      "color": "#764ba2",
+      "descriptionCN": "婴儿提篮、正向座椅、增高垫等",
+      "descriptionEN": "Baby bassinets, forward-facing seats, boosters, etc.",
+      "standards": ["ECE R129", "ECE R44", "FMVSS 213", "GB 27887"],
+      "questions": [
+        {
+          "id": "age",
+          "textCN": "目标儿童年龄范围",
+          "textEN": "Target child age range",
+          "type": "select",
+          "optionsCN": ["0-6个月新生儿", "6-12个月婴儿", "12-36个月幼儿", "3-7岁学龄前", "7-12岁小学生"],
+          "optionsEN": ["0-6 months newborn", "6-12 months infant", "12-36 months toddler", "3-7 years preschool", "7-12 years school-age"]
+        },
+        {
+          "id": "weight",
+          "textCN": "预计使用体重范围",
+          "textEN": "Expected weight range",
+          "type": "select",
+          "optionsCN": ["0-13kg", "9-18kg", "15-25kg", "22-36kg"],
+          "optionsEN": ["0-13kg", "9-18kg", "15-25kg", "22-36kg"]
+        },
+        {
+          "id": "height",
+          "textCN": "预计使用身高范围",
+          "textEN": "Expected height range",
+          "type": "select",
+          "optionsCN": ["40-87cm", "87-105cm", "100-125cm", "125-150cm"],
+          "optionsEN": ["40-87cm", "87-105cm", "100-125cm", "125-150cm"]
+        },
+        {
+          "id": "scenario",
+          "textCN": "使用场景与需求",
+          "textEN": "Usage scenario and requirements",
+          "type": "select",
+          "optionsCN": ["日常通勤", "长途旅行", "多车使用", "二胎家庭", "ISOFIX安装", "安全带安装"],
+          "optionsEN": ["Daily commute", "Long travel", "Multi-car usage", "Two-child family", "ISOFIX installation", "Seatbelt installation"]
+        },
+        {
+          "id": "preference",
+          "textCN": "其他偏好",
+          "textEN": "Other preferences",
+          "type": "select",
+          "optionsCN": ["侧撞保护", "360°旋转", "可调节头枕", "透气面料", "防误操作"],
+          "optionsEN": ["Side impact protection", "360° rotation", "Adjustable headrest", "Breathable fabric", "Anti-misoperation"]
+        }
+      ]
+    },
+    {
+      "id": "furniture",
+      "nameCN": "儿童家具/家庭产品设计",
+      "nameEN": "Children's Furniture Design",
+      "icon": "🪑",
+      "color": "#f093fb",
+      "descriptionCN": "高脚椅、儿童桌椅、收纳柜等",
+      "descriptionEN": "High chairs, children's desks and chairs, storage cabinets, etc.",
+      "standards": ["GB 28007", "EN 1272", "ASTM F2057", "GB 6675"],
+      "questions": [
+        {
+          "id": "age",
+          "textCN": "目标儿童年龄范围",
+          "textEN": "Target child age range",
+          "type": "select",
+          "optionsCN": ["0-6个月", "6-18个月", "18-36个月", "3-6岁", "6岁以上"],
+          "optionsEN": ["0-6 months", "6-18 months", "18-36 months", "3-6 years", "6+ years"]
+        },
+        {
+          "id": "weight",
+          "textCN": "预计使用体重范围",
+          "textEN": "Expected weight range",
+          "type": "select",
+          "optionsCN": ["0-9kg", "9-15kg", "15-25kg", "25-40kg", "40-60kg"],
+          "optionsEN": ["0-9kg", "9-15kg", "15-25kg", "25-40kg", "40-60kg"]
+        },
+        {
+          "id": "height",
+          "textCN": "预计使用身高范围",
+          "textEN": "Expected height range",
+          "type": "select",
+          "optionsCN": ["50-70cm", "70-90cm", "90-110cm", "110-140cm", "140-160cm"],
+          "optionsEN": ["50-70cm", "70-90cm", "90-110cm", "110-140cm", "140-160cm"]
+        },
+        {
+          "id": "scenario",
+          "textCN": "使用场景与需求",
+          "textEN": "Usage scenario and requirements",
+          "type": "select",
+          "optionsCN": ["家居用餐", "学习书桌", "收纳整理", "游戏娱乐", "可调节高度"],
+          "optionsEN": ["Home dining", "Study desk", "Storage", "Play and entertainment", "Adjustable height"]
+        },
+        {
+          "id": "preference",
+          "textCN": "其他偏好",
+          "textEN": "Other preferences",
+          "type": "select",
+          "optionsCN": ["环保材料", "圆角安全", "易清洁", "模块化设计", "空间节约"],
+          "optionsEN": ["Eco-friendly materials", "Rounded corners", "Easy to clean", "Modular design", "Space-saving"]
+        }
+      ]
+    },
+    {
+      "id": "toy",
+      "nameCN": "儿童玩具/益智产品设计",
+      "nameEN": "Children's Toys/Educational Toys Design",
+      "icon": "🎮",
+      "color": "#4facfe",
+      "descriptionCN": "益智玩具、早教产品、户外玩具等",
+      "descriptionEN": "Educational toys, early education products, outdoor toys, etc.",
+      "standards": ["GB 6675", "EN 71", "ASTM F963", "ISO 8124"],
+      "questions": [
+        {
+          "id": "age",
+          "textCN": "目标儿童年龄范围",
+          "textEN": "Target child age range",
+          "type": "select",
+          "optionsCN": ["0-12个月", "12-24个月", "2-4岁", "4-6岁", "6岁以上"],
+          "optionsEN": ["0-12 months", "12-24 months", "2-4 years", "4-6 years", "6+ years"]
+        },
+        {
+          "id": "weight",
+          "textCN": "产品重量范围",
+          "textEN": "Product weight range",
+          "type": "select",
+          "optionsCN": ["轻便(≤0.5kg)", "适中(0.5-2kg)", "重型(2-5kg)"],
+          "optionsEN": ["Lightweight (≤0.5kg)", "Medium (0.5-2kg)", "Heavy (2-5kg)"]
+        },
+        {
+          "id": "scenario",
+          "textCN": "使用场景与需求",
+          "textEN": "Usage scenario and requirements",
+          "type": "select",
+          "optionsCN": ["室内益智", "户外运动", "早教启蒙", "亲子互动", "多人游戏"],
+          "optionsEN": ["Indoor education", "Outdoor sports", "Early education", "Parent-child interaction", "Multiplayer games"]
+        },
+        {
+          "id": "preference",
+          "textCN": "其他偏好",
+          "textEN": "Other preferences",
+          "type": "select",
+          "optionsCN": ["安全无毒", "益智启发", "互动性强", "音效丰富", "外观可爱"],
+          "optionsEN": ["Safe and non-toxic", "Educational", "Interactive", "Rich sound effects", "Cute appearance"]
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "nameCN": "其他儿童用品设计",
+      "nameEN": "Other Children's Products Design",
+      "icon": "🎁",
+      "color": "#43e97b",
+      "descriptionCN": "安全用品、出行配件、护理用品等",
+      "descriptionEN": "Safety products, travel accessories, care products, etc.",
+      "standards": ["GB 6675", "EN 71", "ASTM", "ISO"],
+      "questions": [
+        {
+          "id": "age",
+          "textCN": "目标儿童年龄范围",
+          "textEN": "Target child age range",
+          "type": "select",
+          "optionsCN": ["0-6个月", "6-12个月", "12-36个月", "3-6岁", "6岁以上"],
+          "optionsEN": ["0-6 months", "6-12 months", "12-36 months", "3-6 years", "6+ years"]
+        },
+        {
+          "id": "scenario",
+          "textCN": "使用场景与需求",
+          "textEn": "Usage scenario and requirements",
+          "type": "select",
+          "optionsCN": ["安全防护", "出行便利", "日常护理", "成长记录", "特殊需求"],
+          "optionsEN": ["Safety protection", "Travel convenience", "Daily care", "Growth record", "Special needs"]
+        },
+        {
+          "id": "preference",
+          "textCN": "其他偏好",
+          "textEn": "Other preferences",
+          "type": "select",
+          "optionsCN": ["便携性", "耐用性", "易清洁", "多功能", "性价比"],
+          "optionsEN": ["Portability", "Durability", "Easy to clean", "Multi-function", "Cost-effective"]
+        }
+      ]
+    }
+  ]
+}
