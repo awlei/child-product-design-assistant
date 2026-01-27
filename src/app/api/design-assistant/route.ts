@@ -222,6 +222,18 @@ async function searchBrandParameters(
 
 export async function POST(request: NextRequest) {
   try {
+    // 检查API Key是否配置
+    if (!process.env.DOUBAO_API_KEY || process.env.DOUBAO_API_KEY.trim() === '') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'DOUBAO_API_KEY未配置',
+          details: '请在.env文件中配置DOUBAO_API_KEY环境变量，或联系开发团队获取API Key。',
+        },
+        { status: 500 }
+      );
+    }
+
     const { standard, heightRange, weightRange } = await request.json();
 
     // 加载技术数据
