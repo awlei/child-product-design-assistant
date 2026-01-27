@@ -118,7 +118,7 @@ export async function generateLocalAdvice(request: LocalKnowledgeRequest): Promi
       sections.push({
         title: '伤害指标要求',
         content: Object.entries(standard.injury_criteria).map(([key, value]) => {
-          if (typeof value === 'object') {
+          if (typeof value === 'object' && value !== null) {
             return `**${key}**:\n${Object.entries(value).map(([k, v]) => `  - ${k}: ${v}`).join('\n')}`;
           }
           return `**${key}**: ${value}`;
