@@ -29,14 +29,13 @@ jobs:
 
       # 安装pnpm
       - name: Install pnpm
-        id: pnpm-cache
         uses: pnpm/action-setup@v4
 
       # 启用pnpm缓存
       - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
