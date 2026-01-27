@@ -142,11 +142,15 @@ function buildSystemPrompt(technicalData: any): string {
 - 目前最高约18kg/40lbs
 - 新版FMVSS 213a侧重侧撞保护
 
-## JSON输出格式示例
+## JSON输出格式
 
-你必须按照以下JSON格式输出，不要添加任何其他内容：
+【重要】你**必须**直接输出JSON对象，不要添加任何其他内容：
+- ❌ 不要添加 \`\`\`json 标记
+- ❌ 不要添加 \`\`\` 标记
+- ❌ 不要添加任何解释性文字
+- ✅ 直接输出JSON对象
 
-\`\`\`json
+JSON格式要求：
 {
   "module1": {
     "title": "产品定位与适用标准",
@@ -172,20 +176,14 @@ function buildSystemPrompt(technicalData: any): string {
         "name": "侧撞保护系统（SIP）",
         "implementation": "座椅两侧集成可折叠的侧翼，吸收侧面冲击能量",
         "safetyValue": "减少侧面碰撞对头部和胸部的伤害，降低伤害指标30%"
-      },
-      {
-        "name": "ISOFIX+支撑腿",
-        "implementation": "采用标准ISOFIX接口，配备可伸缩支撑腿，长度35-50cm可调",
-        "safetyValue": "确保座椅稳固安装，降低安装错误风险，防止座椅翻转"
       }
     ]
   }
 }
-\`\`\`
 
 ## 重要提示
 
-1. 必须严格按照JSON格式输出，不要添加任何其他内容（如\`\`\`json标记）
+1. 【最关键】必须直接输出JSON对象，不要添加任何其他内容（不要添加markdown代码块标记）
 2. 必须使用上面提供的技术数据，不能编造数据
 3. 每个模块内容必须专业、具体、可落地
 4. 每个模块控制在200-300字

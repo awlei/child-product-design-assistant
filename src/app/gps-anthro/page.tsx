@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCheck } from 'lucide-react';
+import { Shield, Sparkles, Loader2, CheckCircle, AlertCircle, Settings, ShieldCheck, Bug, X } from 'lucide-react';
 
 type StandardType = 'R129' | 'R44' | 'FMVSS213';
 
@@ -31,6 +31,14 @@ interface DesignReport {
   };
 }
 
+// 错误详情接口
+interface ErrorDetails {
+  message: string;
+  rawContent?: string;
+  parseError?: string;
+  jsonPath?: string;
+}
+
 export default function CarSeatDesignPage() {
   const [standard, setStandard] = useState<StandardType>('R129');
   const [inputType, setInputType] = useState<'height' | 'weight'>('height');
@@ -41,6 +49,8 @@ export default function CarSeatDesignPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [report, setReport] = useState<DesignReport | null>(null);
   const [error, setError] = useState('');
+  const [errorDetails, setErrorDetails] = useState<ErrorDetails | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
@@ -50,6 +60,8 @@ export default function CarSeatDesignPage() {
     setMaxHeight('');
     setMinWeight('');
     setMaxWeight('');
+    setError('');
+    setErrorDetails(null);
   };
 
   const handleGenerateReport = async () => {
@@ -79,6 +91,7 @@ export default function CarSeatDesignPage() {
     }
 
     setError('');
+    setErrorDetails(null);
     setIsGenerating(true);
     setReport(null);
 
@@ -134,62 +147,158 @@ export default function CarSeatDesignPage() {
         }
       }
 
+      console.log('Full content from AI:', fullContent);
+
       // 解析JSON格式的报告
-      const parsedReport = parseJsonReport(fullContent);
-      if (parsedReport) {
-        setReport(parsedReport);
+      const parseResult = parseJsonReport(fullContent);
+      if (parseResult.success && parseResult.report) {
+        setReport(parseResult.report);
       } else {
-        setError('生成报告格式错误，请重试');
+        // 解析失败，显示详细错误
+        setError('生成报告格式错误');
+        setErrorDetails({
+          message: parseResult.error || '未知错误',
+          rawContent: fullContent.substring(0, 500) + (fullContent.length > 500 ? '...' : ''),
+          parseError: parseResult.parseError,
+        });
       }
     } catch (err) {
       console.error('生成报告错误:', err);
       setError('生成报告失败，请稍后重试');
+      setErrorDetails({
+        message: err instanceof Error ? err.message : '未知错误',
+      });
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // 解析JSON格式的报告
-  const parseJsonReport = (content: string): DesignReport | null => {
+  // 改进的JSON解析函数 - 支持多种格式和详细错误诊断
+  const parseJsonReport = (content: string): { success: boolean; report?: DesignReport; error?: string; parseError?: string } => {
+    console.log('Starting JSON parsing...');
+    console.log('Content length:', content.length);
+
+    // 方法1: 直接尝试解析整个内容
     try {
-      // 尝试提取JSON部分
+      console.log('Method 1: Trying to parse entire content as JSON...');
+      const parsed = JSON.parse(content);
+      console.log('Method 1: Direct parse successful');
+      const report = validateAndNormalize(parsed);
+      if (report) {
+        return { success: true, report };
+      } else {
+        console.error('Method 1: Validation failed');
+        return { success: false, error: 'JSON结构不符合要求' };
+      }
+    } catch (e) {
+      console.log('Method 1: Direct parse failed, trying method 2...');
+    }
+
+    // 方法2: 提取第一个完整的JSON对象
+    try {
+      console.log('Method 2: Extracting first JSON object...');
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('No JSON found in content');
-        return null;
+        console.error('Method 2: No JSON found');
+        return {
+          success: false,
+          error: 'AI未返回JSON格式的内容',
+          parseError: '未找到JSON对象',
+        };
       }
 
       const jsonStr = jsonMatch[0];
+      console.log('Method 2: Found JSON, length:', jsonStr.length);
+      console.log('Method 2: JSON preview:', jsonStr.substring(0, 200) + '...');
+
       const parsed = JSON.parse(jsonStr);
+      console.log('Method 2: JSON parsed successfully');
 
-      // 验证结构
-      if (!parsed.module1 || !parsed.module2 || !parsed.module3) {
-        console.error('Invalid report structure');
-        return null;
+      const normalized = validateAndNormalize(parsed);
+      if (normalized) {
+        console.log('Method 2: Validation successful');
+        return { success: true, report: normalized };
+      } else {
+        console.error('Method 2: Validation failed');
+        return {
+          success: false,
+          error: 'JSON结构不符合要求',
+          parseError: '缺少必要的模块（module1/module2/module3）',
+        };
       }
-
-      return {
-        module1: {
-          title: parsed.module1.title || '产品定位与适用标准',
-          content: parsed.module1.content || '',
-        },
-        module2: {
-          title: parsed.module2.title || '关键技术要求',
-          requirements: Array.isArray(parsed.module2.requirements)
-            ? parsed.module2.requirements
-            : [],
-        },
-        module3: {
-          title: parsed.module3.title || '核心安全功能推荐',
-          features: Array.isArray(parsed.module3.features)
-            ? parsed.module3.features
-            : [],
-        },
-      };
     } catch (e) {
-      console.error('Failed to parse JSON report:', e);
+      console.error('Method 2: Parse failed', e);
+      return {
+        success: false,
+        error: 'JSON解析失败',
+        parseError: e instanceof Error ? e.message : '未知解析错误',
+      };
+    }
+  };
+
+  // 验证和标准化报告数据
+  const validateAndNormalize = (parsed: any): DesignReport | null => {
+    console.log('Validating report structure...');
+
+    // 检查必需的模块
+    if (!parsed.module1) {
+      console.error('Missing module1');
       return null;
     }
+    if (!parsed.module2) {
+      console.error('Missing module2');
+      return null;
+    }
+    if (!parsed.module3) {
+      console.error('Missing module3');
+      return null;
+    }
+
+    // 验证module1
+    if (typeof parsed.module1.content !== 'string') {
+      console.error('Invalid module1.content type:', typeof parsed.module1.content);
+      parsed.module1.content = String(parsed.module1.content || '');
+    }
+
+    // 验证module2
+    if (!Array.isArray(parsed.module2.requirements)) {
+      console.error('Invalid module2.requirements type:', typeof parsed.module2.requirements);
+      if (typeof parsed.module2.requirements === 'string') {
+        // 如果是字符串，尝试按换行符分割
+        parsed.module2.requirements = parsed.module2.requirements.split('\n').filter((r: string) => r.trim());
+      } else {
+        parsed.module2.requirements = [];
+      }
+    }
+
+    // 验证module3
+    if (!Array.isArray(parsed.module3.features)) {
+      console.error('Invalid module3.features type:', typeof parsed.module3.features);
+      parsed.module3.features = [];
+    }
+
+    // 标准化features
+    parsed.module3.features = parsed.module3.features.map((f: any) => ({
+      name: f.name || '未命名功能',
+      implementation: f.implementation || '暂无说明',
+      safetyValue: f.safetyValue || '暂无说明',
+    }));
+
+    console.log('Validation successful');
+    return {
+      module1: {
+        title: parsed.module1.title || '产品定位与适用标准',
+        content: parsed.module1.content,
+      },
+      module2: {
+        title: parsed.module2.title || '关键技术要求',
+        requirements: parsed.module2.requirements,
+      },
+      module3: {
+        title: parsed.module3.title || '核心安全功能推荐',
+        features: parsed.module3.features,
+      },
+    };
   };
 
   const getStandardName = (std: StandardType): string => {
@@ -221,9 +330,20 @@ export default function CarSeatDesignPage() {
                   ECE R129 (i-Size) / FMVSS 213 / ECE R44 · 安全第一 · 专业设计
                 </CardDescription>
               </div>
-              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm px-3 py-1">
-                V8.1.0
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm px-3 py-1">
+                  V8.2.0
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDebug(!showDebug)}
+                  className="flex items-center gap-1"
+                >
+                  <Bug className="w-4 h-4" />
+                  调试
+                </Button>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -323,8 +443,36 @@ export default function CarSeatDesignPage() {
             {error && (
               <Card className="border-red-200 bg-red-50">
                 <CardContent className="p-4 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                  <p className="text-red-700">{error}</p>
+                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-red-700 font-semibold mb-2">{error}</p>
+                    {errorDetails && (
+                      <div className="space-y-2 mt-3">
+                        <p className="text-red-600 text-sm">{errorDetails.message}</p>
+                        {errorDetails.parseError && (
+                          <p className="text-red-600 text-xs">解析错误: {errorDetails.parseError}</p>
+                        )}
+                        {errorDetails.rawContent && showDebug && (
+                          <div className="mt-3 p-3 bg-red-100 rounded border border-red-200">
+                            <p className="text-xs font-semibold mb-2">AI原始输出（前500字符）:</p>
+                            <pre className="text-xs text-red-800 whitespace-pre-wrap font-mono">
+                              {errorDetails.rawContent}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {errorDetails && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowDebug(!showDebug)}
+                      className="flex-shrink-0"
+                    >
+                      <Bug className="w-4 h-4" />
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -393,6 +541,9 @@ export default function CarSeatDesignPage() {
                     </CardContent>
                   </Card>
                 ))}
+                {report.module2.requirements.length === 0 && (
+                  <p className="text-gray-500 italic">暂无技术要求</p>
+                )}
               </CardContent>
             </Card>
 
@@ -427,6 +578,9 @@ export default function CarSeatDesignPage() {
                     </CardContent>
                   </Card>
                 ))}
+                {report.module3.features.length === 0 && (
+                  <p className="text-gray-500 italic">暂无安全功能推荐</p>
+                )}
               </CardContent>
             </Card>
 
