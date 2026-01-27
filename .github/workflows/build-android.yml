@@ -31,8 +31,6 @@ jobs:
       - name: Install pnpm
         id: pnpm-cache
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       # 启用pnpm缓存
       - name: Setup pnpm cache
