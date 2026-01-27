@@ -71,32 +71,17 @@ export default function CarSeatDesignPage() {
     setReport(null);
 
     try {
-      // 构建用户消息
-      let userMessage = '';
-      if (inputType === 'height') {
-        userMessage = `请为身高范围 ${minHeight}-${maxHeight}cm 的儿童设计安全座椅，使用 ${getStandardName(standard)} 标准。`;
-      } else {
-        userMessage = `请为体重范围 ${minWeight}-${maxWeight}kg 的儿童设计安全座椅，使用 ${getStandardName(standard)} 标准。`;
-      }
-
-      userMessage += '\n\n请生成完整的设计报告，包括：';
-      userMessage += '\n1. 产品定位与适用标准';
-      userMessage += '\n2. 从技术标准提取的关键技术要求';
-      userMessage += '\n3. 核心安全功能推荐（10-15项）';
-      userMessage += '\n4. 主流品牌参数对比表格';
-      userMessage += '\n5. 设计建议与人体工程学要点';
+      // 构建API请求参数
+      const heightRange = inputType === 'height' ? `${minHeight}-${maxHeight}cm` : null;
+      const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
 
       const response = await fetch('/api/design-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [
-            {
-              role: 'user',
-              content: userMessage,
-            },
-          ],
-          productId: 'car-seat',
+          standard,
+          heightRange,
+          weightRange,
         }),
       });
 
@@ -137,14 +122,8 @@ export default function CarSeatDesignPage() {
         }
       }
 
-      // 简单解析报告内容（实际应用中可以更复杂）
-      setReport({
-        productPosition: extractSection(fullContent, '产品定位'),
-        technicalRequirements: extractList(fullContent, '技术要求'),
-        safetyFeatures: extractList(fullContent, '安全功能'),
-        brandComparison: extractSection(fullContent, '品牌'),
-        designSuggestions: extractSection(fullContent, '设计建议'),
-      });
+      // 改进的报告内容解析
+      setReport(parseReport(fullContent));
     } catch (err) {
       console.error('生成报告错误:', err);
       setError('生成报告失败，请稍后重试');
@@ -166,43 +145,100 @@ export default function CarSeatDesignPage() {
     }
   };
 
-  const extractSection = (content: string, keyword: string): string => {
+  // 改进的报告解析函数
+  const parseReport = (content: string): DesignReport => {
+    return {
+      productPosition: extractSection(content, ['产品定位', '适用标准']),
+      technicalRequirements: extractList(content, ['关键技术', '技术要求']),
+      safetyFeatures: extractList(content, ['核心安全功能', '安全功能']),
+      brandComparison: extractSection(content, ['品牌', '主流品牌']),
+      designSuggestions: extractSection(content, ['设计建议', '人体工程学']),
+    };
+  };
+
+  // 改进的章节提取函数 - 支持多个关键词
+  const extractSection = (content: string, keywords: string[]): string => {
     const lines = content.split('\n');
     let section = '';
     let inSection = false;
+    let foundKeyword = '';
 
-    for (const line of lines) {
-      if (line.includes(keyword)) {
-        inSection = true;
-        continue;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // 检查是否匹配任一关键词
+      for (const keyword of keywords) {
+        if (line.includes(keyword) && (line.startsWith('###') || line.startsWith('#'))) {
+          inSection = true;
+          foundKeyword = keyword;
+          continue;
+        }
       }
-      if (inSection && (line.startsWith('###') || line.startsWith('##'))) {
-        break;
-      }
-      if (inSection) {
-        section += line + '\n';
+
+      // 如果找到了关键词，开始收集内容
+      if (inSection && line.trim() !== foundKeyword) {
+        // 检查是否到达下一个章节
+        if (line.startsWith('###') || line.startsWith('#')) {
+          // 如果包含其他关键词，停止
+          const isNextSection = keywords.some(k => line.includes(k) && k !== foundKeyword);
+          if (isNextSection && !line.includes(foundKeyword)) {
+            break;
+          }
+        }
+
+        // 收集内容，跳过空行和标题
+        if (line.trim() && !line.startsWith('###') && !line.startsWith('#')) {
+          section += line + '\n';
+        }
       }
     }
+
     return section.trim();
   };
 
-  const extractList = (content: string, keyword: string): string[] => {
+  // 改进的列表提取函数 - 支持多个关键词
+  const extractList = (content: string, keywords: string[]): string[] => {
     const lines = content.split('\n');
     let items: string[] = [];
     let inList = false;
 
-    for (const line of lines) {
-      if (line.includes(keyword)) {
-        inList = true;
-        continue;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // 检查是否匹配任一关键词
+      for (const keyword of keywords) {
+        if (line.includes(keyword) && (line.startsWith('###') || line.startsWith('#'))) {
+          inList = true;
+          break;
+        }
       }
-      if (inList && line.startsWith('###')) {
-        break;
-      }
-      if (inList && (line.startsWith('- ') || line.startsWith('* '))) {
-        items.push(line.replace(/^- /, '').replace(/^\* /, ''));
+
+      // 如果在列表区域，提取列表项
+      if (inList) {
+        // 检查是否到达下一个章节
+        if (line.startsWith('###')) {
+          const isNextSection = keywords.some(k => line.includes(k));
+          if (isNextSection) {
+            break;
+          }
+        }
+
+        // 提取列表项
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          const item = line.replace(/^- /, '').replace(/^\* /, '').trim();
+          if (item) {
+            items.push(item);
+          }
+        } else if (line.match(/^\d+\./)) {
+          // 处理数字列表
+          const item = line.replace(/^\d+\.\s*/, '').trim();
+          if (item) {
+            items.push(item);
+          }
+        }
       }
     }
+
     return items;
   };
 

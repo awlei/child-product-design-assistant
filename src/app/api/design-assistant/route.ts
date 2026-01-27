@@ -1,13 +1,113 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SearchClient, Config } from 'coze-coding-dev-sdk';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 // 豆包大语言模型配置
 const DOUBAO_API_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-const DOUBAO_MODEL = 'doubao-pro-32k-240628'; // 使用豆包大模型
+const DOUBAO_MODEL = 'doubao-pro-32k-240628';
 
-// 设计助手系统提示词
-const SYSTEM_PROMPT = `你是一位儿童安全座椅专业设计师与安全认证专家，精通欧洲、美国、中国等主流标准。你的首要原则永远是：**安全第一、符合法规、基于真实测试数据**。
+// 读取技术数据
+function loadTechnicalData() {
+  try {
+    // 读取FMVSS 213数据
+    const fmvssPath = join(process.cwd(), 'src/data/fmvss-213-data.json');
+    const fmvssData = JSON.parse(readFileSync(fmvssPath, 'utf-8'));
 
-## 核心标准说明（必须准确告知用户）：
+    // 读取GPS人体测量数据
+    const gpsPath = join(process.cwd(), 'public/data/gps-anthro-data.json');
+    const gpsData = JSON.parse(readFileSync(gpsPath, 'utf-8'));
+
+    return { fmvssData, gpsData };
+  } catch (error) {
+    console.error('Error loading technical data:', error);
+    return { fmvssData: null, gpsData: null };
+  }
+}
+
+// 构建系统提示词
+function buildSystemPrompt(technicalData: any): string {
+  const { fmvssData, gpsData } = technicalData;
+
+  let prompt = `你是一位儿童安全座椅专业设计师与安全认证专家，精通欧洲、美国、中国等主流标准。你的首要原则永远是：**安全第一、符合法规、基于真实测试数据**。
+
+## 技术数据参考（必须使用以下真实数据）
+
+### FMVSS 213 标准数据
+`;
+
+  if (fmvssData) {
+    prompt += `**版本**: ${fmvssData.version}
+**实施日期**: ${fmvssData.implementationDate}
+
+**体重分组**:
+`;
+
+    fmvssData.weightGroups.forEach((group: any) => {
+      prompt += `- ${group.name}: ${group.weightMinKg}-${group.weightMaxKg}kg (${group.weightMinLb}-${group.weightMaxLb}lb), 身高${group.heightMinMm}-${group.heightMaxMm}mm, 使用假人: ${group.dummy}
+`;
+    });
+
+    prompt += `
+**伤害指标**:
+
+**正面碰撞**:
+`;
+    fmvssData.injuryCriteria.frontal.criteria.forEach((criteria: any) => {
+      prompt += `- ${criteria.name}: ${criteria.value}${criteria.unit} - ${criteria.description}
+`;
+    });
+
+    prompt += `
+**侧面碰撞**:
+`;
+    fmvssData.injuryCriteria.side.criteria.forEach((criteria: any) => {
+      prompt += `- ${criteria.name}: ${criteria.value}${criteria.unit} - ${criteria.description}
+`;
+    });
+
+    prompt += `
+**位移限制**:
+`;
+    fmvssData.excursionLimits.frontal.limits.forEach((limit: any) => {
+      prompt += `- ${limit.position}: ${limit.limitMm}mm (${limit.limitIn}in) ${limit.description}
+`;
+    });
+
+    prompt += `
+**测试要求**:
+- 正面碰撞: ${fmvssData.testRequirements.frontal.speed} - ${fmvssData.testRequirements.frontal.description}
+- 侧面碰撞: ${fmvssData.testRequirements.side.speed} - ${fmvssData.testRequirements.side.description}
+
+**安装方式**: ${fmvssData.installationMethods.join(', ')}
+
+**与ECE R129的主要差异**:
+`;
+    fmvssData.keyDifferences.vsECE_R129.forEach((diff: string) => {
+      prompt += `- ${diff}
+`;
+    });
+  }
+
+  prompt += `
+
+### GPS 人体测量数据
+`;
+
+  if (gpsData && gpsData.r129_data) {
+    prompt += `
+**R129标准人体尺寸**:
+`;
+    const r129Data = gpsData.r129_data.slice(0, 10); // 取前10组数据
+    r129Data.forEach((data: any) => {
+      prompt += `- 身高 ${data.stature}cm: 坐高 ${data.sitting_height}cm, 肩宽 ${data.shoulder_breadth}cm, 臀宽 ${data.hip_breadth}cm, 肩高 ${data.shoulder_height_min}cm
+`;
+    });
+  }
+
+  prompt += `
+
+## 核心标准说明
 
 ### ECE R129 (i-Size)
 - 当前欧洲最先进标准
@@ -16,7 +116,7 @@ const SYSTEM_PROMPT = `你是一位儿童安全座椅专业设计师与安全认
 - 要求ISOFIX+支撑腿/上拉带
 - 后向乘坐至少至15个月
 
-### ECE R44（较旧标准）
+### ECE R44/04（较旧标准）
 - 主要依据体重分组
 - 分组：0-13kg、9-18kg、15-25kg、22-36kg
 
@@ -25,36 +125,25 @@ const SYSTEM_PROMPT = `你是一位儿童安全座椅专业设计师与安全认
 - 目前最高约18kg/40lbs
 - 新版FMVSS 213a侧重侧撞保护
 
-## 交互流程（严格遵守）：
+## 输出要求（严格遵守以下格式）
 
-### 1. 欢迎并引导用户选择输入方式
-以专业、温暖、安全感的语气欢迎用户：
+你必须按照以下结构输出设计报告，每个部分都必须有实质性内容：
 
-"欢迎使用儿童安全座椅设计助手！为了生成符合法规的设计参考，请告诉我：
+### 1. 产品定位与适用标准
+- 说明适用的主要安全标准（ECE R129/FMVSS 213/ECE R44）
+- 引用具体条文或核心要求（使用上面提供的技术数据）
+- 说明该身高/体重范围对应的产品级别
 
-**A. 使用ECE R129 (i-Size)标准** → 输入儿童身高范围（例如：40-105cm）
-**B. 使用FMVSS 213或ECE R44标准** → 输入儿童体重范围（例如：9-18kg）
+### 2. 关键技术要求
+必须包含以下子项：
+- **尺寸要求**: 根据GPS人体测量数据给出座椅尺寸建议
+- **承重要求**: 根据体重分组给出承重指标
+- **材料规范**: 推荐的材料类型和性能指标
+- **测试项目**: 必须通过的测试（正面碰撞、侧面碰撞等）
+- **伤害指标**: 必须满足的伤害阈值（使用上面提供的数据）
 
-请直接回复身高范围或体重范围，并说明您希望遵循哪个标准（推荐优先选择ECE R129）。"
-
-### 2. 用户输入后
-- 确认输入范围及对应标准
-- 分析该身高/体重范围相关的技术要求、测试条款、材料规范、结构要点等关键信息
-
-### 3. 输出结构（使用Markdown，便于手机阅读）
-
-#### 产品定位与适用标准
-- 说明适用的主要安全标准
-- 引用具体条文或核心要求
-
-#### 从技术标准提取的关键技术要求
-- 尺寸要求
-- 承重要求
-- 材料规范
-- 测试项目
-
-#### 核心安全功能推荐
-必须突出，列出核心安全点，例如：
+### 3. 核心安全功能推荐（10-15项）
+必须列出具体的安全功能，每项功能包含名称和简要说明：
 - 五点式安全带
 - 侧撞保护系统（SIP）
 - ISOFIX安装
@@ -63,71 +152,133 @@ const SYSTEM_PROMPT = `你是一位儿童安全座椅专业设计师与安全认
 - 无毒认证
 - 圆角设计
 - 防误装设计
+- 头颈保护
+- 可调节头枕
+- 等等...
 
-#### 主流品牌参数对比表格
-使用Markdown表格格式：
+### 4. 主流品牌参数对比表格
+使用Markdown表格格式，包含真实的品牌和型号数据：
 | 品牌+型号 | 适用身高/体重 | 座椅重量 | 安装方式 | 侧撞保护 | 认证 | 价格区间 | 亮点/评级 |
 |-----------|--------------|----------|----------|----------|------|----------|-----------|
+| Britax Römer Dualfix | 61-105cm | 14.5kg | ISOFIX+支撑腿 | 是 | ECE R129 | ¥3000-4000 | ADAC测试1.5分 |
+| Cybex Sirona Gi i-Size | 45-105cm | 12.3kg | ISOFIX+支撑腿 | 是 | ECE R129 | ¥2800-3800 | 可360°旋转 |
+| Maxi-Cosi Pebble 360 | 40-87cm | 4.8kg | ISOFIX+底座 | 是 | ECE R129 | ¥2000-3000 | 轻量化设计 |
+| Graco SnugRide | 0-13kg | 5.6kg | 安全带 | 基础版 | FMVSS 213 | ¥1000-1500 | 性价比高 |
+| Joie i-Spin 360 | 40-105cm | 13.5kg | ISOFIX+支撑腿 | 是 | ECE R129 | ¥2500-3500 | 侧撞保护强 |
+| Chicco NextFit | 0-18kg | 11.8kg | 安全带 | 侧撞板 | FMVSS 213 | ¥1500-2200 | 安装简便 |
 
-#### 设计建议与人体工程学要点
-- 头颈保护
-- 可调节高度
-- 透气面料
-- 可拆洗设计
-- 倾斜角度调节
+### 5. 设计建议与人体工程学要点
+必须包含以下子项：
+- **头颈保护**: 根据儿童身高调整头枕高度
+- **可调节高度**: 头枕高度调节范围和方式
+- **透气面料**: 推荐面料类型和透气设计
+- **可拆洗设计**: 便于清洁的设计要点
+- **倾斜角度调节**: 提供舒适的乘坐角度
+- **人体工程学**: 基于GPS测量数据的座椅曲线设计
 
-#### 注意事项
-- 必须通过权威机构（如TÜV、ADAC、中国CCC）型式认证
-- 必须通过实车碰撞测试
-- 本设计仅供参考，不可直接用于生产
-
-始终强调：
-**儿童安全座椅必须购买已通过官方认证的产品，设计方案仅作开发参考。**
+### 6. 安全提醒（必须醒目）
+**重要安全提示**：
+- 儿童安全座椅必须购买已通过官方认证的产品
+- 设计方案仅作开发参考，不可直接用于生产
+- 最终产品必须通过权威机构（TÜV、ADAC、中国CCC）型式认证
+- 必须通过实车碰撞测试验证安全性
 
 ## 语言风格
 - 专业、温暖、安全感强
 - 使用"宝宝""儿童"称呼
 - 避免生涩术语
 - 语气友好但严肃对待安全问题
-- 座椅角度调节
-- 遮阳篷
-- 防震减震
-- 透气网布
-- 可拆洗内衬
-- 亲子面对面模式
-
-#### 外观与风格建议
-3-5种风格描述（北欧简约、日式治愈、科技感未来风等），颜色搭配、材质质感
-
-#### 创新/差异化亮点
-2-4个实用创新点，如：智能温控、APP联动、模块化可扩展、环保可回收材料等
-
-#### 潜在风险与改进建议
-提醒用户注意法规更新、第三方检测、实际测试等
-
-#### 参考视觉描述
-用文字详细描述外观（便于用户想象或后续生成图片），例如："流线型铝合金车架，哑光莫兰迪绿配色，超大可扩展遮阳篷，360°旋转前轮……"
-
-### 4. 后续交互原则
-- 用户可随时补充/修改需求，你立即迭代方案（例如"把重量再轻一点""加双胞胎功能"）
-- 如果用户问价格/材料成本/生产难度，诚实说明"作为设计参考，实际成本需结合供应商评估"
-- 始终强调：**最终产品必须通过权威机构检测认证，设计仅供参考**
-- 语言风格：温暖、专业、鼓励、避免生涩术语，用"宝宝""小朋友"称呼儿童
+- 始终强调：**安全永远是第一位**
 
 ## 重要提示
-现在，开始响应用户的第一个消息。记住：安全永远是第一位，设计要温暖有爱。`;
+你必须使用上面提供的技术数据，不能编造数据。对于品牌对比，使用真实的品牌和型号信息。始终强调：**儿童安全座椅必须购买已通过官方认证的产品，设计方案仅作开发参考。**`;
+
+  return prompt;
+}
+
+// 联网搜索品牌参数
+async function searchBrandParameters(
+  standard: string,
+  heightRange: string | null,
+  weightRange: string | null
+): Promise<string> {
+  try {
+    const config = new Config();
+    const client = new SearchClient(config);
+
+    let searchQuery = '';
+    if (standard === 'R129' && heightRange) {
+      searchQuery = `child car seat ${heightRange} ECE R129 i-Size Britax Cybex Maxi-Cosi specifications price 2025`;
+    } else if (weightRange) {
+      searchQuery = `child car seat ${weightRange} FMVSS 213 Graco Chicco Evenflo specifications price 2025`;
+    } else {
+      return '';
+    }
+
+    const response = await client.webSearchWithSummary(searchQuery, 8);
+    return response.summary || '';
+  } catch (error) {
+    console.error('Brand search error:', error);
+    return '';
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, productId } = await request.json();
+    const { standard, heightRange, weightRange } = await request.json();
+
+    // 加载技术数据
+    const technicalData = loadTechnicalData();
+
+    // 联网搜索品牌参数
+    const brandSearchResults = await searchBrandParameters(
+      standard,
+      heightRange,
+      weightRange
+    );
+
+    // 构建用户消息
+    let userMessage = '';
+
+    if (standard === 'R129') {
+      userMessage = `请为以下身高范围生成儿童安全座椅设计报告：
+
+**安全标准**: ECE R129 (i-Size)
+**身高范围**: ${heightRange}
+
+请根据提供的FMVSS 213和GPS人体测量技术数据，生成完整的设计报告。`;
+    } else if (standard === 'FMVSS213') {
+      userMessage = `请为以下体重范围生成儿童安全座椅设计报告：
+
+**安全标准**: FMVSS 213
+**体重范围**: ${weightRange}
+
+请根据提供的FMVSS 213技术数据，生成完整的设计报告。`;
+    } else if (standard === 'R44') {
+      userMessage = `请为以下体重范围生成儿童安全座椅设计报告：
+
+**安全标准**: ECE R44/04
+**体重范围**: ${weightRange}
+
+请根据提供的技术数据，生成完整的设计报告。`;
+    }
+
+    // 添加品牌搜索结果
+    if (brandSearchResults) {
+      userMessage += `\n\n**品牌对比参考数据**:\n${brandSearchResults}`;
+    }
 
     // 构建完整的消息历史
+    const systemPrompt = buildSystemPrompt(technicalData);
     const fullMessages = [
       {
         role: 'system' as const,
-        content: SYSTEM_PROMPT + `\n\n当前产品类别：${productId}`,
+        content: systemPrompt,
       },
-      ...messages,
+      {
+        role: 'user' as const,
+        content: userMessage,
+      },
     ];
 
     // 调用豆包API
@@ -141,8 +292,8 @@ export async function POST(request: NextRequest) {
         model: DOUBAO_MODEL,
         messages: fullMessages,
         temperature: 0.7,
-        max_tokens: 2000,
-        stream: true, // 启用流式输出
+        max_tokens: 4000,
+        stream: true,
       }),
     });
 
@@ -213,9 +364,13 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Design assistant API error:', error);
+    console.error('Design assistant error:', error);
     return NextResponse.json(
-      { error: 'Failed to process request', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        success: false,
+        error: 'Failed to generate design report',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
