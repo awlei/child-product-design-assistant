@@ -83,14 +83,14 @@ export async function generateLocalAdvice(request: LocalKnowledgeRequest): Promi
       // R129基于身高
       const height = (request.heightRange.min + request.heightRange.max) / 2;
       applicableGroups = standard.height_groups.filter((group: any) => {
-        const [minStr, maxStr] = group.range.split('-').map(s => parseInt(s.replace('cm', '')));
+        const [minStr, maxStr] = group.range.split('-').map((s: string) => parseInt(s.replace('cm', '')));
         return height >= minStr && height <= maxStr;
       });
     } else if (request.weightRange) {
       // R44和FMVSS 213基于体重
       const weight = (request.weightRange.min + request.weightRange.max) / 2;
       applicableGroups = standard.weight_groups.filter((group: any) => {
-        const [minStr, maxStr] = group.weight_range.split('-').map(s => parseInt(s.replace('kg', '')));
+        const [minStr, maxStr] = group.weight_range.split('-').map((s: string) => parseInt(s.replace('kg', '')));
         return weight >= minStr && weight <= maxStr;
       });
     }
