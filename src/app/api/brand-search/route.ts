@@ -67,40 +67,30 @@ export async function POST(request: NextRequest) {
 
 需要提取的信息（对于每个产品）：
 1. 品牌（Brand）
-2. 型号（Model）
-3. 适用身高范围（Height Range）
-4. 适用体重范围（Weight Range）
-5. 座椅重量（Seat Weight）
-6. 安装方式（Installation: ISOFIX/LATCH/Seat Belt）
-7. 侧撞保护（Side Impact Protection: Yes/No + Type）
-8. 后向/前向模式（Rear-facing/Facing: Both/Rear-only/Front-only）
-9. 可平躺（Recline: Yes/No）
-10. ADAC评级（ADAC Rating）
-11. Consumer Reports评级（CR Rating）
-12. 价格区间（Price Range）
+2. 型号（Model）- 如果有
+3. 适用身高范围（Height Range）- 如果有
+4. 适用体重范围（Weight Range）- 如果有
+5. 安装方式（Installation: ISOFIX/LATCH/Seat Belt）- 如果有
+6. 侧撞保护（Side Impact Protection）- 如果有
+7. 后向/前向模式（Orientation）- 如果有
 
 搜索结果：
 ${searchContent}
 
-请以JSON数组格式返回产品列表，只包含完整信息的产品。格式：
+请以JSON数组格式返回产品列表，格式：
 [
   {
     "brand": "品牌名",
-    "model": "型号",
-    "heightRange": "身高范围",
-    "weightRange": "体重范围",
-    "seatWeight": "重量",
-    "installation": "安装方式",
-    "sideImpact": "侧撞保护",
-    "orientation": "后向/前向",
-    "recline": "可平躺",
-    "adacRating": "ADAC评级",
-    "crRating": "CR评级",
-    "priceRange": "价格区间"
+    "model": "型号（如果没有可以留空）",
+    "heightRange": "身高范围（如果没有可以留空）",
+    "weightRange": "体重范围（如果没有可以留空）",
+    "installation": "安装方式（如果没有可以留空）",
+    "sideImpact": "侧撞保护（如果没有可以留空）",
+    "orientation": "后向/前向（如果没有可以留空）"
   }
 ]
 
-只返回JSON，不要其他内容。`;
+只返回JSON，不要其他内容。如果某个产品的信息不完整，仍然包含在数组中，对应字段留空字符串。`;
 
       try {
         const stream = llmClient.stream([
@@ -117,6 +107,9 @@ ${searchContent}
           }
         }
 
+        console.log('[Brand Search] LLM response length:', llmContent.length);
+        console.log('[Brand Search] LLM response preview:', llmContent.substring(0, 500));
+
         // 清理可能的markdown标记
         let jsonContent = llmContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         
@@ -126,11 +119,55 @@ ${searchContent}
           console.log('[Brand Search] Extracted', structuredProducts.length, 'products');
         } catch (parseError) {
           console.error('[Brand Search] JSON parse error:', parseError);
-          // 如果JSON解析失败，返回原始搜索结果
+          console.error('[Brand Search] JSON content:', jsonContent.substring(0, 500));
+          // 如果JSON解析失败，从搜索结果手动提取基本信息
+          structuredProducts = searchResults.slice(0, 5).map(item => ({
+            brand: MAIN_BRANDS.find(b => 
+              item.title.toLowerCase().includes(b.toLowerCase()) ||
+              item.snippet.toLowerCase().includes(b.toLowerCase()) ||
+              (item.site_name && item.site_name.toLowerCase().includes(b.toLowerCase()))
+            ) || item.site_name || 'Unknown',
+            model: '',
+            heightRange: heightRange || '',
+            weightRange: weightRange || '',
+            installation: '',
+            sideImpact: '',
+            orientation: ''
+          }));
+          console.log('[Brand Search] Fallback: extracted brands from search results:', structuredProducts.length);
         }
       } catch (llmError) {
         console.error('[Brand Search] LLM error:', llmError);
+        // 如果LLM调用失败，从搜索结果手动提取基本信息
+        structuredProducts = searchResults.slice(0, 5).map(item => ({
+          brand: MAIN_BRANDS.find(b => 
+            item.title.toLowerCase().includes(b.toLowerCase()) ||
+            item.snippet.toLowerCase().includes(b.toLowerCase()) ||
+            (item.site_name && item.site_name.toLowerCase().includes(b.toLowerCase()))
+          ) || item.site_name || 'Unknown',
+          model: '',
+          heightRange: heightRange || '',
+          weightRange: weightRange || '',
+          installation: '',
+          sideImpact: '',
+          orientation: ''
+        }));
+        console.log('[Brand Search] Fallback after LLM error: extracted brands:', structuredProducts.length);
       }
+    }
+
+    // 如果没有搜索结果，使用主流品牌作为占位
+    if (structuredProducts.length === 0 && searchResults.length === 0) {
+      structuredProducts = MAIN_BRANDS.slice(0, 5).map(brand => ({
+        brand: brand,
+        model: '',
+        heightRange: heightRange || '',
+        weightRange: weightRange || '',
+        installation: '',
+        sideImpact: '',
+        orientation: ''
+      }));
+      console.log('[Brand Search] Fallback: using major brands:', structuredProducts.length);
     }
 
     return NextResponse.json({

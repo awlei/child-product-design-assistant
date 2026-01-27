@@ -340,8 +340,8 @@ ${matchedGroup.weight_range || '未指定'}
       if (brandData && brandData.success && brandData.structuredProducts && brandData.structuredProducts.length > 0) {
         markdown += `以下是基于${standardName}标准，适用范围${rangeStr}的主流品牌产品对比：
 
-| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 | 评级 | 价格 |
-|------|------|---------------|----------|----------|-----------|------|------|
+| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 |
+|------|------|---------------|----------|----------|-----------|
 `;
 
         brandData.structuredProducts.forEach((product: any) => {
@@ -350,10 +350,8 @@ ${matchedGroup.weight_range || '未指定'}
           const installation = product.installation || '-';
           const sideImpact = product.sideImpact || '-';
           const orientation = product.orientation || '-';
-          const rating = product.adacRating || product.crRating || '-';
-          const price = product.priceRange || '-';
 
-          markdown += `| ${product.brand} | ${product.model} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} | ${rating} | ${price} |
+          markdown += `| ${product.brand} | ${product.model || '-'} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} |
 `;
         });
 
@@ -622,17 +620,15 @@ ${brandData.summary}
 
 以下是基于${standard === 'R129' ? 'ECE R129 (i-Size)' : standard === 'FMVSS213' ? 'FMVSS 213' : 'ECE R44'}标准，适用范围${heightRange || weightRange}的主流品牌产品对比：
 
-| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 | 评级 | 价格 |
-|------|------|---------------|----------|----------|-----------|------|------|
+| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 |
+|------|------|---------------|----------|----------|-----------|
 ${brandData.structuredProducts.map((product: any) => {
   const height = product.heightRange || '-';
   const weight = product.weightRange || '-';
   const installation = product.installation || '-';
   const sideImpact = product.sideImpact || '-';
   const orientation = product.orientation || '-';
-  const rating = product.adacRating || product.crRating || '-';
-  const price = product.priceRange || '-';
-  return `| ${product.brand} | ${product.model} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} | ${rating} | ${price} |`;
+  return `| ${product.brand} | ${product.model || '-'} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} |`;
 }).join('\n')}
 `;
 
