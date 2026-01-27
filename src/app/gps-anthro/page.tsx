@@ -111,7 +111,15 @@ export default function CarSeatDesignPage() {
       });
 
       if (!response.ok) {
-        throw new Error('生成报告失败');
+        // 尝试读取错误响应体
+        let errorMessage = '生成报告失败';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.details || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       // 处理流式响应
@@ -504,7 +512,8 @@ export default function CarSeatDesignPage() {
             {/* 模块1：产品定位与适用标准 */}
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2" style={{ color: '#667eea' }}>
+                <CardTitle className="flex items-center gap-3" style={{ color: '#667eea' }}>
+                  <Badge className="bg-purple-600 text-white px-2 py-0">01</Badge>
                   <ShieldCheck className="w-6 h-6" />
                   {report.module1.title}
                 </CardTitle>
@@ -523,7 +532,8 @@ export default function CarSeatDesignPage() {
             {/* 模块2：关键技术要求 */}
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2" style={{ color: '#667eea' }}>
+                <CardTitle className="flex items-center gap-3" style={{ color: '#667eea' }}>
+                  <Badge className="bg-blue-600 text-white px-2 py-0">02</Badge>
                   <Settings className="w-6 h-6" />
                   {report.module2.title}
                 </CardTitle>
@@ -550,7 +560,8 @@ export default function CarSeatDesignPage() {
             {/* 模块3：核心安全功能推荐 */}
             <Card className="bg-white/95 backdrop-blur">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2" style={{ color: '#667eea' }}>
+                <CardTitle className="flex items-center gap-3" style={{ color: '#667eea' }}>
+                  <Badge className="bg-green-600 text-white px-2 py-0">03</Badge>
                   <ShieldCheck className="w-6 h-6" />
                   {report.module3.title}
                 </CardTitle>
@@ -561,10 +572,12 @@ export default function CarSeatDesignPage() {
                     <CardContent className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </div>
                           <h4 className="font-bold text-gray-900">{feature.name}</h4>
                         </div>
-                        <div className="space-y-2 ml-7">
+                        <div className="space-y-2 ml-8">
                           <div>
                             <span className="font-semibold text-gray-700">技术实现：</span>
                             <span className="text-gray-600 ml-2">{feature.implementation}</span>
@@ -588,8 +601,9 @@ export default function CarSeatDesignPage() {
             <Card className="bg-red-50 border-red-200">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div>
+                  <Badge className="bg-red-600 text-white px-2 py-0 flex-shrink-0 mt-0.5">04</Badge>
+                  <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                  <div className="flex-1">
                     <h4 className="font-bold text-red-800 mb-2">重要安全提醒</h4>
                     <ul className="text-sm text-red-700 space-y-1">
                       <li>• 儿童安全座椅必须购买已通过官方认证的产品</li>
