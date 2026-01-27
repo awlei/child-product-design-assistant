@@ -194,10 +194,10 @@ export default function GPSAnthroTool() {
         <Card className="bg-white/95 backdrop-blur">
           <CardHeader>
             <CardTitle className="text-2xl" style={{ color: '#667eea' }}>
-              儿童安全座椅人体测量工具 V7.5.0
+              儿童安全座椅专业设计助手 V8.0.0
             </CardTitle>
             <CardDescription>
-              GPS人体测量数据分析、座椅尺寸计算、R129/FMVSS213标准合规检查
+              ECE R129 (i-Size) / FMVSS 213 / ECE R44 · 人体测量 · 座椅设计 · 安全认证
             </CardDescription>
           </CardHeader>
         </Card>
