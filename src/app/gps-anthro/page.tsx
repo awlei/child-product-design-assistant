@@ -132,6 +132,7 @@ export default function CarSeatDesignPage() {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
+      let rawChunks: string[] = []; // 记录所有原始chunk
 
       if (!reader) {
         throw new Error('无法获取响应流');
@@ -150,6 +151,7 @@ export default function CarSeatDesignPage() {
         chunkCount++;
         const chunk = decoder.decode(value, { stream: true });
         console.log(`Chunk ${chunkCount}:`, chunk.substring(0, 100));
+        rawChunks.push(chunk); // 记录原始chunk
 
         // 尝试多种解析方式
         const lines = chunk.split('\n');
@@ -176,6 +178,8 @@ export default function CarSeatDesignPage() {
                 // 豆包API的标准格式
                 fullContent += parsed.choices[0].delta.content;
                 console.log('添加content (豆包格式):', parsed.choices[0].delta.content.substring(0, 50));
+              } else {
+                console.log('收到data但没有可提取的content:', JSON.stringify(parsed).substring(0, 100));
               }
             } catch (e) {
               console.error('解析SSE数据失败:', trimmedLine, e);
@@ -191,6 +195,8 @@ export default function CarSeatDesignPage() {
               } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) {
                 fullContent += parsed.choices[0].delta.content;
                 console.log('添加content (直接JSON-豆包):', parsed.choices[0].delta.content.substring(0, 50));
+              } else {
+                console.log('收到JSON但没有可提取的content:', JSON.stringify(parsed).substring(0, 100));
               }
             } catch (e) {
               console.error('解析直接JSON失败:', trimmedLine, e);
@@ -213,9 +219,11 @@ export default function CarSeatDesignPage() {
       } else {
         console.error('AI未返回任何内容，fullContent为空');
         setError('生成报告失败，AI未返回任何内容');
+        // 显示原始响应内容，帮助诊断问题
+        const rawResponse = rawChunks.join('\n').substring(0, 1000);
         setErrorDetails({
           message: 'AI返回的内容为空，请检查API配置或稍后重试',
-          rawContent: '接收到' + chunkCount + '个chunk，但未提取到有效内容',
+          rawContent: `接收到${chunkCount}个chunk，但未提取到有效内容。\n\n原始响应:\n${rawResponse}${rawChunks.join('\n').length > 1000 ? '...' : ''}`,
         });
       }
     } catch (err) {

@@ -309,13 +309,18 @@ export async function POST(request: NextRequest) {
               throw new Error('Response body is null');
             }
 
+            console.log('[API] 开始处理豆包API流式响应...');
+            let chunkCount = 0;
+
             while (true) {
               const { done, value } = await reader.read();
 
               if (done) {
+                console.log(`[API] 流式响应结束，总共处理 ${chunkCount} 个chunk`);
                 break;
               }
 
+              chunkCount++;
               // 解析SSE数据
               const chunk = new TextDecoder().decode(value);
               const lines = chunk.split('\n').filter(line => line.trim());
@@ -325,6 +330,7 @@ export async function POST(request: NextRequest) {
                   const data = line.slice(6);
 
                   if (data === '[DONE]') {
+                    console.log('[API] 收到[DONE]标记');
                     break;
                   }
 
@@ -333,16 +339,19 @@ export async function POST(request: NextRequest) {
                     const content = parsed.choices?.[0]?.delta?.content;
 
                     if (content) {
+                      console.log(`[API] 提取到content (长度 ${content.length}): ${content.substring(0, 50)}`);
                       controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                    } else {
+                      console.log('[API] 收到数据但没有content字段:', JSON.stringify(parsed).substring(0, 200));
                     }
                   } catch (e) {
-                    console.error('Error parsing SSE data:', e);
+                    console.error('[API] Error parsing SSE data:', line, e);
                   }
                 }
               }
             }
           } catch (error) {
-            console.error('Stream error:', error);
+            console.error('[API] Stream error:', error);
             controller.error(error);
           } finally {
             controller.close();
