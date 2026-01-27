@@ -137,31 +137,70 @@ export default function CarSeatDesignPage() {
         throw new Error('无法获取响应流');
       }
 
+      console.log('开始处理流式响应...');
+      let chunkCount = 0;
+
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log('流式响应结束，总共接收', chunkCount, '个chunk');
+          break;
+        }
 
-        const chunk = decoder.decode(value);
+        chunkCount++;
+        const chunk = decoder.decode(value, { stream: true });
+        console.log(`Chunk ${chunkCount}:`, chunk.substring(0, 100));
+
+        // 尝试多种解析方式
         const lines = chunk.split('\n');
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') break;
+          const trimmedLine = line.trim();
+
+          if (!trimmedLine) continue;
+
+          // 方法1: 标准SSE格式 (data: {...})
+          if (trimmedLine.startsWith('data: ')) {
+            const data = trimmedLine.slice(6);
+            if (data === '[DONE]') {
+              console.log('收到[DONE]标记');
+              continue;
+            }
 
             try {
               const parsed = JSON.parse(data);
               if (parsed.content) {
                 fullContent += parsed.content;
+                console.log('添加content:', parsed.content.substring(0, 50));
+              } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) {
+                // 豆包API的标准格式
+                fullContent += parsed.choices[0].delta.content;
+                console.log('添加content (豆包格式):', parsed.choices[0].delta.content.substring(0, 50));
               }
             } catch (e) {
-              // 忽略解析错误
+              console.error('解析SSE数据失败:', trimmedLine, e);
+            }
+          }
+          // 方法2: 直接是JSON对象（没有data:前缀）
+          else if (trimmedLine.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(trimmedLine);
+              if (parsed.content) {
+                fullContent += parsed.content;
+                console.log('添加content (直接JSON):', parsed.content.substring(0, 50));
+              } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) {
+                fullContent += parsed.choices[0].delta.content;
+                console.log('添加content (直接JSON-豆包):', parsed.choices[0].delta.content.substring(0, 50));
+              }
+            } catch (e) {
+              console.error('解析直接JSON失败:', trimmedLine, e);
             }
           }
         }
       }
 
-      console.log('Full content from AI:', fullContent);
+      console.log('Full content from AI (length:', fullContent.length, '):');
+      console.log(fullContent);
 
       // 直接保存AI输出的markdown内容，不解析JSON
       if (fullContent && fullContent.trim().length > 0) {
@@ -170,16 +209,31 @@ export default function CarSeatDesignPage() {
           standard: getStandardName(standard),
           timestamp: new Date().toISOString(),
         });
+        console.log('报告已设置');
       } else {
+        console.error('AI未返回任何内容，fullContent为空');
         setError('生成报告失败，AI未返回任何内容');
+        setErrorDetails({
+          message: 'AI返回的内容为空，请检查API配置或稍后重试',
+          rawContent: '接收到' + chunkCount + '个chunk，但未提取到有效内容',
+        });
       }
     } catch (err) {
       console.error('生成报告错误:', err);
+      console.error('错误详情:', {
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: err instanceof Error ? err.message : '未知错误',
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+
+      const errorMessage = err instanceof Error ? err.message : '未知错误';
       setError('生成报告失败，请稍后重试');
       setErrorDetails({
-        message: err instanceof Error ? err.message : '未知错误',
+        message: errorMessage,
+        rawContent: err instanceof Error && err.stack ? err.stack.substring(0, 300) : '无详细信息',
       });
     } finally {
+      console.log('生成报告流程结束，isGenerating:', isGenerating);
       setIsGenerating(false);
     }
   };
