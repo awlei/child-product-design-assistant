@@ -1,0 +1,262 @@
+{
+  "standard_info": {
+    "name": "GB 28007-2011 & EN 14988 & ASTM F404",
+    "description": "儿童高脚椅安全标准",
+    "version": "Latest",
+    "effective_date": "2011-08-01"
+  },
+  "test_dummies": [
+    {
+      "name": "Q0 (Newborn)",
+      "stature": 50,
+      "weight": 3.5,
+      "age": "0-6 months",
+      "suitable": false,
+      "reason": "新生儿不能独立坐立，不适合使用高脚椅"
+    },
+    {
+      "name": "Q1 (Infant)",
+      "stature": 75,
+      "weight": 9.7,
+      "age": "6-12 months",
+      "suitable": true,
+      "reason": "能独立坐立，适合使用高脚椅"
+    },
+    {
+      "name": "Q1.5 (Toddler)",
+      "stature": 87.5,
+      "weight": 11.5,
+      "age": "12-18 months",
+      "suitable": true,
+      "reason": "能独立坐立，适合使用高脚椅"
+    },
+    {
+      "name": "Q3 (Child)",
+      "stature": 105,
+      "weight": 15,
+      "age": "3 years",
+      "suitable": true,
+      "reason": "适合使用高脚椅"
+    },
+    {
+      "name": "Q6 (School age)",
+      "stature": 125,
+      "weight": 21.5,
+      "age": "6 years",
+      "suitable": false,
+      "reason": "超过建议使用年龄"
+    }
+  ],
+  "chair_types": [
+    {
+      "type": "Traditional High Chair",
+      "name_cn": "传统高脚椅",
+      "name_en": "Traditional High Chair",
+      "min_weight": 6,
+      "max_weight": 15,
+      "min_age": "6 months",
+      "max_age": "3 years",
+      "features": ["固定高度", "可拆卸托盘", "安全带系统"]
+    },
+    {
+      "type": "Convertible High Chair",
+      "name_cn": "可转换高脚椅",
+      "name_en": "Convertible High Chair",
+      "min_weight": 6,
+      "max_weight": 25,
+      "min_age": "6 months",
+      "max_age": "5 years",
+      "features": ["可调节高度", "可转换为儿童椅", "多功能设计"]
+    },
+    {
+      "type": "Booster Seat",
+      "name_cn": "增高垫椅",
+      "name_en": "Booster Seat",
+      "min_weight": 9,
+      "max_weight": 20,
+      "min_age": "12 months",
+      "max_age": "4 years",
+      "features": ["轻便", "可放在成人椅上", "适合外出"]
+    },
+    {
+      "type": "Hook-on High Chair",
+      "name_cn": "挂式高脚椅",
+      "name_en": "Hook-on High Chair",
+      "min_weight": 6,
+      "max_weight": 12,
+      "min_age": "6 months",
+      "max_age": "2 years",
+      "features": ["便携", "可挂在桌子边缘", "适合外出用餐"]
+    }
+  ],
+  "safety_requirements": [
+    {
+      "id": "stability",
+      "name_cn": "稳定性测试",
+      "name_en": "Stability Test",
+      "description_cn": "高脚椅在正常使用和倾斜10°情况下不得倾倒",
+      "description_en": "High chair must not tip over during normal use and 10° tilt test"
+    },
+    {
+      "id": "restraint_system",
+      "name_cn": "约束系统",
+      "name_en": "Restraint System",
+      "description_cn": "必须配备有效的约束装置，防止儿童滑落",
+      "description_en": "Must be equipped with effective restraint system to prevent child from falling"
+    },
+    {
+      "id": "tray_locking",
+      "name_cn": "托盘锁定",
+      "name_en": "Tray Locking",
+      "description_cn": "托盘必须可靠锁定，使用力至少50N才能打开",
+      "description_en": "Tray must be securely locked, requiring at least 50N force to open"
+    },
+    {
+      "id": "finger_entrapment",
+      "name_cn": "手指夹伤防护",
+      "name_en": "Finger Entrapment Protection",
+      "description_cn": "活动部件之间的间隙不得大于5mm或小于12mm",
+      "description_en": "Gap between moving parts must not be >5mm or <12mm"
+    },
+    {
+      "id": "sharp_edges",
+      "name_cn": "尖锐边缘",
+      "name_en": "Sharp Edges",
+      "description_cn": "所有边缘必须圆角处理，不得有尖锐突起",
+      "description_en": "All edges must be rounded, no sharp projections"
+    },
+    {
+      "id": "chemical_safety",
+      "name_cn": "化学安全",
+      "name_en": "Chemical Safety",
+      "description_cn": "材料必须符合GB 6675玩具安全标准",
+      "description_en": "Materials must comply with GB 6675 toy safety standards"
+    },
+    {
+      "id": "load_capacity",
+      "name_cn": "承载能力",
+      "name_en": "Load Capacity",
+      "description_cn": "必须承受正常使用和异常使用下的载荷",
+      "description_en": "Must withstand loads during normal and abnormal use"
+    },
+    {
+      "id": "labeling",
+      "name_cn": "标识说明",
+      "name_en": "Labeling and Instructions",
+      "description_cn": "必须有清晰的使用说明和安全警示标识",
+      "description_en": "Must have clear usage instructions and safety warning labels"
+    }
+  ],
+  "dimension_requirements": [
+    {
+      "name_cn": "座椅高度",
+      "name_en": "Seat Height",
+      "min_value": 45,
+      "max_value": 85,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "座椅宽度",
+      "name_en": "Seat Width",
+      "min_value": 25,
+      "max_value": 40,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "座椅深度",
+      "name_en": "Seat Depth",
+      "min_value": 20,
+      "max_value": 35,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "靠背高度",
+      "name_en": "Backrest Height",
+      "min_value": 30,
+      "max_value": 60,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "托盘宽度",
+      "name_en": "Tray Width",
+      "min_value": 40,
+      "max_value": 60,
+      "unit": "cm"
+    },
+    {
+      "name_cn": "底座宽度",
+      "name_en": "Base Width",
+      "min_value": 50,
+      "max_value": 70,
+      "unit": "cm"
+    }
+  ],
+  "safety_features": [
+    {
+      "name_cn": "三点式或五点式安全带",
+      "name_en": "3-point or 5-point harness",
+      "importance": "critical"
+    },
+    {
+      "name_cn": "防滑脚垫",
+      "name_en": "Anti-slip feet",
+      "importance": "critical"
+    },
+    {
+      "name_cn": "托盘防脱落设计",
+      "name_en": "Anti-detach tray design",
+      "importance": "critical"
+    },
+    {
+      "name_cn": "可调节高度",
+      "name_en": "Adjustable height",
+      "importance": "important"
+    },
+    {
+      "name_cn": "可拆卸托盘",
+      "name_en": "Removable tray",
+      "importance": "important"
+    },
+    {
+      "name_cn": "防倾倒设计",
+      "name_en": "Anti-tip design",
+      "importance": "important"
+    },
+    {
+      "name_cn": "易清洁表面",
+      "name_en": "Easy-to-clean surface",
+      "importance": "recommended"
+    },
+    {
+      "name_cn": "可折叠设计",
+      "name_en": "Foldable design",
+      "importance": "recommended"
+    }
+  ],
+  "ergonomic_requirements": [
+    {
+      "name_cn": "人体工程学座椅设计",
+      "name_en": "Ergonomic seat design",
+      "description_cn": "座椅应符合儿童身体曲线，提供良好支撑",
+      "description_en": "Seat should conform to child's body curve, provide good support"
+    },
+    {
+      "name_cn": "座椅角度可调",
+      "name_en": "Adjustable seat angle",
+      "description_cn": "座椅应支持一定角度调节，适应不同使用场景",
+      "description_en": "Seat should support angle adjustment for different usage scenarios"
+    },
+    {
+      "name_cn": "足托设计",
+      "name_en": "Footrest design",
+      "description_cn": "应配备可调节足托，避免儿童双脚悬空",
+      "description_en": "Should be equipped with adjustable footrest to avoid dangling feet"
+    },
+    {
+      "name_cn": "靠背支撑",
+      "name_en": "Backrest support",
+      "description_cn": "靠背应提供良好的背部支撑，保护脊椎",
+      "description_en": "Backrest should provide good support for spine protection"
+    }
+  ]
+}
