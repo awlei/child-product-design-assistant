@@ -104,7 +104,7 @@ export default function StrollerPage() {
   ) || [];
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #E8F5E9 0%, #E0F2F1 50%, #E3F2FD 100%)' }}>
       <div className="container mx-auto p-4 space-y-6">
         {/* Header */}
         <Card className="bg-white/95 backdrop-blur">
