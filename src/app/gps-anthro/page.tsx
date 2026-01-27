@@ -39,6 +39,20 @@ interface ErrorDetails {
   jsonPath?: string;
 }
 
+// 审核结果接口
+interface AuditResult {
+  audit_passed: boolean;
+  audit_score: number;
+  issues: Array<{
+    type: string;
+    severity: string;
+    description: string;
+    suggestion: string;
+  }>;
+  summary: string;
+  recommendations: string[];
+}
+
 export default function CarSeatDesignPage() {
   const [standard, setStandard] = useState<StandardType>('R129');
   const [inputType, setInputType] = useState<'height' | 'weight'>('height');
@@ -51,6 +65,11 @@ export default function CarSeatDesignPage() {
   const [error, setError] = useState('');
   const [errorDetails, setErrorDetails] = useState<ErrorDetails | null>(null);
   const [showDebug, setShowDebug] = useState(false);
+
+  // 审核状态
+  const [isAuditing, setIsAuditing] = useState(false);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [auditError, setAuditError] = useState('');
 
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
@@ -178,6 +197,43 @@ export default function CarSeatDesignPage() {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // 审核报告函数
+  const handleAuditReport = async () => {
+    if (!report) return;
+
+    setIsAuditing(true);
+    setAuditError('');
+    setAuditResult(null);
+
+    try {
+      const response = await fetch('/api/audit-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report,
+          standard,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || '审核失败');
+      }
+
+      const data = await response.json();
+      if (data.success && data.audit) {
+        setAuditResult(data.audit);
+      } else {
+        throw new Error('审核结果格式错误');
+      }
+    } catch (err) {
+      console.error('Audit error:', err);
+      setAuditError(err instanceof Error ? err.message : '审核失败');
+    } finally {
+      setIsAuditing(false);
     }
   };
 
@@ -615,6 +671,148 @@ export default function CarSeatDesignPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* 法规审核按钮 */}
+            <Card className="bg-white/95 backdrop-blur">
+              <CardContent className="p-4">
+                <Button
+                  onClick={handleAuditReport}
+                  disabled={isAuditing}
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 font-semibold text-lg py-4"
+                  size="lg"
+                >
+                  {isAuditing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      正在审核报告...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-5 h-5 mr-2" />
+                      启动法规合规性审核
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  使用DeepSeek R1模型深度审核，确保报告符合ECE R129/FMVSS 213等法规要求
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* 审核结果 */}
+            {auditResult && (
+              <Card className={`bg-white/95 backdrop-blur border-2 ${auditResult.audit_passed ? 'border-green-500' : 'border-red-500'}`}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    {auditResult.audit_passed ? (
+                      <>
+                        <CheckCircle className="w-6 h-6 text-green-600" />
+                        <span className="text-green-700">审核通过</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="w-6 h-6 text-red-600" />
+                        <span className="text-red-700">审核未通过</span>
+                      </>
+                    )}
+                    <Badge
+                      className={`ml-4 ${
+                        auditResult.audit_score >= 90
+                          ? 'bg-green-600'
+                          : auditResult.audit_score >= 70
+                          ? 'bg-blue-600'
+                          : auditResult.audit_score >= 50
+                          ? 'bg-yellow-600'
+                          : 'bg-red-600'
+                      } text-white`}
+                    >
+                      {auditResult.audit_score}分
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* 审核摘要 */}
+                  <Card className="bg-gray-50 border-gray-200">
+                    <CardContent className="p-4">
+                      <h4 className="font-bold text-gray-900 mb-2">审核摘要</h4>
+                      <p className="text-gray-700 text-sm">{auditResult.summary}</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* 问题列表 */}
+                  {auditResult.issues && auditResult.issues.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-bold text-gray-900">发现的问题</h4>
+                      {auditResult.issues.map((issue, idx) => (
+                        <Card
+                          key={idx}
+                          className={`border-2 ${
+                            issue.severity === '高'
+                              ? 'border-red-300 bg-red-50'
+                              : issue.severity === '中'
+                              ? 'border-yellow-300 bg-yellow-50'
+                              : 'border-blue-300 bg-blue-50'
+                          }`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Badge
+                                className={`${
+                                  issue.severity === '高'
+                                    ? 'bg-red-600'
+                                    : issue.severity === '中'
+                                    ? 'bg-yellow-600'
+                                    : 'bg-blue-600'
+                                } text-white flex-shrink-0 mt-0.5`}
+                              >
+                                {issue.severity}
+                              </Badge>
+                              <div className="flex-1">
+                                <div className="font-bold text-gray-900 mb-1">{issue.type}</div>
+                                <p className="text-gray-700 text-sm mb-2">{issue.description}</p>
+                                <p className="text-gray-600 text-xs italic">
+                                  建议：{issue.suggestion}
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 改进建议 */}
+                  {auditResult.recommendations && auditResult.recommendations.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-gray-900">改进建议</h4>
+                      <ul className="space-y-2">
+                        {auditResult.recommendations.map((rec, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <Badge className="bg-green-600 text-white flex-shrink-0 mt-0.5">
+                              {idx + 1}
+                            </Badge>
+                            <span className="text-gray-700 text-sm">{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 审核错误 */}
+            {auditError && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4 flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-red-700 font-semibold mb-1">审核失败</p>
+                    <p className="text-red-600 text-sm">{auditError}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
