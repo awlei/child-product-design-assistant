@@ -1055,7 +1055,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinHeight('40'); setMaxHeight('75'); }}
+                        onClick={() => {
+                          setMinHeight('40');
+                          setTimeout(() => setMaxHeight('75'), 0);
+                        }}
                         className="text-sm"
                       >
                         新生儿-婴儿 (40-75cm)
@@ -1063,7 +1066,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinHeight('40'); setMaxHeight('105'); }}
+                        onClick={() => {
+                          setMinHeight('40');
+                          setTimeout(() => setMaxHeight('105'), 0);
+                        }}
                         className="text-sm"
                       >
                         全阶段 (40-105cm)
@@ -1071,7 +1077,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinHeight('67'); setMaxHeight('105'); }}
+                        onClick={() => {
+                          setMinHeight('67');
+                          setTimeout(() => setMaxHeight('105'), 0);
+                        }}
                         className="text-sm"
                       >
                         幼儿阶段 (67-105cm)
@@ -1079,7 +1088,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinHeight('105'); setMaxHeight('125'); }}
+                        onClick={() => {
+                          setMinHeight('105');
+                          setTimeout(() => setMaxHeight('125'), 0);
+                        }}
                         className="text-sm"
                       >
                         学龄前 (105-125cm)
@@ -1124,7 +1136,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinWeight('0'); setMaxWeight('13'); }}
+                        onClick={() => {
+                          setMinWeight('0');
+                          setTimeout(() => setMaxWeight('13'), 0);
+                        }}
                         className="text-sm"
                       >
                         婴儿 (0-13kg)
@@ -1132,7 +1147,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinWeight('9'); setMaxWeight('18'); }}
+                        onClick={() => {
+                          setMinWeight('9');
+                          setTimeout(() => setMaxWeight('18'), 0);
+                        }}
                         className="text-sm"
                       >
                         幼儿 (9-18kg)
@@ -1140,7 +1158,10 @@ ${brandData.summary}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setMinWeight('15'); setMaxWeight('36'); }}
+                        onClick={() => {
+                          setMinWeight('15');
+                          setTimeout(() => setMaxWeight('36'), 0);
+                        }}
                         className="text-sm"
                       >
                         学龄前 (15-36kg)
