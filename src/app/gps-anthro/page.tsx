@@ -936,58 +936,228 @@ ${brandData.summary}
 
               {standard === 'R129' ? (
                 <>
+                  {/* 快速选择身高范围按钮 */}
                   <div>
-                    <Label htmlFor="minHeight">最小身高 (cm)</Label>
-                    <Input
-                      id="minHeight"
-                      type="number"
-                      placeholder="例如：40"
-                      value={minHeight}
-                      onChange={(e) => setMinHeight(e.target.value)}
-                      min="40"
-                      max="150"
-                    />
+                    <Label className="text-sm font-medium mb-2 block">快速选择身高范围</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinHeight('40');
+                          setMaxHeight('60');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        新生儿-婴儿<br/>
+                        <span className="text-xs text-gray-500">40-60cm</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinHeight('60');
+                          setMaxHeight('75');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        婴儿<br/>
+                        <span className="text-xs text-gray-500">60-75cm</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinHeight('75');
+                          setMaxHeight('87');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        幼儿<br/>
+                        <span className="text-xs text-gray-500">75-87cm</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinHeight('87');
+                          setMaxHeight('105');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        学前儿童<br/>
+                        <span className="text-xs text-gray-500">87-105cm</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinHeight('105');
+                          setMaxHeight('125');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        学龄儿童<br/>
+                        <span className="text-xs text-gray-500">105-125cm</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinHeight('125');
+                          setMaxHeight('150');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        大龄儿童<br/>
+                        <span className="text-xs text-gray-500">125-150cm</span>
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="maxHeight">最大身高 (cm)</Label>
-                    <Input
-                      id="maxHeight"
-                      type="number"
-                      placeholder="例如：105"
-                      value={maxHeight}
-                      onChange={(e) => setMaxHeight(e.target.value)}
-                      min="40"
-                      max="150"
-                    />
+
+                  {/* 自定义身高范围输入 */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <Label className="text-sm font-medium mb-3 block">或自定义输入身高范围</Label>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="minHeight" className="text-sm">最小身高 (cm)</Label>
+                        <Input
+                          id="minHeight"
+                          type="number"
+                          placeholder="例如：40"
+                          value={minHeight}
+                          onChange={(e) => setMinHeight(e.target.value)}
+                          min="40"
+                          max="150"
+                          className="text-lg h-12"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="maxHeight" className="text-sm">最大身高 (cm)</Label>
+                        <Input
+                          id="maxHeight"
+                          type="number"
+                          placeholder="例如：105"
+                          value={maxHeight}
+                          onChange={(e) => setMaxHeight(e.target.value)}
+                          min="40"
+                          max="150"
+                          className="text-lg h-12"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </>
               ) : (
                 <>
+                  {/* 快速选择体重范围按钮 */}
                   <div>
-                    <Label htmlFor="minWeight">最小体重 (kg)</Label>
-                    <Input
-                      id="minWeight"
-                      type="number"
-                      placeholder="例如：9"
-                      value={minWeight}
-                      onChange={(e) => setMinWeight(e.target.value)}
-                      min="0"
-                      max="50"
-                      step="0.1"
-                    />
+                    <Label className="text-sm font-medium mb-2 block">快速选择体重范围</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinWeight('0');
+                          setMaxWeight('13');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        新生儿<br/>
+                        <span className="text-xs text-gray-500">0-13kg</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinWeight('9');
+                          setMaxWeight('18');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        婴幼儿<br/>
+                        <span className="text-xs text-gray-500">9-18kg</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinWeight('15');
+                          setMaxWeight('25');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        幼儿<br/>
+                        <span className="text-xs text-gray-500">15-25kg</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setMinWeight('22');
+                          setMaxWeight('36');
+                          setError('');
+                        }}
+                        className="text-sm h-12"
+                      >
+                        学前<br/>
+                        <span className="text-xs text-gray-500">22-36kg</span>
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="maxWeight">最大体重 (kg)</Label>
-                    <Input
-                      id="maxWeight"
-                      type="number"
-                      placeholder="例如：18"
-                      value={maxWeight}
-                      onChange={(e) => setMaxWeight(e.target.value)}
-                      min="0"
-                      max="50"
-                      step="0.1"
-                    />
+
+                  {/* 自定义体重范围输入 */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <Label className="text-sm font-medium mb-3 block">或自定义输入体重范围</Label>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="minWeight" className="text-sm">最小体重 (kg)</Label>
+                        <Input
+                          id="minWeight"
+                          type="number"
+                          placeholder="例如：9"
+                          value={minWeight}
+                          onChange={(e) => setMinWeight(e.target.value)}
+                          min="0"
+                          max="50"
+                          step="0.1"
+                          className="text-lg h-12"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="maxWeight" className="text-sm">最大体重 (kg)</Label>
+                        <Input
+                          id="maxWeight"
+                          type="number"
+                          placeholder="例如：18"
+                          value={maxWeight}
+                          onChange={(e) => setMaxWeight(e.target.value)}
+                          min="0"
+                          max="50"
+                          step="0.1"
+                          className="text-lg h-12"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </>
               )}

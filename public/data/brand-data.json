@@ -1,7 +1,13 @@
 {
-  "version": "1.1.0",
-  "description": "主流儿童安全座椅品牌产品参数数据",
+  "version": "1.2.0",
+  "description": "主流儿童安全座椅品牌产品参数数据 - 增强版",
   "lastUpdated": "2025-01-20",
+  "dataSources": [
+    "品牌官网",
+    "产品技术规格表",
+    "ECE R129认证证书",
+    "FMVSS 213测试报告"
+  ],
   "brands": [
     {
       "brand": "Cybex",
