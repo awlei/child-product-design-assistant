@@ -640,13 +640,51 @@ ${brandData.summary}
         }
       } else {
         console.error('AI未返回任何内容，fullContent为空');
-        setError('生成报告失败，AI未返回任何内容');
-        // 显示原始响应内容，帮助诊断问题
-        const rawResponse = rawChunks.join('\n').substring(0, 1000);
-        setErrorDetails({
-          message: 'AI返回的内容为空，请检查API配置或稍后重试',
-          rawContent: `接收到${chunkCount}个chunk，但未提取到有效内容。\n\n原始响应:\n${rawResponse}${rawChunks.join('\n').length > 1000 ? '...' : ''}`,
-        });
+        console.log('AI生成失败，尝试使用本地数据作为fallback...');
+
+        // Fallback到本地数据
+        try {
+          const localReport = await generateLocalReport(standard, heightRange, weightRange);
+
+          if (localReport) {
+            console.log('本地数据报告生成成功');
+            setReport(localReport);
+
+            // 仍然加载测试矩阵数据（如果需要）
+            if (dataSourceMode !== 'ai-only') {
+              const matrixResult = await loadTestMatrixData(
+                standard,
+                heightRange,
+                weightRange,
+                dataSourceMode === 'local+ai-validation'
+              );
+              if (matrixResult) {
+                setTestMatrixData(matrixResult.data);
+                setDataValidation(matrixResult.validation);
+              }
+            }
+
+            // 显示警告信息，告知用户使用了本地数据
+            setErrorDetails({
+              message: 'AI生成失败，已自动切换到本地数据模式',
+              rawContent: '由于AI服务暂时不可用，已使用本地测试矩阵数据生成报告。这是经过验证的标准数据，可以正常使用。',
+            });
+          } else {
+            // 本地数据也失败
+            setError('生成报告失败，AI和本地数据均不可用');
+            setErrorDetails({
+              message: '所有数据源均不可用',
+              rawContent: 'AI服务失败，且本地数据也无法加载。请稍后重试或检查网络连接。',
+            });
+          }
+        } catch (localError) {
+          console.error('本地数据fallback也失败:', localError);
+          setError('生成报告失败，AI和本地数据均不可用');
+          setErrorDetails({
+            message: '所有数据源均不可用',
+            rawContent: localError instanceof Error ? localError.message : '未知错误',
+          });
+        }
       }
     } catch (err) {
       console.error('生成报告错误:', err);
@@ -656,12 +694,54 @@ ${brandData.summary}
         stack: err instanceof Error ? err.stack : undefined,
       });
 
-      const errorMessage = err instanceof Error ? err.message : '未知错误';
-      setError('生成报告失败，请稍后重试');
-      setErrorDetails({
-        message: errorMessage,
-        rawContent: err instanceof Error && err.stack ? err.stack.substring(0, 300) : '无详细信息',
-      });
+      // AI调用失败，尝试使用本地数据作为fallback
+      console.log('AI调用失败，尝试使用本地数据作为fallback...');
+
+      try {
+        const localReport = await generateLocalReport(standard, heightRange, weightRange);
+
+        if (localReport) {
+          console.log('本地数据报告生成成功（fallback模式）');
+          setReport(localReport);
+
+          // 仍然加载测试矩阵数据（如果需要）
+          if (dataSourceMode !== 'ai-only') {
+            const matrixResult = await loadTestMatrixData(
+              standard,
+              heightRange,
+              weightRange,
+              dataSourceMode === 'local+ai-validation'
+            );
+            if (matrixResult) {
+              setTestMatrixData(matrixResult.data);
+              setDataValidation(matrixResult.validation);
+            }
+          }
+
+          // 显示警告信息，告知用户使用了本地数据
+          const errorMessage = err instanceof Error ? err.message : '未知错误';
+          setErrorDetails({
+            message: `AI生成失败（${errorMessage}），已自动切换到本地数据模式`,
+            rawContent: '由于AI服务异常，已使用本地测试矩阵数据生成报告。这是经过验证的标准数据，可以正常使用。',
+          });
+        } else {
+          // 本地数据也失败
+          const errorMessage = err instanceof Error ? err.message : '未知错误';
+          setError('生成报告失败，AI和本地数据均不可用');
+          setErrorDetails({
+            message: '所有数据源均不可用',
+            rawContent: `AI错误：${errorMessage}。本地数据也无法加载。请稍后重试或检查网络连接。`,
+          });
+        }
+      } catch (localError) {
+        console.error('本地数据fallback也失败:', localError);
+        const errorMessage = err instanceof Error ? err.message : '未知错误';
+        setError('生成报告失败，AI和本地数据均不可用');
+        setErrorDetails({
+          message: '所有数据源均不可用',
+          rawContent: `AI错误：${errorMessage}。本地数据错误：${localError instanceof Error ? localError.message : '未知错误'}`,
+        });
+      }
     } finally {
       console.log('生成报告流程结束，isGenerating:', isGenerating);
       setIsGenerating(false);
@@ -993,7 +1073,7 @@ ${brandData.summary}
               )}
             </div>
 
-            {error && (
+            {error && !report && (
               <Card className="border-red-200 bg-red-50">
                 <CardContent className="p-4 flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -1108,6 +1188,27 @@ ${brandData.summary}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Fallback警告 */}
+            {errorDetails && errorDetails.message.includes('已自动切换到本地数据模式') && (
+              <Card className="bg-yellow-50 border-yellow-200">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-yellow-900 mb-1">已切换到本地数据模式</h4>
+                    <p className="text-sm text-yellow-800">{errorDetails.rawContent}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setErrorDetails(null)}
+                    className="flex-shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 数据源说明 */}
             <Card className={`${
