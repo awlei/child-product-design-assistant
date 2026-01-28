@@ -355,32 +355,26 @@ ${matchedGroup.weight_range || '未指定'}
 
         // 添加AI总结
         if (brandData.summary) {
-          const summarySection = `
+          markdown += `
 ### 市场分析总结
 
 ${brandData.summary}
 `;
-          markdown += summarySection;
-        }
-
-        // 如果使用的是本地数据，添加说明
-        if (brandData.dataSource === 'local' || brandData.fallback) {
-          const localNote = `
-*注：以上品牌数据来自本地数据库，可能不是最新信息。建议查看官方网站获取最新产品参数。*
-`;
-          markdown += localNote;
         }
       } else {
-        // 只有当完全没有数据时才显示警告
-        if (brandSearchResult.status === 'rejected' || !brandData) {
-          markdown += `
+        markdown += `
 ⚠️ **暂未获取到品牌对比数据**
 
-原因：品牌搜索服务暂时不可用
+原因：联网搜索暂时失败，可能的原因包括：
+- 网络连接不稳定
+- 搜索服务暂时不可用
+- 当前无匹配结果
 
-**说明**：这不影响设计报告的主要技术内容，您可以继续参考上述设计建议和测试要求。
+**建议**：
+1. 稍后重试（建议等待30秒后）
+2. 访问Web版使用完整AI功能获取品牌对比数据
+3. 使用本地数据查看技术规范和测试要求
 `;
-        }
       }
 
       markdown += `
@@ -403,64 +397,45 @@ ${brandData.summary}
   };
 
   const handleGenerateReport = async () => {
-    console.log('[handleGenerateReport] 开始生成报告');
+    // 验证输入
+    if (inputType === 'height') {
+      if (!minHeight || !maxHeight) {
+        setError('请输入身高范围（例如：40-105cm）');
+        return;
+      }
+      const min = parseInt(minHeight);
+      const max = parseInt(maxHeight);
+      if (min < 40 || max > 150 || min >= max) {
+        setError('身高范围无效，请输入40-150cm之间的有效范围');
+        return;
+      }
+    } else {
+      if (!minWeight || !maxWeight) {
+        setError('请输入体重范围（例如：9-18kg）');
+        return;
+      }
+      const min = parseFloat(minWeight);
+      const max = parseFloat(maxWeight);
+      if (min < 0 || max > 50 || min >= max) {
+        setError('体重范围无效，请输入0-50kg之间的有效范围');
+        return;
+      }
+    }
+
+    setError('');
+    setErrorDetails(null);
+    setIsGenerating(true);
+    setReport(null);
+
+    // 构建输入参数
+    const heightRange = inputType === 'height' ? `${minHeight}-${maxHeight}cm` : null;
+    const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
 
     try {
-      // 验证输入
-      console.log('[handleGenerateReport] 开始验证输入');
-      if (inputType === 'height') {
-        if (!minHeight || !maxHeight) {
-          console.log('[handleGenerateReport] 身高输入为空');
-          setError('请输入身高范围（例如：40-105cm）');
-          return;
-        }
-        const min = parseInt(minHeight);
-        const max = parseInt(maxHeight);
-        if (min < 40 || max > 150 || min >= max) {
-          console.log('[handleGenerateReport] 身高范围无效:', min, max);
-          setError('身高范围无效，请输入40-150cm之间的有效范围');
-          return;
-        }
-      } else {
-        if (!minWeight || !maxWeight) {
-          console.log('[handleGenerateReport] 体重输入为空');
-          setError('请输入体重范围（例如：9-18kg）');
-          return;
-        }
-        const min = parseFloat(minWeight);
-        const max = parseFloat(maxWeight);
-        if (min < 0 || max > 50 || min >= max) {
-          console.log('[handleGenerateReport] 体重范围无效:', min, max);
-          setError('体重范围无效，请输入0-50kg之间的有效范围');
-          return;
-        }
-      }
-
-      console.log('[handleGenerateReport] 输入验证通过');
-
-      // 使用setTimeout确保状态更新的正确顺序，避免APK环境中的客户端异常
-      setTimeout(() => {
-        setError('');
-        setTimeout(() => {
-          setErrorDetails(null);
-          setTimeout(() => {
-            setReport(null);
-          }, 0);
-        }, 0);
-      }, 0);
-
-      // 构建输入参数
-      const heightRange = inputType === 'height' ? `${minHeight}-${maxHeight}cm` : null;
-      const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
-
-      // 设置生成状态（在异步操作之前）
-      setIsGenerating(true);
-
-      try {
-        // 统一使用免费智能体API生成报告（APK和Web版本一致）
-        console.log('[handleGenerateReport] 使用免费智能体API生成报告');
-        const response = await fetch('/api/design-assistant', {
-          method: 'POST',
+      // 统一使用免费智能体API生成报告（APK和Web版本一致）
+      console.log('使用免费智能体API生成报告');
+      const response = await fetch('/api/design-assistant', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           standard,
@@ -665,51 +640,13 @@ ${brandData.summary}
         }
       } else {
         console.error('AI未返回任何内容，fullContent为空');
-        console.log('AI生成失败，尝试使用本地数据作为fallback...');
-
-        // Fallback到本地数据
-        try {
-          const localReport = await generateLocalReport(standard, heightRange, weightRange);
-
-          if (localReport) {
-            console.log('本地数据报告生成成功');
-            setReport(localReport);
-
-            // 仍然加载测试矩阵数据（如果需要）
-            if (dataSourceMode !== 'ai-only') {
-              const matrixResult = await loadTestMatrixData(
-                standard,
-                heightRange,
-                weightRange,
-                dataSourceMode === 'local+ai-validation'
-              );
-              if (matrixResult) {
-                setTestMatrixData(matrixResult.data);
-                setDataValidation(matrixResult.validation);
-              }
-            }
-
-            // 显示警告信息，告知用户使用了本地数据
-            setErrorDetails({
-              message: 'AI生成失败，已自动切换到本地数据模式',
-              rawContent: '由于AI服务暂时不可用，已使用本地测试矩阵数据生成报告。这是经过验证的标准数据，可以正常使用。',
-            });
-          } else {
-            // 本地数据也失败
-            setError('生成报告失败，AI和本地数据均不可用');
-            setErrorDetails({
-              message: '所有数据源均不可用',
-              rawContent: 'AI服务失败，且本地数据也无法加载。请稍后重试或检查网络连接。',
-            });
-          }
-        } catch (localError) {
-          console.error('本地数据fallback也失败:', localError);
-          setError('生成报告失败，AI和本地数据均不可用');
-          setErrorDetails({
-            message: '所有数据源均不可用',
-            rawContent: localError instanceof Error ? localError.message : '未知错误',
-          });
-        }
+        setError('生成报告失败，AI未返回任何内容');
+        // 显示原始响应内容，帮助诊断问题
+        const rawResponse = rawChunks.join('\n').substring(0, 1000);
+        setErrorDetails({
+          message: 'AI返回的内容为空，请检查API配置或稍后重试',
+          rawContent: `接收到${chunkCount}个chunk，但未提取到有效内容。\n\n原始响应:\n${rawResponse}${rawChunks.join('\n').length > 1000 ? '...' : ''}`,
+        });
       }
     } catch (err) {
       console.error('生成报告错误:', err);
@@ -719,54 +656,12 @@ ${brandData.summary}
         stack: err instanceof Error ? err.stack : undefined,
       });
 
-      // AI调用失败，尝试使用本地数据作为fallback
-      console.log('AI调用失败，尝试使用本地数据作为fallback...');
-
-      try {
-        const localReport = await generateLocalReport(standard, heightRange, weightRange);
-
-        if (localReport) {
-          console.log('本地数据报告生成成功（fallback模式）');
-          setReport(localReport);
-
-          // 仍然加载测试矩阵数据（如果需要）
-          if (dataSourceMode !== 'ai-only') {
-            const matrixResult = await loadTestMatrixData(
-              standard,
-              heightRange,
-              weightRange,
-              dataSourceMode === 'local+ai-validation'
-            );
-            if (matrixResult) {
-              setTestMatrixData(matrixResult.data);
-              setDataValidation(matrixResult.validation);
-            }
-          }
-
-          // 显示警告信息，告知用户使用了本地数据
-          const errorMessage = err instanceof Error ? err.message : '未知错误';
-          setErrorDetails({
-            message: `AI生成失败（${errorMessage}），已自动切换到本地数据模式`,
-            rawContent: '由于AI服务异常，已使用本地测试矩阵数据生成报告。这是经过验证的标准数据，可以正常使用。',
-          });
-        } else {
-          // 本地数据也失败
-          const errorMessage = err instanceof Error ? err.message : '未知错误';
-          setError('生成报告失败，AI和本地数据均不可用');
-          setErrorDetails({
-            message: '所有数据源均不可用',
-            rawContent: `AI错误：${errorMessage}。本地数据也无法加载。请稍后重试或检查网络连接。`,
-          });
-        }
-      } catch (localError) {
-        console.error('本地数据fallback也失败:', localError);
-        const errorMessage = err instanceof Error ? err.message : '未知错误';
-        setError('生成报告失败，AI和本地数据均不可用');
-        setErrorDetails({
-          message: '所有数据源均不可用',
-          rawContent: `AI错误：${errorMessage}。本地数据错误：${localError instanceof Error ? localError.message : '未知错误'}`,
-        });
-      }
+      const errorMessage = err instanceof Error ? err.message : '未知错误';
+      setError('生成报告失败，请稍后重试');
+      setErrorDetails({
+        message: errorMessage,
+        rawContent: err instanceof Error && err.stack ? err.stack.substring(0, 300) : '无详细信息',
+      });
     } finally {
       console.log('生成报告流程结束，isGenerating:', isGenerating);
       setIsGenerating(false);
@@ -1051,7 +946,6 @@ ${brandData.summary}
                       onChange={(e) => setMinHeight(e.target.value)}
                       min="40"
                       max="150"
-                      className="text-lg h-12"
                     />
                   </div>
                   <div>
@@ -1064,58 +958,7 @@ ${brandData.summary}
                       onChange={(e) => setMaxHeight(e.target.value)}
                       min="40"
                       max="150"
-                      className="text-lg h-12"
                     />
-                  </div>
-                  {/* 快速选择按钮 */}
-                  <div className="md:col-span-2">
-                    <Label>快速选择</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinHeight('40');
-                          setTimeout(() => setMaxHeight('75'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        新生儿-婴儿 (40-75cm)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinHeight('40');
-                          setTimeout(() => setMaxHeight('105'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        全阶段 (40-105cm)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinHeight('67');
-                          setTimeout(() => setMaxHeight('105'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        幼儿阶段 (67-105cm)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinHeight('105');
-                          setTimeout(() => setMaxHeight('125'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        学龄前 (105-125cm)
-                      </Button>
-                    </div>
                   </div>
                 </>
               ) : (
@@ -1131,7 +974,6 @@ ${brandData.summary}
                       min="0"
                       max="50"
                       step="0.1"
-                      className="text-lg h-12"
                     />
                   </div>
                   <div>
@@ -1145,53 +987,13 @@ ${brandData.summary}
                       min="0"
                       max="50"
                       step="0.1"
-                      className="text-lg h-12"
                     />
-                  </div>
-                  {/* 快速选择按钮 */}
-                  <div className="md:col-span-2">
-                    <Label>快速选择</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinWeight('0');
-                          setTimeout(() => setMaxWeight('13'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        婴儿 (0-13kg)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinWeight('9');
-                          setTimeout(() => setMaxWeight('18'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        幼儿 (9-18kg)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMinWeight('15');
-                          setTimeout(() => setMaxWeight('36'), 0);
-                        }}
-                        className="text-sm"
-                      >
-                        学龄前 (15-36kg)
-                      </Button>
-                    </div>
                   </div>
                 </>
               )}
             </div>
 
-            {error && !report && (
+            {error && (
               <Card className="border-red-200 bg-red-50">
                 <CardContent className="p-4 flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -1306,27 +1108,6 @@ ${brandData.summary}
                 </div>
               </CardContent>
             </Card>
-
-            {/* Fallback警告 */}
-            {errorDetails && errorDetails.message.includes('已自动切换到本地数据模式') && (
-              <Card className="bg-yellow-50 border-yellow-200">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-yellow-900 mb-1">已切换到本地数据模式</h4>
-                    <p className="text-sm text-yellow-800">{errorDetails.rawContent}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setErrorDetails(null)}
-                    className="flex-shrink-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
 
             {/* 数据源说明 */}
             <Card className={`${
