@@ -93,9 +93,12 @@ export default function CarSeatDesignPage() {
 
   // 测试矩阵数据
   const [testMatrixData, setTestMatrixData] = useState<TestMatrixData | null>(null);
-  
+
   // 数据验证结果
   const [dataValidation, setDataValidation] = useState<any>(null);
+
+  // 数据源选择
+  const [dataSourceMode, setDataSourceMode] = useState<'ai-only' | 'local-only' | 'local+ai-validation'>('local+ai-validation');
 
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
@@ -540,13 +543,23 @@ ${brandData.summary}
           content: fullContent,
           standard: getStandardName(standard),
           timestamp: new Date().toISOString(),
-          dataSource: dataSource,
+          dataSource: dataSourceMode === 'ai-only' ? 'ai' : 'local',
         });
-        console.log('报告已设置，数据来源:', dataSource);
+        console.log('报告已设置，数据来源:', dataSourceMode);
 
-        // 并行执行：加载测试矩阵数据 + 联网搜索品牌信息
+        // 根据用户选择的数据源，决定是否加载测试矩阵数据和是否启用验证
+        const matrixDataPromise = dataSourceMode === 'ai-only'
+          ? Promise.resolve({ data: null, validation: null })
+          : loadTestMatrixData(
+              standard,
+              heightRange,
+              weightRange,
+              dataSourceMode === 'local+ai-validation'  // 只有选择 "本地数据 + AI验证" 时才启用验证
+            );
+
+        // 并行执行：加载测试矩阵数据（如果需要） + 联网搜索品牌信息
         const [matrixData, brandSearchResult] = await Promise.allSettled([
-          loadTestMatrixData(standard, heightRange, weightRange),
+          matrixDataPromise,
           // 联网搜索品牌参数
           (async () => {
             try {
@@ -710,7 +723,8 @@ ${brandData.summary}
   const loadTestMatrixData = async (
     std: StandardType,
     heightRange: string | null,
-    weightRange: string | null
+    weightRange: string | null,
+    enableValidation: boolean = true
   ): Promise<{ data: TestMatrixData | null; validation: any } | null> => {
     try {
       const response = await fetch('/data/test-matrix-data.json');
@@ -755,29 +769,33 @@ ${brandData.summary}
         return { data: null, validation: null };
       }
 
-      // 调用验证API验证数据准确性
+      // 根据配置调用验证API验证数据准确性
       let validationResult: any = null;
-      try {
-        console.log('[Frontend] Validating local data...');
-        const validationResponse = await fetch('/api/validate-data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            standard: std,
-            heightRange,
-            weightRange,
-            localData: matchedGroup,
-          }),
-        });
+      if (enableValidation) {
+        try {
+          console.log('[Frontend] Validating local data...');
+          const validationResponse = await fetch('/api/validate-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              standard: std,
+              heightRange,
+              weightRange,
+              localData: matchedGroup,
+            }),
+          });
 
-        if (validationResponse.ok) {
-          validationResult = await validationResponse.json();
-          console.log('[Frontend] Validation result:', validationResult);
-        } else {
-          console.warn('[Frontend] Validation API returned error');
+          if (validationResponse.ok) {
+            validationResult = await validationResponse.json();
+            console.log('[Frontend] Validation result:', validationResult);
+          } else {
+            console.warn('[Frontend] Validation API returned error');
+          }
+        } catch (validationError) {
+          console.error('[Frontend] Validation error:', validationError);
         }
-      } catch (validationError) {
-        console.error('[Frontend] Validation error:', validationError);
+      } else {
+        console.log('[Frontend] Validation disabled by user choice');
       }
 
       return { data: matchedGroup, validation: validationResult };
@@ -891,6 +909,26 @@ ${brandData.summary}
                     </SelectItem>
                     <SelectItem value="R44">
                       ECE R44/04 - 基于体重（较旧标准）
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="dataSource">数据源</Label>
+                <Select value={dataSourceMode} onValueChange={(value) => setDataSourceMode(value as any)}>
+                  <SelectTrigger id="dataSource">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ai-only">
+                      仅大语言模型 - 使用AI生成设计建议
+                    </SelectItem>
+                    <SelectItem value="local-only">
+                      仅本地数据 - 使用本地测试矩阵数据
+                    </SelectItem>
+                    <SelectItem value="local+ai-validation">
+                      本地数据 + AI验证（推荐）- 本地数据 + AI准确性验证
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -1010,6 +1048,30 @@ ${brandData.summary}
                 </>
               )}
             </Button>
+
+            {/* 数据源说明 */}
+            <Card className="bg-gray-50 border-gray-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Badge className="bg-purple-600 text-white px-2 py-0 flex-shrink-0 mt-0.5">
+                    {dataSourceMode === 'ai-only' ? 'AI模式' : dataSourceMode === 'local-only' ? '本地模式' : '双重验证'}
+                  </Badge>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">
+                      {dataSourceMode === 'ai-only' && (
+                        <span>使用大语言模型生成设计建议，不加载本地测试矩阵数据，适合需要创意和灵活设计的场景。</span>
+                      )}
+                      {dataSourceMode === 'local-only' && (
+                        <span>使用本地测试矩阵数据，提供标准的测试要求和设计规范，不启用AI验证，速度快且可靠。</span>
+                      )}
+                      {dataSourceMode === 'local+ai-validation' && (
+                        <span>使用本地测试矩阵数据 + AI验证双重机制，确保数据准确性，适合需要严格符合标准的设计场景。</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
 
@@ -1044,6 +1106,31 @@ ${brandData.summary}
                     </Badge>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* 数据源说明 */}
+            <Card className={`${
+              dataSourceMode === 'ai-only'
+                ? 'bg-purple-50 border-purple-200'
+                : dataSourceMode === 'local-only'
+                ? 'bg-blue-50 border-blue-200'
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  {dataSourceMode === 'ai-only' && <Sparkles className="w-4 h-4 text-purple-600" />}
+                  {dataSourceMode === 'local-only' && <Settings className="w-4 h-4 text-blue-600" />}
+                  {dataSourceMode === 'local+ai-validation' && <ShieldCheck className="w-4 h-4 text-green-600" />}
+                  数据源说明
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-700">
+                  {dataSourceMode === 'ai-only' && '当前使用大语言模型生成设计建议，未加载本地测试矩阵数据。'}
+                  {dataSourceMode === 'local-only' && '当前使用本地测试矩阵数据，未启用AI验证。'}
+                  {dataSourceMode === 'local+ai-validation' && '当前使用本地测试矩阵数据 + AI验证双重机制，确保数据准确性。'}
+                </p>
               </CardContent>
             </Card>
 
