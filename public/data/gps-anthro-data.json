@@ -1,1 +1,248 @@
-{"us_child_data":[{"age":"0-3 mo","weight_5th":2.8576321199999994,"weight_mean":5.30703108,"weight_95th":7.75643004,"height_5th":48.006,"height_mean":56.134,"height_95th":64.262},{"age":".5yr","weight_5th":4.989516399999999,"weight_mean":7.8017892799999995,"weight_95th":0,"height_5th":57.404,"height_mean":67.056,"height_95th":0},{"age":"1 yr","weight_5th":7.2574784,"weight_mean":9.70687736,"weight_95th":0,"height_5th":67.564,"height_mean":74.676,"height_95th":0},{"age":"1.5 yr","weight_5th":8.75433332,"weight_mean":0,"weight_95th":0,"height_5th":74.168,"height_mean":0,"height_95th":0},{"age":"2 yr","weight_5th":9.70687736,"weight_mean":0,"weight_95th":0,"height_5th":0,"height_mean":0,"height_95th":0}],"eu_child_data":[],"china_child_data":[],"r129_data":[{"stature":45,"sitting_height":39,"shoulder_breadth":12.1,"hip_breadth":14.2,"shoulder_height_min":27.4,"shoulder_height_max":0,"abdominal_depth_5th":"NOT ALLOWED FOR ECRS IMPACT SHIELD SYSTEMS","abdominal_depth_95th":null,"upper_leg_thickness_5th":null,"upper_leg_thickness_95th":null},{"stature":50,"sitting_height":40.5,"shoulder_breadth":14.1,"hip_breadth":14.8,"shoulder_height_min":27.6,"shoulder_height_max":0,"abdominal_depth_5th":null,"abdominal_depth_95th":null,"upper_leg_thickness_5th":null,"upper_leg_thickness_95th":null},{"stature":55,"sitting_height":42,"shoulder_breadth":16.1,"hip_breadth":15.4,"shoulder_height_min":27.8,"shoulder_height_max":0,"abdominal_depth_5th":null,"abdominal_depth_95th":null,"upper_leg_thickness_5th":null,"upper_leg_thickness_95th":null},{"stature":60,"sitting_height":43.5,"shoulder_breadth":18.1,"hip_breadth":16,"shoulder_height_min":28,"shoulder_height_max":0,"abdominal_depth_5th":null,"abdominal_depth_95th":null,"upper_leg_thickness_5th":null,"upper_leg_thickness_95th":null},{"stature":65,"sitting_height":45,"shoulder_breadth":20.1,"hip_breadth":17.2,"shoulder_height_min":28.2,"shoulder_height_max":0,"abdominal_depth_5th":null,"abdominal_depth_95th":null,"upper_leg_thickness_5th":null,"upper_leg_thickness_95th":null},{"stature":70,"sitting_height":47.1,"shoulder_breadth":22.1,"hip_breadth":18.4,"shoulder_height_min":28.3,"shoulder_height_max":0,"abdominal_depth_5th":null,"abdominal_depth_95th":null,"upper_leg_thickness_5th":null,"upper_leg_thickness_95th":null},{"stature":75,"sitting_height":49.2,"shoulder_breadth":24.1,"hip_breadth":19.6,"shoulder_height_min":28.4,"shoulder_height_max":0,"abdominal_depth_5th":12.5,"abdominal_depth_95th":15.1,"upper_leg_thickness_5th":5.7,"upper_leg_thickness_95th":8.4},{"stature":80,"sitting_height":51.3,"shoulder_breadth":26.1,"hip_breadth":20.8,"shoulder_height_min":29.2,"shoulder_height_max":0,"abdominal_depth_5th":12.7,"abdominal_depth_95th":15.7,"upper_leg_thickness_5th":5.8,"upper_leg_thickness_95th":8.4},{"stature":85,"sitting_height":53.4,"shoulder_breadth":26.9,"hip_breadth":22,"shoulder_height_min":30,"shoulder_height_max":0,"abdominal_depth_5th":12.9,"abdominal_depth_95th":16.2,"upper_leg_thickness_5th":5.9,"upper_leg_thickness_95th":8.5},{"stature":87.5,"sitting_height":54.45,"shoulder_breadth":27.299999999999997,"hip_breadth":22.25,"shoulder_height_min":30.4,"shoulder_height_max":0,"abdominal_depth_5th":13,"abdominal_depth_95th":16.5,"upper_leg_thickness_5th":0,"upper_leg_thickness_95th":8.5}],"dummies_data":[{"name":"Newborn","stature":50.4,"seated_height":34.3,"seated_shoulder":24.7,"shoulder_width":18,"mass":3.39,"hip_width":16,"pelvic_depth":10.72},{"name":"6mo","stature":66.68,"seated_height":44.45,"seated_shoulder":27,"shoulder_width":19,"mass":7.91,"hip_width":18,"pelvic_depth":12.06},{"name":"12mo","stature":74.68,"seated_height":47.75,"seated_shoulder":28.3,"shoulder_width":20,"mass":9.98,"hip_width":19,"pelvic_depth":13.46},{"name":"18mo","stature":82.55,"seated_height":50.8,"seated_shoulder":29.5,"shoulder_width":21,"mass":11.34,"hip_width":20,"pelvic_depth":14.35},{"name":"3yr","stature":96.52,"seated_height":56.51,"seated_shoulder":32,"shoulder_width":23,"mass":14.52,"hip_width":22,"pelvic_depth":16.26},{"name":"6yr","stature":119.38,"seated_height":65.53,"seated_shoulder":35.5,"shoulder_width":26,"mass":21.32,"hip_width":25,"pelvic_depth":18.8},{"name":"10yr","stature":138.43,"seated_height":73.15,"seated_shoulder":38.5,"shoulder_width":28,"mass":31.75,"hip_width":27,"pelvic_depth":20.83}]}
+{
+  "us_child_data": [
+    {
+      "age": "0-3 mo",
+      "weight_5th": 2.8576321199999994,
+      "weight_mean": 5.30703108,
+      "weight_95th": 7.75643004,
+      "height_5th": 48.006,
+      "height_mean": 56.134,
+      "height_95th": 64.262
+    },
+    {
+      "age": ".5yr",
+      "weight_5th": 4.989516399999999,
+      "weight_mean": 7.8017892799999995,
+      "weight_95th": 0,
+      "height_5th": 57.404,
+      "height_mean": 67.056,
+      "height_95th": 0
+    },
+    {
+      "age": "1 yr",
+      "weight_5th": 7.2574784,
+      "weight_mean": 9.70687736,
+      "weight_95th": 0,
+      "height_5th": 67.564,
+      "height_mean": 74.676,
+      "height_95th": 0
+    },
+    {
+      "age": "1.5 yr",
+      "weight_5th": 8.75433332,
+      "weight_mean": 0,
+      "weight_95th": 0,
+      "height_5th": 74.168,
+      "height_mean": 0,
+      "height_95th": 0
+    },
+    {
+      "age": "2 yr",
+      "weight_5th": 9.70687736,
+      "weight_mean": 0,
+      "weight_95th": 0,
+      "height_5th": 0,
+      "height_mean": 0,
+      "height_95th": 0
+    }
+  ],
+  "eu_child_data": [],
+  "china_child_data": [],
+  "r129_data": [
+    {
+      "stature": 45,
+      "sitting_height": 39,
+      "shoulder_breadth": 12.1,
+      "hip_breadth": 14.2,
+      "shoulder_height_min": 27.4,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": "NOT ALLOWED FOR ECRS IMPACT SHIELD SYSTEMS",
+      "abdominal_depth_95th": null,
+      "upper_leg_thickness_5th": null,
+      "upper_leg_thickness_95th": null
+    },
+    {
+      "stature": 50,
+      "sitting_height": 40.5,
+      "shoulder_breadth": 14.1,
+      "hip_breadth": 14.8,
+      "shoulder_height_min": 27.6,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": null,
+      "abdominal_depth_95th": null,
+      "upper_leg_thickness_5th": null,
+      "upper_leg_thickness_95th": null
+    },
+    {
+      "stature": 55,
+      "sitting_height": 42,
+      "shoulder_breadth": 16.1,
+      "hip_breadth": 15.4,
+      "shoulder_height_min": 27.8,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": null,
+      "abdominal_depth_95th": null,
+      "upper_leg_thickness_5th": null,
+      "upper_leg_thickness_95th": null
+    },
+    {
+      "stature": 60,
+      "sitting_height": 43.5,
+      "shoulder_breadth": 18.1,
+      "hip_breadth": 16,
+      "shoulder_height_min": 28,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": null,
+      "abdominal_depth_95th": null,
+      "upper_leg_thickness_5th": null,
+      "upper_leg_thickness_95th": null
+    },
+    {
+      "stature": 65,
+      "sitting_height": 45,
+      "shoulder_breadth": 20.1,
+      "hip_breadth": 17.2,
+      "shoulder_height_min": 28.2,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": null,
+      "abdominal_depth_95th": null,
+      "upper_leg_thickness_5th": null,
+      "upper_leg_thickness_95th": null
+    },
+    {
+      "stature": 70,
+      "sitting_height": 47.1,
+      "shoulder_breadth": 22.1,
+      "hip_breadth": 18.4,
+      "shoulder_height_min": 28.3,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": null,
+      "abdominal_depth_95th": null,
+      "upper_leg_thickness_5th": null,
+      "upper_leg_thickness_95th": null
+    },
+    {
+      "stature": 75,
+      "sitting_height": 49.2,
+      "shoulder_breadth": 24.1,
+      "hip_breadth": 19.6,
+      "shoulder_height_min": 28.4,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": 12.5,
+      "abdominal_depth_95th": 15.1,
+      "upper_leg_thickness_5th": 5.7,
+      "upper_leg_thickness_95th": 8.4
+    },
+    {
+      "stature": 80,
+      "sitting_height": 51.3,
+      "shoulder_breadth": 26.1,
+      "hip_breadth": 20.8,
+      "shoulder_height_min": 29.2,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": 12.7,
+      "abdominal_depth_95th": 15.7,
+      "upper_leg_thickness_5th": 5.8,
+      "upper_leg_thickness_95th": 8.4
+    },
+    {
+      "stature": 85,
+      "sitting_height": 53.4,
+      "shoulder_breadth": 26.9,
+      "hip_breadth": 22,
+      "shoulder_height_min": 30,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": 12.9,
+      "abdominal_depth_95th": 16.2,
+      "upper_leg_thickness_5th": 5.9,
+      "upper_leg_thickness_95th": 8.5
+    },
+    {
+      "stature": 87.5,
+      "sitting_height": 54.45,
+      "shoulder_breadth": 27.299999999999997,
+      "hip_breadth": 22.25,
+      "shoulder_height_min": 30.4,
+      "shoulder_height_max": 0,
+      "abdominal_depth_5th": 13,
+      "abdominal_depth_95th": 16.5,
+      "upper_leg_thickness_5th": 0,
+      "upper_leg_thickness_95th": 8.5
+    }
+  ],
+  "dummies_data": [
+    {
+      "name": "Newborn",
+      "stature": 50.4,
+      "seated_height": 34.3,
+      "seated_shoulder": 24.7,
+      "shoulder_width": 18,
+      "mass": 3.39,
+      "hip_width": 16,
+      "pelvic_depth": 10.72
+    },
+    {
+      "name": "6mo",
+      "stature": 66.68,
+      "seated_height": 44.45,
+      "seated_shoulder": 27,
+      "shoulder_width": 19,
+      "mass": 7.91,
+      "hip_width": 18,
+      "pelvic_depth": 12.06
+    },
+    {
+      "name": "12mo",
+      "stature": 74.68,
+      "seated_height": 47.75,
+      "seated_shoulder": 28.3,
+      "shoulder_width": 20,
+      "mass": 9.98,
+      "hip_width": 19,
+      "pelvic_depth": 13.46
+    },
+    {
+      "name": "18mo",
+      "stature": 82.55,
+      "seated_height": 50.8,
+      "seated_shoulder": 29.5,
+      "shoulder_width": 21,
+      "mass": 11.34,
+      "hip_width": 20,
+      "pelvic_depth": 14.35
+    },
+    {
+      "name": "3yr",
+      "stature": 96.52,
+      "seated_height": 56.51,
+      "seated_shoulder": 32,
+      "shoulder_width": 23,
+      "mass": 14.52,
+      "hip_width": 22,
+      "pelvic_depth": 16.26
+    },
+    {
+      "name": "6yr",
+      "stature": 119.38,
+      "seated_height": 65.53,
+      "seated_shoulder": 35.5,
+      "shoulder_width": 26,
+      "mass": 21.32,
+      "hip_width": 25,
+      "pelvic_depth": 18.8
+    },
+    {
+      "name": "10yr",
+      "stature": 138.43,
+      "seated_height": 73.15,
+      "seated_shoulder": 38.5,
+      "shoulder_width": 28,
+      "mass": 31.75,
+      "hip_width": 27,
+      "pelvic_depth": 20.83
+    }
+  ],
+  "version": "1.0.0",
+  "last_updated": "2025-01-20",
+  "description": "GPS人体测量数据 - 包含美国、欧洲、中国儿童生长发育数据及R129假人数据"
+}

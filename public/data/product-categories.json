@@ -1,4 +1,7 @@
 {
+  "version": "1.0.0",
+  "last_updated": "2025-01-20",
+  "description": "产品分类数据 - 包含儿童产品设计助手支持的所有产品类别",
   "categories": [
     {
       "id": "stroller",

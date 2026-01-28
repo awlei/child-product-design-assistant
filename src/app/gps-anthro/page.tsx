@@ -1032,6 +1032,7 @@ ${brandData.summary}
                       onChange={(e) => setMinHeight(e.target.value)}
                       min="40"
                       max="150"
+                      className="text-lg h-12"
                     />
                   </div>
                   <div>
@@ -1044,7 +1045,46 @@ ${brandData.summary}
                       onChange={(e) => setMaxHeight(e.target.value)}
                       min="40"
                       max="150"
+                      className="text-lg h-12"
                     />
+                  </div>
+                  {/* 快速选择按钮 */}
+                  <div className="md:col-span-2">
+                    <Label>快速选择</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinHeight('40'); setMaxHeight('75'); }}
+                        className="text-sm"
+                      >
+                        新生儿-婴儿 (40-75cm)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinHeight('40'); setMaxHeight('105'); }}
+                        className="text-sm"
+                      >
+                        全阶段 (40-105cm)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinHeight('67'); setMaxHeight('105'); }}
+                        className="text-sm"
+                      >
+                        幼儿阶段 (67-105cm)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinHeight('105'); setMaxHeight('125'); }}
+                        className="text-sm"
+                      >
+                        学龄前 (105-125cm)
+                      </Button>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -1060,6 +1100,7 @@ ${brandData.summary}
                       min="0"
                       max="50"
                       step="0.1"
+                      className="text-lg h-12"
                     />
                   </div>
                   <div>
@@ -1073,7 +1114,38 @@ ${brandData.summary}
                       min="0"
                       max="50"
                       step="0.1"
+                      className="text-lg h-12"
                     />
+                  </div>
+                  {/* 快速选择按钮 */}
+                  <div className="md:col-span-2">
+                    <Label>快速选择</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinWeight('0'); setMaxWeight('13'); }}
+                        className="text-sm"
+                      >
+                        婴儿 (0-13kg)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinWeight('9'); setMaxWeight('18'); }}
+                        className="text-sm"
+                      >
+                        幼儿 (9-18kg)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setMinWeight('15'); setMaxWeight('36'); }}
+                        className="text-sm"
+                      >
+                        学龄前 (15-36kg)
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}

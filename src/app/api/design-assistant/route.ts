@@ -15,10 +15,14 @@ function loadTechnicalData() {
     const gpsPath = join(process.cwd(), 'public/data/gps-anthro-data.json');
     const gpsData = JSON.parse(readFileSync(gpsPath, 'utf-8'));
 
-    return { fmvssData, gpsData };
+    // 读取测试矩阵数据（最新版本）
+    const testMatrixPath = join(process.cwd(), 'public/data/test-matrix-data.json');
+    const testMatrixData = JSON.parse(readFileSync(testMatrixPath, 'utf-8'));
+
+    return { fmvssData, gpsData, testMatrixData };
   } catch (error) {
     console.error('Error loading technical data:', error);
-    return { fmvssData: null, gpsData: null };
+    return { fmvssData: null, gpsData: null, testMatrixData: null };
   }
 }
 
@@ -103,6 +107,36 @@ function buildSystemPrompt(technicalData: any): string {
 
 **安装方式**: ${fmvssData.installationMethods.join(', ')}
 `;
+  }
+
+  prompt += `
+
+### ECE R129 测试矩阵数据（最新版本）
+
+`;
+
+  if (technicalData.testMatrixData) {
+    const tm = technicalData.testMatrixData;
+    prompt += `**版本**: ${tm.version}
+**说明**: ${tm.description}
+
+**假人选择标准（根据ECE R129 Table 8）**:
+`;
+    tm.r129_dummy_selection.table.forEach((entry: any) => {
+      prompt += `- ${entry.size_range}: ${entry.dummy}`;
+      if (entry.verified_by) {
+        prompt += ` [验证: ${entry.verified_by}]`;
+      }
+      prompt += '\n';
+    });
+
+    prompt += `
+**真实认证案例**:
+`;
+    tm.certification_examples.slice(0, 2).forEach((cert: any) => {
+      prompt += `- ${cert.approval_number}: ${cert.product_name}, 范围: ${cert.approved_size_range}, 假人: ${cert.primary_dummies.join(', ')}
+`;
+    });
   }
 
   prompt += `
