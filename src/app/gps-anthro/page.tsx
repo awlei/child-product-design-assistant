@@ -403,45 +403,64 @@ ${brandData.summary}
   };
 
   const handleGenerateReport = async () => {
-    // 验证输入
-    if (inputType === 'height') {
-      if (!minHeight || !maxHeight) {
-        setError('请输入身高范围（例如：40-105cm）');
-        return;
-      }
-      const min = parseInt(minHeight);
-      const max = parseInt(maxHeight);
-      if (min < 40 || max > 150 || min >= max) {
-        setError('身高范围无效，请输入40-150cm之间的有效范围');
-        return;
-      }
-    } else {
-      if (!minWeight || !maxWeight) {
-        setError('请输入体重范围（例如：9-18kg）');
-        return;
-      }
-      const min = parseFloat(minWeight);
-      const max = parseFloat(maxWeight);
-      if (min < 0 || max > 50 || min >= max) {
-        setError('体重范围无效，请输入0-50kg之间的有效范围');
-        return;
-      }
-    }
-
-    setError('');
-    setErrorDetails(null);
-    setIsGenerating(true);
-    setReport(null);
-
-    // 构建输入参数
-    const heightRange = inputType === 'height' ? `${minHeight}-${maxHeight}cm` : null;
-    const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
+    console.log('[handleGenerateReport] 开始生成报告');
 
     try {
-      // 统一使用免费智能体API生成报告（APK和Web版本一致）
-      console.log('使用免费智能体API生成报告');
-      const response = await fetch('/api/design-assistant', {
-        method: 'POST',
+      // 验证输入
+      console.log('[handleGenerateReport] 开始验证输入');
+      if (inputType === 'height') {
+        if (!minHeight || !maxHeight) {
+          console.log('[handleGenerateReport] 身高输入为空');
+          setError('请输入身高范围（例如：40-105cm）');
+          return;
+        }
+        const min = parseInt(minHeight);
+        const max = parseInt(maxHeight);
+        if (min < 40 || max > 150 || min >= max) {
+          console.log('[handleGenerateReport] 身高范围无效:', min, max);
+          setError('身高范围无效，请输入40-150cm之间的有效范围');
+          return;
+        }
+      } else {
+        if (!minWeight || !maxWeight) {
+          console.log('[handleGenerateReport] 体重输入为空');
+          setError('请输入体重范围（例如：9-18kg）');
+          return;
+        }
+        const min = parseFloat(minWeight);
+        const max = parseFloat(maxWeight);
+        if (min < 0 || max > 50 || min >= max) {
+          console.log('[handleGenerateReport] 体重范围无效:', min, max);
+          setError('体重范围无效，请输入0-50kg之间的有效范围');
+          return;
+        }
+      }
+
+      console.log('[handleGenerateReport] 输入验证通过');
+
+      // 使用setTimeout确保状态更新的正确顺序，避免APK环境中的客户端异常
+      setTimeout(() => {
+        setError('');
+        setTimeout(() => {
+          setErrorDetails(null);
+          setTimeout(() => {
+            setReport(null);
+          }, 0);
+        }, 0);
+      }, 0);
+
+      // 构建输入参数
+      const heightRange = inputType === 'height' ? `${minHeight}-${maxHeight}cm` : null;
+      const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
+
+      // 设置生成状态（在异步操作之前）
+      setIsGenerating(true);
+
+      try {
+        // 统一使用免费智能体API生成报告（APK和Web版本一致）
+        console.log('[handleGenerateReport] 使用免费智能体API生成报告');
+        const response = await fetch('/api/design-assistant', {
+          method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           standard,
