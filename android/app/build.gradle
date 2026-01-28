@@ -1,0 +1,62 @@
+android {
+    // Release signing configuration
+    signingConfigs {
+        release {
+            // 注：实际部署时请替换为真实的密钥库文件和密码
+            // 这里的配置用于演示，生产环境请使用真实的密钥库
+            storeFile file('child-design-release.keystore')
+            storePassword 'ChildDesign2024!'
+            keyAlias 'child-design-key'
+            keyPassword 'ChildDesign2024!'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // 启用签名（如果密钥库文件不存在，可以暂时注释掉）
+            // signingConfig signingConfigs.release
+            
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+        }
+        
+        debug {
+            minifyEnabled false
+            debuggable true
+        }
+    }
+
+    // 优化构建
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // 启用代码压缩
+    buildFeatures {
+        buildConfig true
+    }
+
+    // 优化DEX生成
+    dexOptions {
+        preDexLibraries true
+        maxProcessCount 8
+    }
+}
+
+// 启用R8优化模式
+android {
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            // 使用R8进行混淆和优化
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
