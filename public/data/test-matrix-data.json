@@ -1,14 +1,14 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "standard": "ECE R129 (i-Size)",
-  "description": "儿童安全座椅测试矩阵数据 - 基于ECE R129 Table 8及真实认证证书（E4-129R-000001, E4-129R-000004, E4*129R02/02*0025*01）验证",
+  "description": "儿童安全座椅测试矩阵数据 - 基于ECE R129 Table 8及真实认证证书（E4-129R-000001, E4-129R-000004, E4*129R02/02*0025*01, E4-129R-000012）验证",
   "r129_dummy_selection": {
-    "note": "根据ECE R129标准7.1.3.6节Table 8，假人选择标准如下。以下标准已通过真实认证案例（E4-129R-000001, E4-129R-000004, E4*129R02/02*0025*01）验证。",
+    "note": "根据ECE R129标准7.1.3.6节Table 8，假人选择标准如下。以下标准已通过真实认证案例（E4-129R-000001, E4-129R-000004, E4*129R02/02*0025*01, E4-129R-000012）验证。",
     "table": [
-      {"size_range": "≤ 60 cm", "dummy": "Q0", "verified_by": "E4*129R02/02*0025*01 (40-105cm)"},
-      {"size_range": "60 < x ≤ 75 cm", "dummy": "Q1", "verified_by": "E4-129R-000004 (45-75cm)"},
-      {"size_range": "75 < x ≤ 87 cm", "dummy": "Q1.5", "verified_by": "E4*129R02/02*0025*01 (40-105cm)"},
-      {"size_range": "87 < x ≤ 105 cm", "dummy": "Q3", "verified_by": "E4-129R-000001 (67-105cm)"},
+      {"size_range": "≤ 60 cm", "dummy": "Q0", "verified_by": "E4*129R02/02*0025*01 (40-105cm), E4-129R-000012 (40-105cm)"},
+      {"size_range": "60 < x ≤ 75 cm", "dummy": "Q1", "verified_by": "E4-129R-000004 (45-75cm), E4-129R-000012 (40-105cm)"},
+      {"size_range": "75 < x ≤ 87 cm", "dummy": "Q1.5", "verified_by": "E4*129R02/02*0025*01 (40-105cm), E4-129R-000012 (40-105cm)"},
+      {"size_range": "87 < x ≤ 105 cm", "dummy": "Q3", "verified_by": "E4-129R-000001 (67-105cm), E4*129R02/02*0025*01 (40-105cm), E4-129R-000012 (40-105cm)"},
       {"size_range": "105 < x ≤ 125 cm", "dummy": "Q6"},
       {"size_range": "> 125 cm", "dummy": "Q10"}
     ],
@@ -423,7 +423,30 @@
           "neck_force_max": "416 N"
         }
       }
+    },
+  {
+    "approval_number": "E4-129R-000012",
+    "extension": "01",
+    "product_name": "O3, O3 SPS, O3 LITE (NADÓ series)",
+    "manufacturer": "Ningbo Bolenn Manufacturing Co., Ltd (宁波柏伦制造有限公司)",
+    "approved_size_range": "40-105cm",
+    "test_report": "17ExtH02681001-21366-1",
+    "primary_dummies": ["Q0", "Q1", "Q1.5", "Q3"],
+    "extension_reason": "Test without support leg (无支撑腿测试)",
+    "brands": ["NADÓ", "NADÓ BY BE COOL", "BOLENN", "MAMA&BEBE"],
+    "frontal_impact_test": {
+      "dummy_used": "Q3 (3 year old)",
+      "test_date": "2016-12-07",
+      "results": {
+        "thoracic_spine_acceleration_3ms": "31.9 g (limit: < 55 g)",
+        "thoracic_spine_acceleration_max": "47.9 g",
+        "thoracic_spine_accel_x": {"max": "11.3 g", "min": "-45.8 g"},
+        "thoracic_spine_accel_y": {"max": "10.3 g", "min": "-9.1 g"},
+        "thoracic_spine_accel_z": {"max": "20.9 g", "min": "-16.7 g"}
+      },
+      "performance": "PASS - 胸部加速度3ms为31.9g，远低于55g限制"
     }
+  }
   ],
   "examples": [
     {
@@ -462,7 +485,32 @@
       "side_impact_note": "测试所有相关假人（真实认证数据：Q0侧撞测试通过，头部加速度25.4g）"
     },
     {
-      "description": "示例2：身高45-75cm的婴儿安全座椅 (Pebble Plus)",
+      "description": "示例2：基于真实认证的O3Lite (E4-129R-000012)",
+      "height_range": "40-105cm",
+      "size_ranges_covered": ["40-60", "60-75", "75-87", "87-105"],
+      "approval_number": "E4-129R-000012 (Extension 01)",
+      "manufacturer": "Ningbo Bolenn Manufacturing Co., Ltd",
+      "brands": ["NADÓ", "NADÓ BY BE COOL", "BOLENN", "MAMA&BEBE"],
+      "verified_test_data": {
+        "extension_reason": "无支撑腿测试（Test without support leg）",
+        "frontal_impact": {
+          "dummy": "Q3 (3 year old)",
+          "test_date": "2016-12-07",
+          "thoracic_spine_acceleration_3ms": "31.9 g",
+          "thoracic_spine_acceleration_max": "47.9 g",
+          "limit": "< 55 g",
+          "performance": "PASS - 远低于限制值"
+        }
+      },
+      "primary_dummies": ["Q0", "Q1", "Q1.5", "Q3"],
+      "frontal_impact_dummies": ["Q0", "Q3"],
+      "frontal_impact_note": "使用最小假人Q0和最大假人Q3（真实认证：Q3正面碰撞测试通过）",
+      "side_impact_dummies": ["Q0", "Q1", "Q1.5", "Q3"],
+      "side_impact_note": "测试所有相关假人",
+      "notes": "中国制造商宁波柏伦的认证案例，证明40-105cm范围通过ECE R129认证"
+    },
+    {
+      "description": "示例3：身高45-75cm的婴儿安全座椅 (Pebble Plus)",
       "height_range": "45-75cm",
       "size_ranges_covered": ["40-60", "60-75"],
       "approval_number": "E4-129R-000004 (Extension 02)",
@@ -476,7 +524,7 @@
       "side_impact_note": "测试所有相关假人Q0和Q1"
     },
     {
-      "description": "示例3：身高75-87cm的安全座椅",
+      "description": "示例4：身高75-87cm的安全座椅",
       "height_range": "75-87cm",
       "size_ranges_covered": ["75-87"],
       "primary_dummy": "Q1.5",
@@ -486,7 +534,7 @@
       "side_impact_note": "测试所有相关假人"
     },
     {
-      "description": "示例4：身高125-135cm的增高垫座椅",
+      "description": "示例5：身高125-135cm的增高垫座椅",
       "height_range": "125-135cm",
       "size_ranges_covered": [">125"],
       "primary_dummy": "Q10",
