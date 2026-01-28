@@ -1,0 +1,254 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-01-27",
+  "description": "儿童安全座椅本地知识库，用于AI服务不可用时的fallback方案",
+  "standards": {
+    "ECE_R129": {
+      "name": "ECE R129 (i-Size)",
+      "description": "当前欧洲最先进的儿童安全座椅标准，主要依据儿童身高",
+      "effective_date": "2013-07-09",
+      "key_requirements": {
+        "height_based": "基于儿童身高（40cm~150cm）",
+        "isofix_required": "强制使用ISOFIX接口",
+        "rear_facing_min": "后向乘坐至少至15个月",
+        "side_impact": "强制侧撞保护"
+      },
+      "height_groups": [
+        {
+          "range": "40-105cm",
+          "age": "0-15个月",
+          "installation": "ISOFIX + 支撑腿",
+          "features": [
+            "新生儿插件（40-60cm）",
+            "可调节头枕（5-7档）",
+            "五点式安全带",
+            "侧撞保护系统"
+          ],
+          "technical_specs": {
+            "seat_angle": "45-50度（后向）",
+            "harness_width": "25-28mm",
+            "shoulder_width": "230-280mm"
+          }
+        },
+        {
+          "range": "100-150cm",
+          "age": "15个月-12岁",
+          "installation": "ISOFIX + 车辆安全带",
+          "features": [
+            "可调节头枕（7-10档）",
+            "五点式安全带（15-150cm）",
+            "侧撞保护系统",
+            "可调节底座"
+          ],
+          "technical_specs": {
+            "seat_angle": "30-45度（后向/前向）",
+            "harness_width": "28-32mm",
+            "shoulder_width": "280-360mm"
+          }
+        }
+      ],
+      "injury_criteria": {
+        "HIC15": "≤ 700",
+        "HIC36": "≤ 1000",
+        "Nij": "≤ 1.0",
+        "chest_acceleration": "≤ 55g"
+      },
+      "safety_recommendations": [
+        "必须使用已通过ECE R129认证的产品",
+        "后向乘坐至少至15个月或身高105cm",
+        "定期检查ISOFIX接口的连接状态",
+        "根据儿童身高及时调整头枕高度"
+      ]
+    },
+    "FMVSS_213": {
+      "name": "FMVSS 213",
+      "description": "美国联邦儿童约束系统标准，主要依据体重",
+      "effective_date": "2024-11-01",
+      "key_requirements": {
+        "weight_based": "基于体重分组",
+        "lap_shoulder_belt": "可使用车辆安全带固定",
+        "side_impact": "新版213a强制侧撞保护"
+      },
+      "weight_groups": [
+        {
+          "name": "Group 0+",
+          "weight_range": "0-13kg",
+          "approx_height": "0-80cm",
+          "age": "0-12个月",
+          "installation": "ISOFIX + 支撑腿/车辆安全带",
+          "features": [
+            "五点式安全带",
+            "可调节靠背角度（135-145度）",
+            "可拆分底座（部分型号）"
+          ],
+          "technical_specs": {
+            "seat_angle": "135-145度",
+            "harness_width": "20-25mm",
+            "hip_width": "180-230mm"
+          }
+        },
+        {
+          "name": "Group 1",
+          "weight_range": "9-18kg",
+          "approx_height": "75-105cm",
+          "age": "9个月-4岁",
+          "installation": "ISOFIX + 顶部固定带/车辆安全带",
+          "features": [
+            "五点式安全带",
+            "可调节头枕（5-6档）",
+            "侧撞保护（新版）"
+          ],
+          "technical_specs": {
+            "seat_angle": "100-110度",
+            "harness_width": "25-28mm",
+            "shoulder_height": "280-360mm"
+          }
+        },
+        {
+          "name": "Group 2",
+          "weight_range": "15-25kg",
+          "approx_height": "110-125cm",
+          "age": "3-7岁",
+          "installation": "车辆安全带",
+          "features": [
+            "车辆安全带导轨",
+            "可调节头枕（6-7档）",
+            "侧撞保护（新版）"
+          ],
+          "technical_specs": {
+            "seat_angle": "95-105度",
+            "belt_guide_height": "380-450mm",
+            "shoulder_width": "310-360mm"
+          }
+        },
+        {
+          "name": "Group 3",
+          "weight_range": "22-36kg",
+          "approx_height": "125-150cm",
+          "age": "6-12岁",
+          "installation": "车辆安全带",
+          "features": [
+            "车辆安全带导轨",
+            "可调节头枕（7-10档）",
+            "侧撞保护（新版）"
+          ],
+          "technical_specs": {
+            "seat_angle": "90-100度",
+            "belt_guide_height": "450-550mm",
+            "shoulder_width": "340-400mm"
+          }
+        }
+      ],
+      "injury_criteria": {
+        "frontal": {
+          "HIC": "≤ 1000",
+          "Nij": "≤ 1.0",
+          "chest_acceleration": "≤ 60g"
+        },
+        "side": {
+          "head_injury_criteria": "≤ 890",
+          "chest_acceleration": "≤ 60g",
+          "abdominal_force": "≤ 2.5kN"
+        }
+      },
+      "safety_recommendations": [
+        "选择通过FMVSS 213认证的产品",
+        "新版213a标准要求侧撞保护",
+        "根据体重选择合适的分组",
+        "定期检查安全带磨损情况"
+      ]
+    },
+    "ECE_R44": {
+      "name": "ECE R44/04",
+      "description": "欧洲旧版儿童约束系统标准，主要依据体重分组",
+      "effective_date": "2013-01-01",
+      "status": "逐步淘汰，将被R129完全取代",
+      "key_requirements": {
+        "weight_based": "基于体重分组",
+        "universal": "Universal类可使用ISOFIX"
+      },
+      "weight_groups": [
+        {
+          "name": "Group 0",
+          "weight_range": "0-10kg",
+          "age": "0-6个月",
+          "features": ["五点式安全带", "新生儿插头"]
+        },
+        {
+          "name": "Group 0+",
+          "weight_range": "0-13kg",
+          "age": "0-12个月",
+          "features": ["五点式安全带", "可调节靠背"]
+        },
+        {
+          "name": "Group 1",
+          "weight_range": "9-18kg",
+          "age": "9个月-4岁",
+          "features": ["五点式安全带", "可调节头枕"]
+        },
+        {
+          "name": "Group 2",
+          "weight_range": "15-25kg",
+          "age": "3-7岁",
+          "features": ["车辆安全带固定", "靠背可调节"]
+        },
+        {
+          "name": "Group 3",
+          "weight_range": "22-36kg",
+          "age": "6-12岁",
+          "features": ["车辆安全带固定", "增高座垫"]
+        }
+      ],
+      "injury_criteria": {
+        "HIC": "≤ 1000",
+        "chest_acceleration": "≤ 55g"
+      },
+      "note": "该标准已被ECE R129取代，建议优先使用R129标准"
+    }
+  },
+  "anthropometry": {
+    "description": "GPS人体测量数据（基于UN Regulation No. 16）",
+    "r129_data": [
+      {"stature": 40, "sitting_height": 26, "shoulder_breadth": 17, "hip_breadth": 14, "shoulder_height_min": 18},
+      {"stature": 50, "sitting_height": 30, "shoulder_breadth": 19, "hip_breadth": 15, "shoulder_height_min": 22},
+      {"stature": 60, "sitting_height": 34, "shoulder_breadth": 21, "hip_breadth": 16, "shoulder_height_min": 26},
+      {"stature": 70, "sitting_height": 38, "shoulder_breadth": 23, "hip_breadth": 17, "shoulder_height_min": 30},
+      {"stature": 80, "sitting_height": 42, "shoulder_breadth": 24, "hip_breadth": 18, "shoulder_height_min": 34},
+      {"stature": 90, "sitting_height": 46, "shoulder_breadth": 26, "hip_breadth": 19, "shoulder_height_min": 38},
+      {"stature": 100, "sitting_height": 50, "shoulder_breadth": 28, "hip_breadth": 20, "shoulder_height_min": 42},
+      {"stature": 105, "sitting_height": 52, "shoulder_breadth": 29, "hip_breadth": 21, "shoulder_height_min": 44},
+      {"stature": 110, "sitting_height": 54, "shoulder_breadth": 30, "hip_breadth": 22, "shoulder_height_min": 46},
+      {"stature": 125, "sitting_height": 60, "shoulder_breadth": 32, "hip_breadth": 24, "shoulder_height_min": 52},
+      {"stature": 150, "sitting_height": 70, "shoulder_breadth": 35, "hip_breadth": 27, "shoulder_height_min": 62}
+    ]
+  },
+  "common_features": {
+    "five_point_harness": {
+      "name": "五点式安全带",
+      "description": "分散碰撞冲击力，防止儿童滑脱",
+      "technical_specs": "肩带宽度25-32mm，配备防滑锁定器"
+    },
+    "side_impact_protection": {
+      "name": "侧撞保护系统（SIP）",
+      "description": "吸收侧面冲击能量，减少头部和胸部伤害",
+      "technical_specs": "可折叠侧翼，能量吸收材料"
+    },
+    "adjustable_headrest": {
+      "name": "可调节头枕",
+      "description": "根据儿童身高调整，提供最佳保护",
+      "technical_specs": "5-10档调节，单手操作"
+    },
+    "isofix_interface": {
+      "name": "ISOFIX接口",
+      "description": "快速、安全的安装方式",
+      "technical_specs": "符合ISO 13216标准，配备支撑腿或上拉带"
+    }
+  },
+  "design_tips": [
+    "座椅角度应根据儿童年龄调整：新生儿135-145度，幼儿45-50度，儿童30-45度",
+    "头枕高度应调节至儿童眼睛与头枕顶部齐平",
+    "安全带应紧贴儿童身体，手指间隙不超过2cm",
+    "侧撞保护系统应始终处于工作状态",
+    "定期检查所有连接件和固定装置"
+  ]
+}

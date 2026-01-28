@@ -1,0 +1,410 @@
+{
+  "version": "1.1.0",
+  "description": "主流儿童安全座椅品牌产品参数数据",
+  "lastUpdated": "2025-01-20",
+  "brands": [
+    {
+      "brand": "Cybex",
+      "website": "https://www.cybex-online.com",
+      "products": [
+        {
+          "model": "Sirona Gi i-Size",
+          "heightRange": "45-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "L.S.P. System (Linear Side-impact Protection)",
+          "orientation": "后向 (0-105cm)",
+          "features": ["360°旋转", "可调头枕", "新生儿插入件", "透气面料"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Sirona SX2 i-Size",
+          "heightRange": "45-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "S.R.T (Side-impact Reduction Technology)",
+          "orientation": "后向 (0-105cm)",
+          "features": ["360°旋转", "可调头枕", "安全带安装选项", "经济实惠"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Cloud T i-Size",
+          "heightRange": "45-87cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-18个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "L.S.P. System",
+          "orientation": "后向",
+          "features": ["可拆卸作为提篮", "可调节靠背", "集成防晒罩", "新生儿插入件"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Solution T i-Fix",
+          "heightRange": "100-150cm",
+          "weightRange": "15-36kg",
+          "ageRange": "4-12岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX",
+          "sideImpact": "L.S.P. System + 头部安全气垫",
+          "orientation": "前向",
+          "features": ["3档倾斜", "可调头枕", "线性侧撞保护", "透气设计"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Britax",
+      "website": "https://www.britax.com",
+      "products": [
+        {
+          "model": "Dualfix i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "SICT (Side Impact Cushion Technology)",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["V型头枕", "5点式安全带", "可调节坐垫", "新生儿插入件"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Swingfix M i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "SICT",
+          "orientation": "后向 (0-105cm)",
+          "features": ["可调头枕", "5点式安全带", "Soft Latch系统", "新生儿衬垫"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Römer Baby-Safe i-Size",
+          "heightRange": "40-83cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-15个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "SICT",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "可调节手柄", "新生儿插入件", "侧面防撞保护"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Advansafix IV R",
+          "heightRange": "100-150cm",
+          "weightRange": "15-36kg",
+          "ageRange": "4-12岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "SICT + SecureGuard",
+          "orientation": "前向",
+          "features": ["可调头枕", "3档倾斜", "5点式安全带", "舒适护垫"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Maxi-Cosi",
+      "website": "https://www.maxi-cosi.com",
+      "products": [
+        {
+          "model": "Pearl 360 i-Size",
+          "heightRange": "67-105cm",
+          "weightRange": "9-18kg",
+          "ageRange": "6个月-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX (配合FamilyFix底座)",
+          "sideImpact": "Side Protection System",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["5点式安全带", "可调头枕", "舒适坐垫", "多档倾斜"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Mica Pro Eco i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "Air Protect技术",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["环保材料", "可调头枕", "5点式安全带", "新生儿插入件"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "CabrioFix i-Size",
+          "heightRange": "40-83cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-15个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Side Protection System",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "可调节手柄", "新生儿插入件", "适配FamilyFix"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Kore Pro i-Size",
+          "heightRange": "100-150cm",
+          "weightRange": "15-36kg",
+          "ageRange": "4-12岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX",
+          "sideImpact": "Air Protect技术",
+          "orientation": "前向",
+          "features": ["可调头枕", "3档倾斜", "舒适的护肩设计", "侧撞保护"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Graco",
+      "website": "https://www.gracobaby.com",
+      "products": [
+        {
+          "model": "SnugRide 35 i-Size",
+          "heightRange": "40-75cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-12个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "可调节手柄", "EPS吸能泡沫", "4档倾斜"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Extend2Fit i-Size",
+          "heightRange": "61-125cm",
+          "weightRange": "9-29kg",
+          "ageRange": "9个月-7岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Simply Safe Adjust",
+          "orientation": "后向/前向",
+          "features": ["可延长头枕", "6档倾斜", "No-Rethread安全带", "侧撞保护"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Nuna",
+      "website": "https://www.nuna.eu",
+      "products": [
+        {
+          "model": "REBL plus",
+          "heightRange": "40-125cm",
+          "weightRange": "0-25kg",
+          "ageRange": "新生儿-7岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "Tailor Tech™ 侧撞保护",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["7档头枕", "Ventilated透气设计", "可调坐垫", " newborn插入件"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "PIVA i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "Integrated Side Protection",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["7档头枕", "Baby-inlay新生儿衬垫", "可调坐垫", "透气面料"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "CUDL i-Size",
+          "heightRange": "40-87cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-18个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "可调节靠背", "可拆卸遮阳罩", "Dream Drape™"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "AACE i-Size",
+          "heightRange": "100-150cm",
+          "weightRange": "15-36kg",
+          "ageRange": "4-12岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX",
+          "sideImpact": "3D Side Impact Protection",
+          "orientation": "前向",
+          "features": ["3档倾斜", "可调头枕", "护肩垫", "侧撞保护"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Joie",
+      "website": "https://www.joiebaby.com",
+      "products": [
+        {
+          "model": "i-Spin 360 i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "Guard Surround Safety™",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["Tri-Protect™头枕", "3档倾斜", "5点式安全带", "新生儿插入件"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "i-Level Recline i-Size",
+          "heightRange": "40-87cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-18个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "4档倾斜", "可调节手柄", "EPS吸能泡沫"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Recaro",
+      "website": "https://www.recaro.com",
+      "products": [
+        {
+          "model": "Storja i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "HERO Safety System",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["5点式安全带", "7档头枕", "侧撞保护", "可调坐垫"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "Monza Nova IS",
+          "heightRange": "100-150cm",
+          "weightRange": "15-36kg",
+          "ageRange": "4-12岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "HERO Safety System",
+          "orientation": "前向",
+          "features": ["可调头枕", "3档倾斜", "侧撞保护", "透气网眼设计"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Chicco",
+      "website": "https://www.chicco.com",
+      "products": [
+        {
+          "model": "NextFit i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向/前向 360°旋转",
+          "features": ["Cocoon新生儿衬垫", "6档头枕", "可调坐垫", "5点式安全带"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "KeyFit i-Size",
+          "heightRange": "40-83cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-15个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "可调节手柄", "新生儿插入件", "吸能泡沫"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    },
+    {
+      "brand": "Uppababy",
+      "website": "https://www.uppababy.com",
+      "products": [
+        {
+          "model": "KNOX i-Size",
+          "heightRange": "40-105cm",
+          "weightRange": "0-18kg",
+          "ageRange": "新生儿-4岁",
+          "standard": "ECE R129",
+          "installation": "ISOFIX + 支撑腿",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向 (0-105cm)",
+          "features": ["5点式安全带", "7档头枕", "新生儿插入件", "侧撞保护"],
+          "isofixClass": "UNIVERSAL"
+        },
+        {
+          "model": "MESA i-Size",
+          "heightRange": "40-83cm",
+          "weightRange": "0-13kg",
+          "ageRange": "新生儿-15个月",
+          "standard": "ECE R129",
+          "installation": "ISOFIX / 安全带",
+          "sideImpact": "Side Impact Protection",
+          "orientation": "后向",
+          "features": ["可拆卸提篮", "可调节手柄", "新生儿插入件", "Smart Secure系统"],
+          "isofixClass": "UNIVERSAL"
+        }
+      ]
+    }
+  ],
+  "heightRanges": [
+    {
+      "range": "40-60cm",
+      "description": "新生儿",
+      "recommendedBrands": ["Cybex", "Britax", "Maxi-Cosi", "Nuna", "Joie"]
+    },
+    {
+      "range": "60-75cm",
+      "description": "6-12个月",
+      "recommendedBrands": ["Cybex", "Britax", "Maxi-Cosi", "Nuna", "Joie"]
+    },
+    {
+      "range": "75-87cm",
+      "description": "12-18个月",
+      "recommendedBrands": ["Cybex", "Britax", "Maxi-Cosi", "Nuna", "Graco"]
+    },
+    {
+      "range": "87-100cm",
+      "description": "18-36个月",
+      "recommendedBrands": ["Cybex", "Britax", "Maxi-Cosi", "Nuna", "Recaro"]
+    },
+    {
+      "range": "100-105cm",
+      "description": "3-4岁",
+      "recommendedBrands": ["Cybex", "Britax", "Maxi-Cosi", "Nuna", "Joie"]
+    },
+    {
+      "range": "105-125cm",
+      "description": "4-7岁",
+      "recommendedBrands": ["Nuna", "Graco", "Cybex", "Britax", "Recaro"]
+    },
+    {
+      "range": "125-150cm",
+      "description": "7-12岁",
+      "recommendedBrands": ["Cybex", "Britax", "Maxi-Cosi", "Nuna", "Recaro"]
+    }
+  ]
+}
