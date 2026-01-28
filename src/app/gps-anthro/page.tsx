@@ -355,26 +355,32 @@ ${matchedGroup.weight_range || '未指定'}
 
         // 添加AI总结
         if (brandData.summary) {
-          markdown += `
+          const summarySection = `
 ### 市场分析总结
 
 ${brandData.summary}
 `;
+          markdown += summarySection;
+        }
+
+        // 如果使用的是本地数据，添加说明
+        if (brandData.dataSource === 'local' || brandData.fallback) {
+          const localNote = `
+*注：以上品牌数据来自本地数据库，可能不是最新信息。建议查看官方网站获取最新产品参数。*
+`;
+          markdown += localNote;
         }
       } else {
-        markdown += `
+        // 只有当完全没有数据时才显示警告
+        if (brandSearchResult.status === 'rejected' || !brandData) {
+          markdown += `
 ⚠️ **暂未获取到品牌对比数据**
 
-原因：联网搜索暂时失败，可能的原因包括：
-- 网络连接不稳定
-- 搜索服务暂时不可用
-- 当前无匹配结果
+原因：品牌搜索服务暂时不可用
 
-**建议**：
-1. 稍后重试（建议等待30秒后）
-2. 访问Web版使用完整AI功能获取品牌对比数据
-3. 使用本地数据查看技术规范和测试要求
+**说明**：这不影响设计报告的主要技术内容，您可以继续参考上述设计建议和测试要求。
 `;
+        }
       }
 
       markdown += `

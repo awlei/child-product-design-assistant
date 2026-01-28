@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SearchClient, Config as SearchConfig, LLMClient, Config as LLMConfig } from 'coze-coding-dev-sdk';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 // 主流品牌列表
 const MAIN_BRANDS = [
@@ -14,6 +16,88 @@ const MAIN_BRANDS = [
   'Uppababy',
   'Evenflo',
 ];
+
+// 从本地数据加载品牌信息
+function loadLocalBrandData() {
+  try {
+    const filePath = join(process.cwd(), 'public', 'data', 'brand-data.json');
+    const fileContent = readFileSync(filePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    console.error('[Brand Search] Failed to load local brand data:', error);
+    return null;
+  }
+}
+
+// 根据身高/体重范围匹配产品
+function matchProductsByRange(
+  localData: any,
+  heightRange: string | null,
+  weightRange: string | null
+) {
+  if (!localData || !localData.brands) {
+    return [];
+  }
+
+  const matchedProducts: any[] = [];
+
+  for (const brandData of localData.brands) {
+    for (const product of brandData.products) {
+      let matched = false;
+
+      // 基于身高匹配
+      if (heightRange && product.heightRange) {
+        const userMin = parseInt(heightRange.split('-')[0]);
+        const userMax = parseInt(heightRange.split('-')[1]);
+        const productMin = parseInt(product.heightRange.split('-')[0]);
+        const productMax = parseInt(product.heightRange.split('-')[1]);
+
+        // 检查是否有重叠或包含关系
+        if (!(userMax < productMin || userMin > productMax)) {
+          matched = true;
+        }
+      }
+
+      // 基于体重匹配
+      if (!matched && weightRange && product.weightRange) {
+        const userMin = parseFloat(weightRange.split('-')[0]);
+        const userMax = parseFloat(weightRange.split('-')[1]);
+        const productMin = parseFloat(product.weightRange.split('-')[0]);
+        const productMax = parseFloat(product.weightRange.split('-')[1]);
+
+        // 检查是否有重叠或包含关系
+        if (!(userMax < productMin || userMin > productMax)) {
+          matched = true;
+        }
+      }
+
+      if (matched) {
+        matchedProducts.push({
+          brand: brandData.brand,
+          model: product.model,
+          heightRange: product.heightRange,
+          weightRange: product.weightRange,
+          installation: product.installation,
+          sideImpact: product.sideImpact,
+          orientation: product.orientation,
+        });
+      }
+    }
+  }
+
+  // 限制返回数量，每个品牌最多1个产品
+  const brandCount = new Map();
+  const filteredProducts = matchedProducts.filter(product => {
+    const count = brandCount.get(product.brand) || 0;
+    if (count < 1) {
+      brandCount.set(product.brand, count + 1);
+      return true;
+    }
+    return false;
+  });
+
+  return filteredProducts.slice(0, 10);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -156,25 +240,54 @@ ${searchContent}
       }
     }
 
-    // 如果没有搜索结果，使用主流品牌作为占位
-    if (structuredProducts.length === 0 && searchResults.length === 0) {
-      structuredProducts = MAIN_BRANDS.slice(0, 5).map(brand => ({
-        brand: brand,
-        model: '',
-        heightRange: heightRange || '',
-        weightRange: weightRange || '',
-        installation: '',
-        sideImpact: '',
-        orientation: ''
-      }));
-      console.log('[Brand Search] Fallback: using major brands:', structuredProducts.length);
+    // 检查提取的产品是否包含足够的详细信息
+    const hasCompleteInfo = structuredProducts.some((p: any) => p.installation && p.sideImpact && p.orientation);
+
+    // 如果搜索结果中没有完整信息，优先使用本地数据
+    if (!hasCompleteInfo) {
+      console.log('[Brand Search] Extracted products lack complete info, trying local data fallback...');
+      const localData = loadLocalBrandData();
+      if (localData) {
+        const localProducts = matchProductsByRange(localData, heightRange, weightRange);
+        if (localProducts.length > 0) {
+          console.log('[Brand Search] Using local data with', localProducts.length, 'complete products');
+          structuredProducts = localProducts;
+        }
+      }
     }
+
+    // 如果仍然没有产品，使用本地数据作为最后fallback
+    if (structuredProducts.length === 0) {
+      console.log('[Brand Search] No products, trying local data fallback...');
+      const localData = loadLocalBrandData();
+      if (localData) {
+        structuredProducts = matchProductsByRange(localData, heightRange, weightRange);
+        console.log('[Brand Search] Local data fallback found:', structuredProducts.length, 'products');
+      }
+
+      // 如果本地数据也没有，使用主流品牌作为占位
+      if (structuredProducts.length === 0) {
+        structuredProducts = MAIN_BRANDS.slice(0, 5).map(brand => ({
+          brand: brand,
+          model: '',
+          heightRange: heightRange || '',
+          weightRange: weightRange || '',
+          installation: '',
+          sideImpact: '',
+          orientation: ''
+        }));
+        console.log('[Brand Search] Ultimate fallback: using major brands:', structuredProducts.length);
+      }
+    }
+
+    // 更新dataSource标记
+    const dataSource = hasCompleteInfo && searchResults.length > 0 ? 'web' : 'local';
 
     return NextResponse.json({
       success: true,
-      summary: searchResponse.summary || '',
+      summary: searchResponse.summary || '使用本地品牌数据库',
       searchResults: searchResults.map(item => ({
-        brand: MAIN_BRANDS.find(b => 
+        brand: MAIN_BRANDS.find(b =>
           item.title.toLowerCase().includes(b.toLowerCase()) ||
           item.snippet.toLowerCase().includes(b.toLowerCase()) ||
           (item.site_name && item.site_name.toLowerCase().includes(b.toLowerCase()))
@@ -186,16 +299,45 @@ ${searchContent}
       })),
       structuredProducts,
       totalCount: searchResults.length,
+      dataSource: dataSource,
     });
   } catch (error) {
     console.error('[Brand Search] Error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to search brand parameters',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+
+    // 即使出错也尝试返回本地数据
+    console.log('[Brand Search] Error occurred, trying local data fallback...');
+    const { heightRange, weightRange, standard } = await request.json().catch(() => ({}));
+
+    const localData = loadLocalBrandData();
+    let structuredProducts = [];
+
+    if (localData) {
+      structuredProducts = matchProductsByRange(localData, heightRange || null, weightRange || null);
+      console.log('[Brand Search] Local data fallback after error found:', structuredProducts.length, 'products');
+    }
+
+    // 如果本地数据也没有，使用主流品牌作为占位
+    if (structuredProducts.length === 0) {
+      structuredProducts = MAIN_BRANDS.slice(0, 5).map(brand => ({
+        brand: brand,
+        model: '',
+        heightRange: heightRange || '',
+        weightRange: weightRange || '',
+        installation: '',
+        sideImpact: '',
+        orientation: ''
+      }));
+      console.log('[Brand Search] Ultimate fallback after error: using major brands:', structuredProducts.length);
+    }
+
+    return NextResponse.json({
+      success: true,
+      summary: '使用本地品牌数据库（网络搜索失败）',
+      searchResults: [],
+      structuredProducts,
+      totalCount: structuredProducts.length,
+      dataSource: 'local',
+      fallback: true,
+    });
   }
 }
