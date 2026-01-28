@@ -1,12 +1,32 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "standard": "ECE R129 (i-Size)",
-  "description": "儿童安全座椅测试矩阵数据",
+  "description": "儿童安全座椅测试矩阵数据 - 基于ECE R129 Table 8",
+  "r129_dummy_selection": {
+    "note": "根据ECE R129标准7.1.3.6节Table 8，假人选择标准如下",
+    "table": [
+      {"size_range": "≤ 60 cm", "dummy": "Q0"},
+      {"size_range": "60 < x ≤ 75 cm", "dummy": "Q1"},
+      {"size_range": "75 < x ≤ 87 cm", "dummy": "Q1.5"},
+      {"size_range": "87 < x ≤ 105 cm", "dummy": "Q3"},
+      {"size_range": "105 < x ≤ 125 cm", "dummy": "Q6"},
+      {"size_range": "> 125 cm", "dummy": "Q10"}
+    ],
+    "test_requirements": {
+      "frontal_impact": "使用最大假人和最小假人进行测试",
+      "rear_impact": "使用主要假人进行测试",
+      "side_impact": "对所有相关假人进行测试（Q10除外，见例外条款）",
+      "note1": "i-Size增高垫座椅（范围上限125-135cm）无需使用Q10假人进行侧碰测试",
+      "note2": "ECRS不得仅基于Q3非整体配置的测试结果获得批准",
+      "note3": "当座椅跨越超过3个尺寸范围时，需要测试额外的中间假人"
+    }
+  },
   "r129_height_groups": [
     {
       "height_range": "40-60cm",
       "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
-      "dummies": ["Q0"],
+      "primary_dummy": "Q0",
+      "all_required_dummies": ["Q0"],
       "weight_range": "0-10kg",
       "age_range": "新生儿-6个月",
       "design_requirements": {
@@ -21,6 +41,7 @@
         {
           "test_type": "正面碰撞",
           "dummies": ["Q0"],
+          "description": "最大假人和最小假人均为Q0",
           "speed": "50 km/h",
           "deceleration": "28-32g",
           "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
@@ -28,6 +49,7 @@
         {
           "test_type": "后面碰撞",
           "dummies": ["Q0"],
+          "description": "使用主要假人Q0",
           "speed": "30 km/h",
           "deceleration": "15-20g",
           "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
@@ -35,6 +57,7 @@
         {
           "test_type": "侧面碰撞",
           "dummies": ["Q0"],
+          "description": "使用所有相关假人（仅Q0）",
           "speed": "24 km/h",
           "deceleration": "20-25g",
           "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
@@ -44,7 +67,8 @@
     {
       "height_range": "60-75cm",
       "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
-      "dummies": ["Q1", "Q1.5"],
+      "primary_dummy": "Q1",
+      "all_required_dummies": ["Q0", "Q1"],
       "weight_range": "9-11kg",
       "age_range": "9-12个月",
       "design_requirements": {
@@ -58,21 +82,24 @@
       "test_matrix": [
         {
           "test_type": "正面碰撞",
-          "dummies": ["Q1", "Q1.5"],
+          "dummies": ["Q0", "Q1"],
+          "description": "使用最大假人Q1和最小假人Q0",
           "speed": "50 km/h",
           "deceleration": "28-32g",
           "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
         },
         {
           "test_type": "后面碰撞",
-          "dummies": ["Q1", "Q1.5"],
+          "dummies": ["Q1"],
+          "description": "使用主要假人Q1",
           "speed": "30 km/h",
           "deceleration": "15-20g",
           "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
         },
         {
           "test_type": "侧面碰撞",
-          "dummies": ["Q1", "Q1.5"],
+          "dummies": ["Q0", "Q1"],
+          "description": "使用所有相关假人Q0和Q1",
           "speed": "24 km/h",
           "deceleration": "20-25g",
           "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
@@ -82,7 +109,8 @@
     {
       "height_range": "75-87cm",
       "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
-      "dummies": ["Q3"],
+      "primary_dummy": "Q1.5",
+      "all_required_dummies": ["Q0", "Q1", "Q1.5"],
       "weight_range": "15kg",
       "age_range": "15-18个月",
       "design_requirements": {
@@ -96,21 +124,24 @@
       "test_matrix": [
         {
           "test_type": "正面碰撞",
-          "dummies": ["Q3"],
+          "dummies": ["Q0", "Q1.5"],
+          "description": "使用最大假人Q1.5和最小假人Q0",
           "speed": "50 km/h",
           "deceleration": "28-32g",
           "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
         },
         {
           "test_type": "后面碰撞",
-          "dummies": ["Q3"],
+          "dummies": ["Q1.5"],
+          "description": "使用主要假人Q1.5",
           "speed": "30 km/h",
           "deceleration": "15-20g",
           "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
         },
         {
           "test_type": "侧面碰撞",
-          "dummies": ["Q3"],
+          "dummies": ["Q0", "Q1", "Q1.5"],
+          "description": "使用所有相关假人Q0、Q1和Q1.5",
           "speed": "24 km/h",
           "deceleration": "20-25g",
           "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
@@ -120,7 +151,8 @@
     {
       "height_range": "87-105cm",
       "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
-      "dummies": ["Q3", "Q6"],
+      "primary_dummy": "Q3",
+      "all_required_dummies": ["Q0", "Q1", "Q1.5", "Q3"],
       "weight_range": "15-22kg",
       "age_range": "18-36个月",
       "design_requirements": {
@@ -134,21 +166,24 @@
       "test_matrix": [
         {
           "test_type": "正面碰撞",
-          "dummies": ["Q3", "Q6"],
+          "dummies": ["Q0", "Q3"],
+          "description": "使用最大假人Q3和最小假人Q0（或Q1.5，视具体配置而定）",
           "speed": "50 km/h",
           "deceleration": "28-32g",
           "injury_criteria": ["HIC15 ≤ 700", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
         },
         {
           "test_type": "后面碰撞",
-          "dummies": ["Q3", "Q6"],
+          "dummies": ["Q3"],
+          "description": "使用主要假人Q3",
           "speed": "30 km/h",
           "deceleration": "15-20g",
           "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
         },
         {
           "test_type": "侧面碰撞",
-          "dummies": ["Q3", "Q6"],
+          "dummies": ["Q0", "Q1", "Q1.5", "Q3"],
+          "description": "使用所有相关假人Q0、Q1、Q1.5和Q3",
           "speed": "24 km/h",
           "deceleration": "20-25g",
           "injury_criteria": ["HIC15 ≤ 700", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
@@ -158,7 +193,8 @@
     {
       "height_range": "105-125cm",
       "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
-      "dummies": ["Q6", "Q10"],
+      "primary_dummy": "Q6",
+      "all_required_dummies": ["Q1.5", "Q3", "Q6"],
       "weight_range": "22-36kg",
       "age_range": "3-7岁",
       "design_requirements": {
@@ -172,21 +208,24 @@
       "test_matrix": [
         {
           "test_type": "正面碰撞",
-          "dummies": ["Q6", "Q10"],
+          "dummies": ["Q1.5", "Q6"],
+          "description": "使用最大假人Q6和最小假人Q1.5",
           "speed": "50 km/h",
           "deceleration": "28-32g",
           "injury_criteria": ["HIC36 ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
         },
         {
           "test_type": "后面碰撞",
-          "dummies": ["Q6", "Q10"],
+          "dummies": ["Q6"],
+          "description": "使用主要假人Q6",
           "speed": "30 km/h",
           "deceleration": "15-20g",
           "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
         },
         {
           "test_type": "侧面碰撞",
-          "dummies": ["Q6", "Q10"],
+          "dummies": ["Q1.5", "Q3", "Q6"],
+          "description": "使用所有相关假人Q1.5、Q3和Q6",
           "speed": "24 km/h",
           "deceleration": "20-25g",
           "injury_criteria": ["HIC36 ≤ 1000", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
@@ -196,7 +235,8 @@
     {
       "height_range": "125-150cm",
       "isofix_size_class": "UNIVERSAL (A, B1, B2, C, D)",
-      "dummies": ["Q10"],
+      "primary_dummy": "Q10",
+      "all_required_dummies": ["Q6", "Q10"],
       "weight_range": "36kg",
       "age_range": "7-12岁",
       "design_requirements": {
@@ -210,7 +250,8 @@
       "test_matrix": [
         {
           "test_type": "正面碰撞",
-          "dummies": ["Q10"],
+          "dummies": ["Q6", "Q10"],
+          "description": "使用最大假人Q10和最小假人Q6",
           "speed": "50 km/h",
           "deceleration": "28-32g",
           "injury_criteria": ["HIC36 ≤ 1000", "Nij ≤ 1.0", "chest_accel ≤ 55g"]
@@ -218,16 +259,19 @@
         {
           "test_type": "后面碰撞",
           "dummies": ["Q10"],
+          "description": "使用主要假人Q10",
           "speed": "30 km/h",
           "deceleration": "15-20g",
           "injury_criteria": ["neck_force ≤ 660N", "head excursion ≤ 550mm"]
         },
         {
           "test_type": "侧面碰撞",
-          "dummies": ["Q10"],
+          "dummies": ["Q6", "Q10"],
+          "description": "使用所有相关假人Q6和Q10（增高垫座椅范围上限125-135cm可免Q10侧碰）",
           "speed": "24 km/h",
           "deceleration": "20-25g",
-          "injury_criteria": ["HIC36 ≤ 1000", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"]
+          "injury_criteria": ["HIC36 ≤ 1000", "chest_accel ≤ 55g", "abdominal_force ≤ 2.5kN"],
+          "note": "对于i-Size增高垫座椅，尺寸范围上限在125cm和135cm之间，无需使用Q10假人进行侧面碰撞测试"
         }
       ]
     }
@@ -299,14 +343,14 @@
       "weight_range": "18-36kg",
       "isofix_size_class": "Universal (A, B1, B2, C, D)",
       "dummies": ["Hybrid III 6yo", "Hybrid III 10yo"],
-      "height_range": "105-150cm",
+      "height_range": "100-145cm",
       "age_range": "4-12岁",
       "design_requirements": {
-        "head_rest_height": "可调节至10-15档，范围85-140cm",
-        "harness_width": "28-35mm（或使用车辆安全带）",
-        "seat_angle": "20-35度（前向）",
-        "shoulder_width": "300-400mm",
-        "hip_width": "270-350mm",
+        "head_rest_height": "可调节至8-12档，范围80-140cm",
+        "harness_width": "28-32mm（或使用车辆安全带）",
+        "seat_angle": "20-30度（前向）",
+        "shoulder_width": "300-380mm",
+        "hip_width": "260-340mm",
         "internal_length": "550-700mm"
       },
       "test_matrix": [
@@ -327,12 +371,36 @@
       ]
     }
   ],
-  "design_tips": [
-    "头托内部高度应比儿童头顶高出至少10-15cm，提供头部保护",
-    "肩带应通过或略高于儿童肩膀，确保碰撞时力传递到盆骨",
-    "座椅角度应根据儿童年龄调整：新生儿135-145度，幼儿45-50度，儿童30-45度",
-    "侧撞保护系统应始终处于工作状态，可折叠侧翼应展开",
-    "头枕高度应调节至儿童眼睛与头枕顶部齐平",
-    "五点式安全带应紧贴儿童身体，手指间隙不超过2cm"
+  "examples": [
+    {
+      "description": "示例1：身高40-105cm的转换型安全座椅",
+      "height_range": "40-105cm",
+      "size_ranges_covered": ["40-60", "60-75", "75-87", "87-105"],
+      "primary_dummies": ["Q0", "Q1", "Q1.5", "Q3"],
+      "frontal_impact_dummies": ["Q0", "Q3"],
+      "frontal_impact_note": "使用最小假人Q0和最大假人Q3（或Q1.5，视配置而定）",
+      "side_impact_dummies": ["Q0", "Q1", "Q1.5", "Q3"],
+      "side_impact_note": "测试所有相关假人"
+    },
+    {
+      "description": "示例2：身高75-87cm的安全座椅",
+      "height_range": "75-87cm",
+      "size_ranges_covered": ["75-87"],
+      "primary_dummy": "Q1.5",
+      "frontal_impact_dummies": ["Q0", "Q1.5"],
+      "frontal_impact_note": "使用最小假人Q0和最大假人Q1.5",
+      "side_impact_dummies": ["Q0", "Q1", "Q1.5"],
+      "side_impact_note": "测试所有相关假人"
+    },
+    {
+      "description": "示例3：身高125-135cm的增高垫座椅",
+      "height_range": "125-135cm",
+      "size_ranges_covered": [">125"],
+      "primary_dummy": "Q10",
+      "frontal_impact_dummies": ["Q6", "Q10"],
+      "frontal_impact_note": "使用最小假人Q6和最大假人Q10",
+      "side_impact_dummies": ["Q6"],
+      "side_impact_note": "对于增高垫座椅（范围上限125-135cm），无需使用Q10假人进行侧面碰撞测试"
+    }
   ]
 }
