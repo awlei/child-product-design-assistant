@@ -97,8 +97,8 @@ export default function CarSeatDesignPage() {
   // 数据验证结果
   const [dataValidation, setDataValidation] = useState<any>(null);
 
-  // 数据源选择
-  const [dataSourceMode, setDataSourceMode] = useState<'ai-only' | 'local-only' | 'local+ai-validation'>('local+ai-validation');
+  // 数据源模式 - 简化，现在只有纯本地数据库
+  const [dataSourceMode, setDataSourceMode] = useState<'local-database'>('local-database');
 
   const handleStandardChange = (value: string) => {
     setStandard(value as StandardType);
@@ -426,14 +426,15 @@ ${brandData.summary}
     setErrorDetails(null);
     setIsGenerating(true);
     setReport(null);
+    setTestMatrixData(null);
 
     // 构建输入参数
     const heightRange = inputType === 'height' ? `${minHeight}-${maxHeight}cm` : null;
     const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
 
     try {
-      // 统一使用免费智能体API生成报告（APK和Web版本一致）
-      console.log('使用免费智能体API生成报告');
+      // 使用纯本地数据库API生成报告
+      console.log('[Frontend] 使用纯本地数据库API生成报告');
       const response = await fetch('/api/design-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -445,268 +446,75 @@ ${brandData.summary}
       });
 
       if (!response.ok) {
-        // 尝试读取错误响应体
-        let errorMessage = '生成报告失败';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.details || errorData.error || errorMessage;
-        } catch (e) {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        throw new Error(errorData.error || '生成报告失败');
       }
 
       // 处理流式响应
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
-      let rawChunks: string[] = []; // 记录所有原始chunk
-      const dataSource = response.headers.get('X-Data-Source') as 'ai' | 'local' | 'free-llm-api' || 'ai';
+      const dataSource = response.headers.get('X-Data-Source') || 'local-database';
 
       if (!reader) {
         throw new Error('无法获取响应流');
       }
 
       console.log('[前端] 开始处理流式响应，数据来源:', dataSource);
-      let chunkCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          console.log('流式响应结束，总共接收', chunkCount, '个chunk');
-          break;
-        }
+        if (done) break;
 
-        chunkCount++;
         const chunk = decoder.decode(value, { stream: true });
-        console.log(`Chunk ${chunkCount}:`, chunk.substring(0, 100));
-        rawChunks.push(chunk); // 记录原始chunk
-
-        // 尝试多种解析方式
         const lines = chunk.split('\n');
 
         for (const line of lines) {
           const trimmedLine = line.trim();
-
           if (!trimmedLine) continue;
 
-          // 方法1: 标准SSE格式 (data: {...})
           if (trimmedLine.startsWith('data: ')) {
             const data = trimmedLine.slice(6);
-            if (data === '[DONE]') {
-              console.log('收到[DONE]标记');
-              continue;
-            }
+            if (data === '[DONE]') continue;
 
             try {
               const parsed = JSON.parse(data);
               if (parsed.content) {
                 fullContent += parsed.content;
-                console.log('添加content:', parsed.content.substring(0, 50));
-                // 记录数据源类型
-                if (parsed.type) {
-                  console.log('数据源类型:', parsed.type);
-                }
-              } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) {
-                // 豆包API的标准格式
-                fullContent += parsed.choices[0].delta.content;
-                console.log('添加content (豆包格式):', parsed.choices[0].delta.content.substring(0, 50));
-              } else {
-                console.log('收到data但没有可提取的content:', JSON.stringify(parsed).substring(0, 100));
               }
             } catch (e) {
               console.error('解析SSE数据失败:', trimmedLine, e);
             }
           }
-          // 方法2: 直接是JSON对象（没有data:前缀）
-          else if (trimmedLine.startsWith('{')) {
-            try {
-              const parsed = JSON.parse(trimmedLine);
-              if (parsed.content) {
-                fullContent += parsed.content;
-                console.log('添加content (直接JSON):', parsed.content.substring(0, 50));
-              } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) {
-                fullContent += parsed.choices[0].delta.content;
-                console.log('添加content (直接JSON-豆包):', parsed.choices[0].delta.content.substring(0, 50));
-              } else {
-                console.log('收到JSON但没有可提取的content:', JSON.stringify(parsed).substring(0, 100));
-              }
-            } catch (e) {
-              console.error('解析直接JSON失败:', trimmedLine, e);
-            }
-          }
         }
       }
 
-      console.log('Full content from AI (length:', fullContent.length, '):');
-      console.log(fullContent);
+      console.log('设计建议生成完成，长度:', fullContent.length);
 
-      // 直接保存AI输出的markdown内容，不解析JSON
+      // 保存报告
       if (fullContent && fullContent.trim().length > 0) {
         setReport({
           content: fullContent,
           standard: getStandardName(standard),
           timestamp: new Date().toISOString(),
-          dataSource: dataSourceMode === 'ai-only' ? 'ai' : 'local',
+          dataSource: 'local',
         });
-        console.log('报告已设置，数据来源:', dataSourceMode);
 
-        // 根据用户选择的数据源，决定是否加载测试矩阵数据和是否启用验证
-        const matrixDataPromise = dataSourceMode === 'ai-only'
-          ? Promise.resolve({ data: null, validation: null })
-          : loadTestMatrixData(
-              standard,
-              heightRange,
-              weightRange,
-              dataSourceMode === 'local+ai-validation'  // 只有选择 "本地数据 + AI验证" 时才启用验证
-            );
+        // 加载测试矩阵数据
+        const matrixData = await loadTestMatrixData(
+          standard,
+          heightRange,
+          weightRange
+        );
 
-        // 并行执行：加载测试矩阵数据（如果需要） + 联网搜索品牌信息
-        const [matrixData, brandSearchResult] = await Promise.allSettled([
-          matrixDataPromise,
-          // 联网搜索品牌参数
-          (async () => {
-            try {
-              console.log('[Web Mode] Starting brand search...');
-              const brandResponse = await fetch('/api/brand-search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  standard,
-                  heightRange,
-                  weightRange,
-                }),
-              });
-              
-              if (brandResponse.ok) {
-                const data = await brandResponse.json();
-                console.log('[Web Mode] Brand search result:', data.success, data.structuredProducts?.length);
-                return data;
-              }
-              return null;
-            } catch (err) {
-              console.error('[Web Mode] Brand search failed:', err);
-              return null;
-            }
-          })(),
-        ]);
-
-        // 设置测试矩阵数据和验证结果
-        if (matrixData.status === 'fulfilled' && matrixData.value) {
-          const { data, validation } = matrixData.value;
-          setTestMatrixData(data);
-          setDataValidation(validation);
-          console.log('测试矩阵数据已加载:', data);
-          console.log('数据验证结果:', validation);
-        } else {
-          console.log('未找到匹配的测试矩阵数据');
-          setTestMatrixData(null);
-        }
-
-        // 如果品牌搜索成功，添加到报告中
-        if (brandSearchResult.status === 'fulfilled' && brandSearchResult.value && brandSearchResult.value.success) {
-          const brandData = brandSearchResult.value;
-          
-          if (brandData.structuredProducts && brandData.structuredProducts.length > 0) {
-            const brandSection = `
-
-## 9. 主流品牌产品对比
-
-以下是基于${standard === 'R129' ? 'ECE R129 (i-Size)' : standard === 'FMVSS213' ? 'FMVSS 213' : 'ECE R44'}标准，适用范围${heightRange || weightRange}的主流品牌产品对比：
-
-| 品牌 | 型号 | 身高/体重范围 | 安装方式 | 侧撞保护 | 后向/前向 |
-|------|------|---------------|----------|----------|-----------|
-${brandData.structuredProducts.map((product: any) => {
-  const height = product.heightRange || '-';
-  const weight = product.weightRange || '-';
-  const installation = product.installation || '-';
-  const sideImpact = product.sideImpact || '-';
-  const orientation = product.orientation || '-';
-  return `| ${product.brand} | ${product.model || '-'} | ${height}<br/>${weight} | ${installation} | ${sideImpact} | ${orientation} |`;
-}).join('\n')}
-`;
-
-            // 添加AI总结
-            if (brandData.summary) {
-              const summarySection = `
-### 市场分析总结
-
-${brandData.summary}
-`;
-              
-              // 更新报告内容
-              setReport(prev => prev ? {
-                ...prev,
-                content: fullContent + brandSection + summarySection,
-              } : null);
-            }
-          }
+        if (matrixData) {
+          setTestMatrixData(matrixData);
         }
       } else {
-        console.error('AI未返回任何内容，fullContent为空');
-        setError('生成报告失败，AI未返回任何内容');
-        // 显示原始响应内容，帮助诊断问题
-        const rawResponse = rawChunks.join('\n').substring(0, 1000);
-        setErrorDetails({
-          message: 'AI返回的内容为空，请检查API配置或稍后重试',
-          rawContent: `接收到${chunkCount}个chunk，但未提取到有效内容。\n\n原始响应:\n${rawResponse}${rawChunks.join('\n').length > 1000 ? '...' : ''}`,
-        });
+        throw new Error('未收到任何设计建议');
       }
     } catch (err) {
       console.error('生成报告错误:', err);
-      console.error('错误详情:', {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: err instanceof Error ? err.message : '未知错误',
-        stack: err instanceof Error ? err.stack : undefined,
-      });
-
-      const errorMessage = err instanceof Error ? err.message : '未知错误';
-      setError('生成报告失败，请稍后重试');
-      setErrorDetails({
-        message: errorMessage,
-        rawContent: err instanceof Error && err.stack ? err.stack.substring(0, 300) : '无详细信息',
-      });
-    } finally {
-      console.log('生成报告流程结束，isGenerating:', isGenerating);
-      setIsGenerating(false);
-    }
-  };
-
-  // 审核报告函数
-  const handleAuditReport = async () => {
-    if (!report) return;
-
-    // 统一使用免费智能体API审核报告（APK和Web版本一致）
-    setIsAuditing(true);
-    setAuditError('');
-    setAuditResult(null);
-
-    try {
-      const response = await fetch('/api/audit-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          report,
-          standard,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || errorData.error || '审核失败');
-      }
-
-      const data = await response.json();
-      if (data.success && data.audit) {
-        setAuditResult(data.audit);
-      } else {
-        throw new Error('审核结果格式错误');
-      }
-    } catch (err) {
-      console.error('Audit error:', err);
-      setAuditError(err instanceof Error ? err.message : '审核失败');
-    } finally {
-      setIsAuditing(false);
     }
   };
 
@@ -723,13 +531,12 @@ ${brandData.summary}
     }
   };
 
-  // 加载测试矩阵数据
+  // 加载测试矩阵数据（简化版，不包含验证）
   const loadTestMatrixData = async (
     std: StandardType,
     heightRange: string | null,
-    weightRange: string | null,
-    enableValidation: boolean = true
-  ): Promise<{ data: TestMatrixData | null; validation: any } | null> => {
+    weightRange: string | null
+  ): Promise<TestMatrixData | null> => {
     try {
       const response = await fetch('/data/test-matrix-data.json');
       if (!response.ok) {
@@ -769,42 +576,9 @@ ${brandData.summary}
         }
       }
 
-      if (!matchedGroup) {
-        return { data: null, validation: null };
-      }
-
-      // 根据配置调用验证API验证数据准确性
-      let validationResult: any = null;
-      if (enableValidation) {
-        try {
-          console.log('[Frontend] Validating local data...');
-          const validationResponse = await fetch('/api/validate-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              standard: std,
-              heightRange,
-              weightRange,
-              localData: matchedGroup,
-            }),
-          });
-
-          if (validationResponse.ok) {
-            validationResult = await validationResponse.json();
-            console.log('[Frontend] Validation result:', validationResult);
-          } else {
-            console.warn('[Frontend] Validation API returned error');
-          }
-        } catch (validationError) {
-          console.error('[Frontend] Validation error:', validationError);
-        }
-      } else {
-        console.log('[Frontend] Validation disabled by user choice');
-      }
-
-      return { data: matchedGroup, validation: validationResult };
-    } catch (error) {
-      console.error('Error loading test matrix data:', error);
+      return matchedGroup;
+    } catch (err) {
+      console.error('加载测试矩阵数据失败:', err);
       return null;
     }
   };
@@ -918,24 +692,16 @@ ${brandData.summary}
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="dataSource">数据源</Label>
-                <Select value={dataSourceMode} onValueChange={(value) => setDataSourceMode(value as any)}>
-                  <SelectTrigger id="dataSource">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ai-only">
-                      仅大语言模型 - 使用AI生成设计建议
-                    </SelectItem>
-                    <SelectItem value="local-only">
-                      仅本地数据 - 使用本地测试矩阵数据
-                    </SelectItem>
-                    <SelectItem value="local+ai-validation">
-                      本地数据 + AI验证（推荐）- 本地数据 + AI准确性验证
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* 数据源说明 - 简化版 */}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">
+                      <strong>纯本地数据库模式</strong>：使用本地测试矩阵数据（ECE R129 / FMVSS 213）生成设计建议，快速稳定，无需网络连接。
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {standard === 'R129' ? (
@@ -1224,28 +990,21 @@ ${brandData.summary}
             </Button>
 
             {/* 数据源说明 */}
-            <Card className="bg-gray-50 border-gray-200">
+            <Card className="bg-green-50 border-green-200">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <Badge className="bg-purple-600 text-white px-2 py-0 flex-shrink-0 mt-0.5">
-                    {dataSourceMode === 'ai-only' ? 'AI模式' : dataSourceMode === 'local-only' ? '本地模式' : '双重验证'}
+                  <Badge className="bg-green-600 text-white px-2 py-0 flex-shrink-0 mt-0.5">
+                    本地数据库
                   </Badge>
                   <div className="flex-1">
                     <p className="text-sm text-gray-700">
-                      {dataSourceMode === 'ai-only' && (
-                        <span>使用大语言模型生成设计建议，不加载本地测试矩阵数据，适合需要创意和灵活设计的场景。</span>
-                      )}
-                      {dataSourceMode === 'local-only' && (
-                        <span>使用本地测试矩阵数据，提供标准的测试要求和设计规范，不启用AI验证，速度快且可靠。</span>
-                      )}
-                      {dataSourceMode === 'local+ai-validation' && (
-                        <span>使用本地测试矩阵数据 + AI验证双重机制，确保数据准确性，适合需要严格符合标准的设计场景。</span>
-                      )}
+                      使用本地测试矩阵数据（ECE R129 / FMVSS 213）生成设计建议，快速稳定，无需网络连接。
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
           </CardContent>
         </Card>
 
@@ -1263,48 +1022,12 @@ ${brandData.summary}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {report.dataSource === 'local' && (
-                      <Badge className="bg-blue-600 text-white flex items-center gap-1">
-                        <Settings className="w-3 h-3" />
-                        本地知识库
-                      </Badge>
-                    )}
-                    {report.dataSource === 'free-llm-api' && (
-                      <Badge className="bg-green-600 text-white flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        免费AI模型
-                      </Badge>
-                    )}
-                    <Badge className="bg-purple-600 text-white">
-                      已生成
+                    <Badge className="bg-blue-600 text-white flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      本地数据库
                     </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* 数据源说明 */}
-            <Card className={`${
-              dataSourceMode === 'ai-only'
-                ? 'bg-purple-50 border-purple-200'
-                : dataSourceMode === 'local-only'
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-green-50 border-green-200'
-            }`}>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  {dataSourceMode === 'ai-only' && <Sparkles className="w-4 h-4 text-purple-600" />}
-                  {dataSourceMode === 'local-only' && <Settings className="w-4 h-4 text-blue-600" />}
-                  {dataSourceMode === 'local+ai-validation' && <ShieldCheck className="w-4 h-4 text-green-600" />}
-                  数据源说明
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-700">
-                  {dataSourceMode === 'ai-only' && '当前使用大语言模型生成设计建议，未加载本地测试矩阵数据。'}
-                  {dataSourceMode === 'local-only' && '当前使用本地测试矩阵数据，未启用AI验证。'}
-                  {dataSourceMode === 'local+ai-validation' && '当前使用本地测试矩阵数据 + AI验证双重机制，确保数据准确性。'}
-                </p>
               </CardContent>
             </Card>
 
@@ -1452,52 +1175,7 @@ ${brandData.summary}
                     </span>
                   </div>
 
-                  {/* 验证说明 */}
-                  {dataValidation.explanation && (
-                    <div className="bg-white p-3 rounded border border-gray-200">
-                      <p className="text-sm text-gray-700">{dataValidation.explanation}</p>
-                    </div>
-                  )}
 
-                  {/* 发现的问题 */}
-                  {dataValidation.issues && dataValidation.issues.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">发现的问题</h4>
-                      <div className="space-y-2">
-                        {dataValidation.issues.map((issue: any, idx: number) => (
-                          <div key={idx} className="bg-white p-3 rounded border border-yellow-200">
-                            <div className="flex items-start gap-2">
-                              <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">{issue.item}</p>
-                                <p className="text-sm text-gray-600 mt-1">{issue.issue}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 建议的修正 */}
-                  {dataValidation.issues && dataValidation.issues.length > 0 && dataValidation.issues.some((i: any) => i.suggestion) && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">建议的修正</h4>
-                      <div className="space-y-2">
-                        {dataValidation.issues.filter((i: any) => i.suggestion).map((issue: any, idx: number) => (
-                          <div key={idx} className="bg-white p-3 rounded border border-blue-200">
-                            <div className="flex items-start gap-2">
-                              <Lightbulb className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">{issue.category}</p>
-                                <p className="text-sm text-gray-600 mt-1">{issue.suggestion}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             )}
@@ -1521,32 +1199,7 @@ ${brandData.summary}
               </CardContent>
             </Card>
 
-            {/* 法规审核按钮 */}
-            <Card className="bg-white/95 backdrop-blur">
-              <CardContent className="p-4">
-                <Button
-                  onClick={handleAuditReport}
-                  disabled={isAuditing}
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 font-semibold text-lg py-4"
-                  size="lg"
-                >
-                  {isAuditing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      正在审核报告...
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-5 h-5 mr-2" />
-                      启动法规合规性审核
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  使用DeepSeek R1模型深度审核，确保报告符合ECE R129/FMVSS 213等法规要求
-                </p>
-              </CardContent>
-            </Card>
+
 
             {/* 审核结果 */}
             {auditResult && (

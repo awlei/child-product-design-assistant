@@ -3,148 +3,206 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 /**
- * 品牌搜索API - 仅使用本地数据版本
- * 移除所有联网搜索和AI调用
+ * 品牌搜索API - 纯本地数据库版本 v2.0
+ * 完全基于brand-data.json，确保品牌参数稳定输出
  */
 
-// 从本地数据加载品牌信息
-function loadLocalBrandData() {
+interface BrandData {
+  version: string;
+  description: string;
+  lastUpdated: string;
+  dataSources: string[];
+  brands: Brand[];
+}
+
+interface Brand {
+  brand: string;
+  website: string;
+  products: Product[];
+}
+
+interface Product {
+  model: string;
+  heightRange: string;
+  weightRange: string;
+  ageRange: string;
+  standard: string;
+  installation: string;
+  sideImpact: string;
+  orientation: string;
+  features: string[];
+  isofixClass: string;
+}
+
+// 加载品牌数据
+function loadBrandData(): BrandData | null {
   try {
     const filePath = join(process.cwd(), 'public/data/brand-data.json');
     const fileContent = readFileSync(filePath, 'utf-8');
     return JSON.parse(fileContent);
   } catch (error) {
-    console.error('[Brand Search] Failed to load local brand data:', error);
+    console.error('[Brand API] 加载品牌数据失败:', error);
     return null;
   }
 }
 
-// 根据身高/体重范围匹配产品
-function matchProductsByRange(
-  localData: any,
-  heightRange: string | null,
-  weightRange: string | null
-) {
-  if (!localData || !localData.brands) {
-    return [];
-  }
+// 搜索产品
+function searchProducts(brandData: BrandData, query: string): Array<Product & { brandName: string }> {
+  const results: Array<Product & { brandName: string }> = [];
+  const lowerQuery = query.toLowerCase();
 
-  const matchedProducts: any[] = [];
-
-  for (const brandData of localData.brands) {
-    for (const product of brandData.products) {
-      let matched = false;
-
-      // 基于身高匹配
-      if (heightRange && product.heightRange) {
-        const userMin = parseInt(heightRange.split('-')[0]);
-        const userMax = parseInt(heightRange.split('-')[1]);
-        const productMin = parseInt(product.heightRange.split('-')[0]);
-        const productMax = parseInt(product.heightRange.split('-')[1]);
-
-        // 检查是否有重叠或包含关系
-        if (!(userMax < productMin || userMin > productMax)) {
-          matched = true;
-        }
+  for (const brand of brandData.brands) {
+    for (const product of brand.products) {
+      // 匹配品牌名
+      if (brand.brand.toLowerCase().includes(lowerQuery)) {
+        results.push({ ...product, brandName: brand.brand });
+        continue;
       }
 
-      // 基于体重匹配
-      if (!matched && weightRange && product.weightRange) {
-        const userMin = parseFloat(weightRange.split('-')[0]);
-        const userMax = parseFloat(weightRange.split('-')[1]);
-        const productMin = parseFloat(product.weightRange.split('-')[0]);
-        const productMax = parseFloat(product.weightRange.split('-')[1]);
-
-        // 检查是否有重叠或包含关系
-        if (!(userMax < productMin || userMin > productMax)) {
-          matched = true;
-        }
+      // 匹配产品型号
+      if (product.model.toLowerCase().includes(lowerQuery)) {
+        results.push({ ...product, brandName: brand.brand });
+        continue;
       }
 
-      if (matched) {
-        matchedProducts.push({
-          brand: brandData.brand,
-          model: product.model,
-          heightRange: product.heightRange,
-          weightRange: product.weightRange,
-          installation: product.installation,
-          sideImpact: product.sideImpact,
-          orientation: product.orientation,
-          features: product.features || [],
-        });
+      // 匹配标准
+      if (product.standard.toLowerCase().includes(lowerQuery)) {
+        results.push({ ...product, brandName: brand.brand });
+        continue;
+      }
+
+      // 匹配尺寸范围
+      if (product.heightRange.toLowerCase().includes(lowerQuery)) {
+        results.push({ ...product, brandName: brand.brand });
+        continue;
+      }
+
+      // 匹配特征
+      if (product.features.some(f => f.toLowerCase().includes(lowerQuery))) {
+        results.push({ ...product, brandName: brand.brand });
       }
     }
   }
 
-  // 限制返回数量，每个品牌最多1个产品
-  const brandCount = new Map();
-  const filteredProducts = matchedProducts.filter(product => {
-    const count = brandCount.get(product.brand) || 0;
-    if (count < 1) {
-      brandCount.set(product.brand, count + 1);
-      return true;
-    }
-    return false;
-  });
+  return results;
+}
 
-  return filteredProducts.slice(0, 10);
+// 生成搜索结果文本
+function generateSearchResults(products: Array<Product & { brandName: string }>, query: string): string {
+  if (products.length === 0) {
+    return `## 🔍 搜索结果
+
+未找到与 "${query}" 相关的产品信息。
+
+建议：
+- 尝试使用品牌名称搜索（如：Cybex、Britax）
+- 尝试使用产品型号搜索
+- 尝试使用标准名称搜索（如：i-Size、R129）
+
+---
+`;
+  }
+
+  let result = `## 🔍 搜索结果
+
+找到 ${products.length} 个与 "${query}" 相关的产品：
+
+---
+
+`;
+
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i];
+    result += `### ${i + 1}. ${product.brandName} ${product.model}
+
+**适用范围**：
+- 身高范围：${product.heightRange}
+- 体重范围：${product.weightRange}
+- 年龄范围：${product.ageRange}
+
+**安全标准**：${product.standard}
+
+**安装方式**：${product.installation}
+
+**侧撞保护**：${product.sideImpact}
+
+**朝向**：${product.orientation}
+
+**ISOFIX Class**：${product.isofixClass}
+
+**核心特性**：
+${product.features.map(f => `- ${f}`).join('\n')}
+
+---
+`;
+  }
+
+  result += `
+*数据来源：本地品牌数据库 (v${loadBrandData()?.version || '未知'})*
+`;
+
+  return result;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { heightRange, weightRange, standard } = await request.json();
+    console.log('[Brand API] 开始处理品牌搜索请求（纯本地数据库）...');
 
-    console.log('[Brand Search] Request received:', { heightRange, weightRange, standard });
+    const { query } = await request.json();
 
-    // 加载本地品牌数据
-    const localData = loadLocalBrandData();
-    
-    if (!localData) {
+    if (!query || typeof query !== 'string') {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to load local brand data',
-        },
+        { success: false, error: '请输入搜索关键词' },
+        { status: 400 }
+      );
+    }
+
+    // 加载品牌数据
+    const brandData = loadBrandData();
+    if (!brandData) {
+      console.error('[Brand API] 无法加载品牌数据');
+      return NextResponse.json(
+        { success: false, error: '无法加载数据' },
         { status: 500 }
       );
     }
 
-    // 匹配产品
-    const structuredProducts = matchProductsByRange(localData, heightRange, weightRange);
-    console.log('[Brand Search] Found', structuredProducts.length, 'products from local data');
+    // 搜索产品
+    const products = searchProducts(brandData, query);
+    console.log('[Brand API] 搜索完成，找到', products.length, '个产品');
 
-    // 生成摘要
-    let summary = '本地品牌数据库';
-    if (structuredProducts.length > 0) {
-      const brandNames = [...new Set(structuredProducts.map(p => p.brand))].join('、');
-      summary = `从本地数据库找到 ${structuredProducts.length} 款产品，来自品牌：${brandNames}`;
-    } else {
-      summary = '本地数据库未找到匹配的产品';
-    }
+    // 生成结果文本
+    const results = generateSearchResults(products, query);
 
-    return NextResponse.json({
-      success: true,
-      summary: summary,
-      searchResults: structuredProducts.map((product, index) => ({
-        brand: product.brand,
-        title: product.model,
-        snippet: `${product.heightRange || product.weightRange} | ${product.installation}`,
-        url: `#${product.brand.toLowerCase().replace(/\s/g, '-')}`,
-        siteName: product.brand,
-      })),
-      structuredProducts,
-      totalCount: structuredProducts.length,
-      dataSource: 'local',
-    });
-  } catch (error) {
-    console.error('[Brand Search] Error:', error);
-
-    return NextResponse.json(
+    // 流式返回
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          const chars = results.split('');
+          
+          for (const char of chars) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: char })}\n\n`));
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+          
+          controller.close();
+        },
+      }),
       {
-        success: false,
-        error: 'Brand search failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'X-Data-Source': 'local-database-only',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('[Brand API] 处理请求失败:', error);
+    
+    return NextResponse.json(
+      { success: false, error: '搜索失败' },
       { status: 500 }
     );
   }
