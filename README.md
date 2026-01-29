@@ -155,69 +155,46 @@ coze start
 
 APK版本与Web版本功能**完全一致**，包括：
 
-- ✅ AI智能助手（R129/FMVSS咨询、综合设计）
+- ✅ 本地数据库设计助手（R129/FMVSS咨询）
+- ✅ 综合设计方案生成
 - ✅ 简笔画生成
-- ✅ 报告审核与分析
-- ✅ 品牌对比数据获取
 - ✅ 所有计算工具（尺寸计算、伤害指标、GPS人体测量）
+- ✅ 品牌对比数据获取
 
-所有AI功能都使用免费的豆包大语言模型，无需额外配置。
+所有功能都使用本地数据库，无需API配置，100%稳定可用。
 
-### 自动构建（推荐）
+### 自动构建
 
-项目配置了GitHub Actions自动化构建，每次推送代码到`main`分支会自动触发APK构建。
+项目配置了GitHub Actions自动化构建，每次推送到`main`分支会自动触发APK构建。
 
-**构建步骤**：
-1. 推送代码到GitHub main分支
-2. GitHub Actions自动触发构建
-3. 构建完成后，APK会上传为GitHub Artifacts
-
-**下载APK**：
-1. 访问GitHub仓库的Actions页面
-2. 点击最近的构建任务
+**快速下载APK**：
+1. 访问Actions页面：https://github.com/awlei/child-product-design-assistant/actions
+2. 点击最近的构建任务（绿色✅）
 3. 在Artifacts部分下载APK文件
 
-**手动触发构建**：
-- 访问GitHub仓库的Actions页面
-- 选择"Build Android APK"工作流
-- 点击"Run workflow"按钮
+**详细说明**：
+- 📖 [APK构建完整指南](docs/APK_BUILDS.md) - 包含构建流程、下载步骤、常见问题等
+- 📖 [APK测试指南](APK_TEST_GUIDE.md) - APK功能测试流程
 
-### 本地构建APK
+### 手动触发构建
 
-如果需要在本地构建APK：
+如需手动触发构建：
+1. 访问GitHub仓库的Actions页面
+2. 选择"Build Android APK"工作流
+3. 点击"Run workflow"按钮
 
-```bash
-# 1. 构建Web应用
-pnpm run build
+### 构建状态
 
-# 2. 添加Android平台
-npx cap add android
-
-# 3. 同步资源
-npx cap sync android
-
-# 4. 构建APK
-cd android
-./gradlew assembleDebug
+查看最新的构建状态和下载APK：
+```
+https://github.com/awlei/child-product-design-assistant/actions
 ```
 
-构建完成后，APK文件位于：`android/app/build/outputs/apk/debug/app-debug.apk`
+### 本地构建APK（可选）
 
-**系统要求**：
-- Java 17+
-- Android SDK
-- Gradle
+如果需要在本地构建APK，请参考：[APK构建完整指南](docs/APK_BUILDS.md#本地构建apk)
 
-**安装Android SDK**：
-```bash
-# macOS
-brew install android-sdk
-
-# Ubuntu/Debian
-sudo apt-get install android-sdk
-
-# 或使用Android Studio
-```
+**注意**：本地构建需要Java 17+、Android SDK、Gradle等环境配置，推荐使用GitHub Actions自动构建。
 
 ## 🔐 环境变量
 
