@@ -258,6 +258,33 @@ export async function POST(request: NextRequest) {
       weightRange
     );
 
+    // 先准备本地知识库结果（作为备用）
+    let localKnowledgeResult = '';
+    let localKnowledgeAvailable = false;
+    try {
+      const { standard: std, heightRange: hr, weightRange: wr, productType: pt } = await request.json();
+      
+      let localStandard: 'ECE_R129' | 'FMVSS_213' | 'ECE_R44';
+      if (std === 'R129') localStandard = 'ECE_R129';
+      else if (std === 'FMVSS213') localStandard = 'FMVSS_213';
+      else localStandard = 'ECE_R44';
+
+      const localRequest: LocalKnowledgeRequest = {
+        productType: pt || 'child-safety-seat',
+        standard: localStandard,
+        heightRange: hr ? parseRange(hr) : undefined,
+        weightRange: wr ? parseRange(wr) : undefined,
+      };
+
+      const advice = await generateLocalAdvice(localRequest);
+      localKnowledgeResult = formatLocalAdvice(advice);
+      localKnowledgeAvailable = true;
+      console.log('[API] 本地知识库准备成功');
+    } catch (error) {
+      console.error('[API] 本地知识库准备失败:', error);
+      localKnowledgeAvailable = false;
+    }
+
     // 构建用户消息
     let userMessage = '';
 
@@ -315,28 +342,57 @@ export async function POST(request: NextRequest) {
         temperature: 0.7,
       });
 
-      // 返回流式响应
+      // 返回流式响应，先发送本地数据，再发送智能体数据
       return new Response(
         new ReadableStream({
           async start(controller) {
             const encoder = new TextEncoder();
-            let chunkCount = 0;
 
             try {
               console.log('[API] 开始处理流式响应...');
 
+              // 第1部分：发送本地知识库结果（如果有）
+              if (localKnowledgeAvailable && localKnowledgeResult) {
+                console.log('[API] 发送本地知识库结果...');
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                  type: 'local-knowledge',
+                  content: '## 📚 本地知识库设计建议\n\n' + localKnowledgeResult 
+                })}\n\n`));
+              }
+
+              // 第2部分：发送智能体结果
+              console.log('[API] 发送智能体结果标识...');
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                type: 'ai-assistant',
+                content: '## 🤖 智能体设计建议\n\n' 
+              })}\n\n`));
+
+              let chunkCount = 0;
               for await (const chunk of stream) {
                 if (chunk.content) {
                   chunkCount++;
                   const content = chunk.content.toString();
                   console.log(`[API] 发送chunk ${chunkCount}: ${content.substring(0, 30)}...`);
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                    type: 'ai-assistant',
+                    content: content 
+                  })}\n\n`));
                 }
               }
 
               console.log(`[API] 流式响应完成，共发送 ${chunkCount} 个chunk`);
             } catch (error) {
               console.error('[API] 流式处理错误:', error);
+              
+              // 如果智能体流式处理失败，但本地知识库可用，确保发送本地数据
+              if (localKnowledgeAvailable && localKnowledgeResult) {
+                console.log('[API] 智能体失败，发送本地知识库结果...');
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                  type: 'local-knowledge',
+                  content: '## 📚 本地知识库设计建议\n\n' + localKnowledgeResult 
+                })}\n\n`));
+              }
+              
               controller.error(error);
             } finally {
               controller.close();
@@ -348,19 +404,61 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
-            'X-Data-Source': 'free-llm-api',
+            'X-Data-Source': 'hybrid',
           },
         }
       );
     } catch (llmError) {
-      console.error('[API] LLM调用失败，切换到本地知识库:', llmError);
-      // LLM失败时切换到本地知识库
-      return await handleLocalKnowledgeFallback(request);
+      console.error('[API] LLM调用失败，使用本地知识库:', llmError);
+      
+      // LLM失败时，只返回本地知识库结果
+      if (localKnowledgeAvailable && localKnowledgeResult) {
+        console.log('[API] 返回本地知识库结果（智能体失败）...');
+        
+        return new Response(
+          new ReadableStream({
+            async start(controller) {
+              const encoder = new TextEncoder();
+              
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                type: 'local-knowledge',
+                content: '## 📚 本地知识库设计建议\n\n' + localKnowledgeResult 
+              })}\n\n`));
+              
+              controller.close();
+            },
+          }),
+          {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+              'X-Data-Source': 'local-knowledge-only',
+            },
+          }
+        );
+      }
+      
+      // 如果本地知识库也失败了，返回完整错误
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to generate design report from both AI and local knowledge',
+          details: '智能体和本地知识库均无法生成设计建议，请稍后重试',
+        },
+        { status: 500 }
+      );
     }
   } catch (error) {
-    console.error('[API] 处理请求失败，尝试使用本地知识库:', error);
-    // 整体失败时切换到本地知识库
-    return await handleLocalKnowledgeFallback(request);
+    console.error('[API] 处理请求失败:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to process request',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 

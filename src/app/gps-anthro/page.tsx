@@ -503,6 +503,10 @@ ${brandData.summary}
               if (parsed.content) {
                 fullContent += parsed.content;
                 console.log('添加content:', parsed.content.substring(0, 50));
+                // 记录数据源类型
+                if (parsed.type) {
+                  console.log('数据源类型:', parsed.type);
+                }
               } else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) {
                 // 豆包API的标准格式
                 fullContent += parsed.choices[0].delta.content;
