@@ -334,12 +334,14 @@ export async function POST(request: NextRequest) {
             content: '## 📚 设计建议（本地数据库）\n\n' 
           })}\n\n`));
 
-          // 模拟流式输出
+          // 优化流式输出：快速发送，减少延迟
           const chars = advice.split('');
-          for (let i = 0; i < chars.length; i += 8) {
-            const chunk = chars.slice(i, i + 8).join('');
+          const chunkSize = 50;  // 每个chunk发送50个字符（原来是8个）
+          for (let i = 0; i < chars.length; i += chunkSize) {
+            const chunk = chars.slice(i, i + chunkSize).join('');
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
-            await new Promise(resolve => setTimeout(resolve, 15));
+            // 减少延迟到5ms（原来是15ms），加快输出速度
+            await new Promise(resolve => setTimeout(resolve, 5));
           }
 
           controller.close();

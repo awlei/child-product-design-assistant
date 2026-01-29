@@ -174,16 +174,19 @@ export async function POST(request: NextRequest) {
     // 生成结果文本
     const results = generateSearchResults(products, query);
 
-    // 流式返回
+    // 流式返回 - 优化速度
     return new Response(
       new ReadableStream({
         async start(controller) {
           const encoder = new TextEncoder();
           const chars = results.split('');
+          const chunkSize = 50;  // 每个chunk发送50个字符（原来是1个）
           
-          for (const char of chars) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: char })}\n\n`));
-            await new Promise(resolve => setTimeout(resolve, 10));
+          for (let i = 0; i < chars.length; i += chunkSize) {
+            const chunk = chars.slice(i, i + chunkSize).join('');
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+            // 减少延迟到5ms（原来是10ms）
+            await new Promise(resolve => setTimeout(resolve, 5));
           }
           
           controller.close();

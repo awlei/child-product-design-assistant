@@ -433,88 +433,99 @@ ${brandData.summary}
     const weightRange = inputType === 'weight' ? `${minWeight}-${maxWeight}kg` : null;
 
     try {
-      // 使用纯本地数据库API生成报告
-      console.log('[Frontend] 使用纯本地数据库API生成报告');
-      const response = await fetch('/api/design-assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          standard,
-          heightRange,
-          weightRange,
-        }),
-      });
+      // 并行执行：生成报告 + 加载测试矩阵数据
+      console.log('[Frontend] 使用纯本地数据库API生成报告（并行加载测试矩阵）');
+      
+      const [reportPromise, matrixDataPromise] = await Promise.allSettled([
+        // 生成设计报告
+        (async () => {
+          const response = await fetch('/api/design-assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              standard,
+              heightRange,
+              weightRange,
+            }),
+          });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '生成报告失败');
-      }
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '生成报告失败');
+          }
 
-      // 处理流式响应
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = '';
-      const dataSource = response.headers.get('X-Data-Source') || 'local-database';
+          // 处理流式响应
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+          let fullContent = '';
 
-      if (!reader) {
-        throw new Error('无法获取响应流');
-      }
+          if (!reader) {
+            throw new Error('无法获取响应流');
+          }
 
-      console.log('[前端] 开始处理流式响应，数据来源:', dataSource);
+          console.log('[前端] 开始处理流式响应');
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
 
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (!trimmedLine) continue;
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) continue;
 
-          if (trimmedLine.startsWith('data: ')) {
-            const data = trimmedLine.slice(6);
-            if (data === '[DONE]') continue;
+              if (trimmedLine.startsWith('data: ')) {
+                const data = trimmedLine.slice(6);
+                if (data === '[DONE]') continue;
 
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.content) {
-                fullContent += parsed.content;
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.content) {
+                    fullContent += parsed.content;
+                  }
+                } catch (e) {
+                  console.error('解析SSE数据失败:', trimmedLine, e);
+                }
               }
-            } catch (e) {
-              console.error('解析SSE数据失败:', trimmedLine, e);
             }
           }
-        }
-      }
 
-      console.log('设计建议生成完成，长度:', fullContent.length);
+          console.log('设计建议生成完成，长度:', fullContent.length);
+          return fullContent;
+        })(),
+        // 并行加载测试矩阵数据
+        loadTestMatrixData(standard, heightRange, weightRange)
+      ]);
 
-      // 保存报告
-      if (fullContent && fullContent.trim().length > 0) {
+      // 处理设计报告
+      if (reportPromise.status === 'fulfilled' && reportPromise.value) {
         setReport({
-          content: fullContent,
+          content: reportPromise.value,
           standard: getStandardName(standard),
           timestamp: new Date().toISOString(),
           dataSource: 'local',
         });
-
-        // 加载测试矩阵数据
-        const matrixData = await loadTestMatrixData(
-          standard,
-          heightRange,
-          weightRange
-        );
-
-        if (matrixData) {
-          setTestMatrixData(matrixData);
-        }
       } else {
-        throw new Error('未收到任何设计建议');
+        throw new Error('生成报告失败');
+      }
+
+      // 处理测试矩阵数据
+      if (matrixDataPromise.status === 'fulfilled' && matrixDataPromise.value) {
+        setTestMatrixData(matrixDataPromise.value);
       }
     } catch (err) {
       console.error('生成报告错误:', err);
+      const errorMessage = err instanceof Error ? err.message : '生成报告失败，请稍后重试';
+      setError(errorMessage);
+      setErrorDetails({
+        message: errorMessage,
+        rawContent: err instanceof Error && err.stack ? err.stack.substring(0, 300) : '无详细信息'
+      });
+    } finally {
+      setIsGenerating(false);
+      console.log('生成报告流程结束，isGenerating:', false);
     }
   };
 
@@ -988,6 +999,23 @@ ${brandData.summary}
                 </>
               )}
             </Button>
+
+            {/* 加载进度提示 */}
+            {isGenerating && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Loader2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0 animate-spin" />
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-900 font-semibold">生成进行中</p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        正在基于本地测试矩阵数据生成设计建议...
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 数据源说明 */}
             <Card className="bg-green-50 border-green-200">
